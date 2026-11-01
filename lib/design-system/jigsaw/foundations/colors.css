@@ -1,0 +1,1604 @@
+/* ============================================================================
+   COLORS - Jigsaw Design System
+   Synced from Figma: New colors (aZZCnG4AYx9hwF5d6Bz66I)
+   Last sync: 2026-01-22
+   ============================================================================ */
+
+/* ============================================================================
+   DEFINITION TOKENS - Light Mode
+   ============================================================================ */
+
+:root {
+	/* GREY */
+	--grey-0: oklch(1 0 0);
+	--grey-5: oklch(0.97 0 0);
+	--grey-10: oklch(0.94 0 0);
+	--grey-20: oklch(0.9 0 0);
+	--grey-30: oklch(0.88 0 0);
+	--grey-40: oklch(0.6 0 0);
+	--grey-50: oklch(0.5 0 0);
+	--grey-60: oklch(0.4 0 0);
+	--grey-70: oklch(0.3 0 0);
+	--grey-80: oklch(0.24 0 0);
+	--grey-90: oklch(0.16 0 0);
+
+	/* PINK */
+	--pink-5: oklch(0.958 0.03 332.465);
+	--pink-10: oklch(0.916 0.057 332.479);
+	--pink-20: oklch(0.864 0.085 333.39);
+	--pink-30: oklch(0.798 0.119 336.916);
+	--pink-40: oklch(0.719 0.168 335.781);
+	--pink-50: oklch(0.67 0.2 333.818);
+	--pink-60: oklch(0.613 0.185 333.397);
+	--pink-70: oklch(0.541 0.171 333.375);
+	--pink-80: oklch(0.449 0.14 333.382);
+	--pink-90: oklch(0.342 0.101 333.678);
+
+	/* BLUE */
+	--blue-5: oklch(0.959 0.019 260.17);
+	--blue-10: oklch(0.932 0.032 255.585);
+	--blue-20: oklch(0.882 0.057 254.128);
+	--blue-30: oklch(0.809 0.096 251.813);
+	--blue-40: oklch(0.714 0.143 254.624);
+	--blue-50: oklch(0.623 0.188 259.815);
+	--blue-60: oklch(0.546 0.215 262.881);
+	--blue-70: oklch(0.488 0.217 264.376);
+	--blue-80: oklch(0.424 0.181 265.638);
+	--blue-90: oklch(0.379 0.138 265.522);
+
+	/* GREEN */
+	--green-5: oklch(0.961 0.023 157.598);
+	--green-10: oklch(0.926 0.045 157.505);
+	--green-20: oklch(0.865 0.079 159.057);
+	--green-30: oklch(0.801 0.11 158.73);
+	--green-40: oklch(0.735 0.137 157.657);
+	--green-50: oklch(0.651 0.145 157.243);
+	--green-60: oklch(0.576 0.128 157.264);
+	--green-70: oklch(0.492 0.109 156.976);
+	--green-80: oklch(0.399 0.086 157.944);
+	--green-90: oklch(0.311 0.063 159.739);
+
+	/* RED */
+	--red-5: oklch(0.964 0.016 17.439);
+	--red-10: oklch(0.917 0.038 17.864);
+	--red-20: oklch(0.829 0.078 18.871);
+	--red-30: oklch(0.751 0.117 20.19);
+	--red-40: oklch(0.674 0.155 22.095);
+	--red-50: oklch(0.608 0.179 24.17);
+	--red-60: oklch(0.545 0.17 24.774);
+	--red-70: oklch(0.476 0.15 24.905);
+	--red-80: oklch(0.394 0.121 24.587);
+	--red-90: oklch(0.307 0.089 24.031);
+
+	/* YELLOW */
+	--yellow-5: oklch(0.962 0.062 95.396);
+	--yellow-10: oklch(0.924 0.115 95.746);
+	--yellow-20: oklch(0.879 0.153 91.605);
+	--yellow-30: oklch(0.837 0.164 84.429);
+	--yellow-40: oklch(0.769 0.165 70.08);
+	--yellow-50: oklch(0.666 0.157 58.318);
+	--yellow-60: oklch(0.555 0.146 48.998);
+	--yellow-70: oklch(0.473 0.125 46.201);
+	--yellow-80: oklch(0.414 0.105 45.904);
+	--yellow-90: oklch(0.348 0.084 48.662);
+}
+
+/* ============================================================================
+   DEFINITION TOKENS - Dark Mode
+   ============================================================================ */
+
+.dark {
+	/* GREY — Dark Mode overrides */
+	--grey-0: oklch(1 0 0);
+	--grey-5: oklch(0.97 0 0);
+	--grey-10: oklch(0.94 0 0);
+	--grey-20: oklch(0.92 0 0);
+	--grey-30: oklch(0.8 0 0);
+	--grey-40: oklch(0.6 0 0);
+	--grey-50: oklch(0.5 0 0);
+	--grey-60: oklch(0.36 0 0);
+	--grey-70: oklch(0.3 0 0);
+	--grey-80: oklch(0.24 0 0);
+	--grey-90: oklch(0.16 0 0);
+
+	/* PINK — Dark Mode (desaturated ~15%, -50 kept at full saturation) */
+	--pink-5: oklch(0.96 0.025 332);
+	--pink-10: oklch(0.92 0.048 332);
+	--pink-20: oklch(0.87 0.072 333);
+	--pink-30: oklch(0.81 0.1 337);
+	--pink-40: oklch(0.73 0.142 336);
+	--pink-50: oklch(0.67 0.2 333.818);
+	--pink-60: oklch(0.63 0.157 333);
+	--pink-70: oklch(0.56 0.145 333);
+	--pink-80: oklch(0.47 0.119 333);
+	--pink-90: oklch(0.21 0.03 334);
+
+	/* BLUE — Dark Mode */
+	--blue-5: oklch(0.96 0.016 260);
+	--blue-10: oklch(0.935 0.027 256);
+	--blue-20: oklch(0.89 0.048 254);
+	--blue-30: oklch(0.82 0.082 252);
+	--blue-40: oklch(0.73 0.121 255);
+	--blue-50: oklch(0.623 0.188 259.815);
+	--blue-60: oklch(0.57 0.183 263);
+	--blue-70: oklch(0.51 0.184 264);
+	--blue-80: oklch(0.445 0.154 266);
+	--blue-90: oklch(0.2 0.027 266);
+
+	/* GREEN — Dark Mode */
+	--green-5: oklch(0.965 0.02 158);
+	--green-10: oklch(0.93 0.038 158);
+	--green-20: oklch(0.87 0.067 159);
+	--green-30: oklch(0.81 0.094 159);
+	--green-40: oklch(0.745 0.116 158);
+	--green-50: oklch(0.651 0.145 157.243);
+	--green-60: oklch(0.595 0.109 157);
+	--green-70: oklch(0.51 0.093 157);
+	--green-80: oklch(0.42 0.073 158);
+	--green-90: oklch(0.2 0.024 160);
+
+	/* RED — Dark Mode */
+	--red-5: oklch(0.965 0.014 17);
+	--red-10: oklch(0.92 0.032 18);
+	--red-20: oklch(0.84 0.066 19);
+	--red-30: oklch(0.765 0.099 20);
+	--red-40: oklch(0.69 0.132 22);
+	--red-50: oklch(0.608 0.179 24.17);
+	--red-60: oklch(0.565 0.144 25);
+	--red-70: oklch(0.5 0.128 25);
+	--red-80: oklch(0.415 0.103 25);
+	--red-90: oklch(0.2 0.02 24);
+
+	/* YELLOW — Dark Mode */
+	--yellow-5: oklch(0.965 0.053 95);
+	--yellow-10: oklch(0.93 0.098 96);
+	--yellow-20: oklch(0.885 0.13 92);
+	--yellow-30: oklch(0.845 0.139 84);
+	--yellow-40: oklch(0.78 0.14 70);
+	--yellow-50: oklch(0.666 0.157 58.318);
+	--yellow-60: oklch(0.575 0.124 49);
+	--yellow-70: oklch(0.495 0.106 46);
+	--yellow-80: oklch(0.435 0.089 46);
+	--yellow-90: oklch(0.2 0.021 49);
+}
+
+/* ============================================================================
+   CLIP TOKENS (Video Editor)
+   Category-based color system:
+   - Visuals (blue): video, image, avatar
+   - Audio (green): audio
+   - Graphics (purple): text, rectangle, arrow
+   - Effects (orange): blur, spotlight, callout, zoom
+   ============================================================================ */
+
+:root {
+	/* Visuals Category (Blue) - video, image, avatar */
+	--color-clip-visuals-start: oklch(45% 0.18 255);
+	--color-clip-visuals-end: oklch(35% 0.15 255);
+	--color-clip-visuals-overlay-start: oklch(52% 0.16 255);
+	--color-clip-visuals-overlay-end: oklch(48% 0.18 255);
+
+	/* Audio Category (Green) - audio */
+	--color-clip-audio-start: oklch(50% 0.12 160);
+	--color-clip-audio-end: oklch(48% 0.14 160);
+	--color-clip-audio-waveform-bg: oklch(45% 0.13 160);
+
+	/* Graphics Category (Purple) - text, rectangle, arrow */
+	--color-clip-graphics-start: oklch(55% 0.18 300);
+	--color-clip-graphics-end: oklch(45% 0.2 300);
+
+	/* Effects Category (Orange) - blur, spotlight, callout, zoom */
+	--color-clip-effects-start: oklch(60% 0.16 45);
+	--color-clip-effects-end: oklch(50% 0.18 45);
+
+	/* Legacy aliases for backward compatibility */
+	--color-clip-video-start: var(--color-clip-visuals-start);
+	--color-clip-video-end: var(--color-clip-visuals-end);
+	--color-clip-video-start-40: oklch(45% 0.18 255 / 0.4);
+	--color-clip-video-end-40: oklch(35% 0.15 255 / 0.4);
+	--color-clip-video-overlay-start: var(--color-clip-visuals-overlay-start);
+	--color-clip-video-overlay-end: var(--color-clip-visuals-overlay-end);
+}
+
+/* ============================================================================
+   SEMANTIC TOKENS - Light Mode
+   ============================================================================ */
+
+:root {
+	/* ===== BACKGROUND (bg) ===== */
+	--color-bg-canvas: var(--grey-10);
+	--color-bg-surface: var(--grey-5);
+	--color-bg-weak: var(--grey-20);
+	--color-bg-normal: var(--grey-30);
+	--color-bg-strong: var(--grey-40);
+	--color-bg-inverted: var(--grey-80);
+
+	/* bg/brand */
+	--color-bg-brand-normal: var(--pink-50);
+	--color-bg-brand-weak: var(--pink-5);
+
+	/* bg/accent */
+	--color-bg-accent-normal: var(--blue-50);
+	--color-bg-accent-weak: var(--blue-5);
+
+	/* bg/selection */
+	--color-bg-selection: rgba(0, 0, 0, 0.15);
+
+	/* bg/marquee — canvas rubber-band selection indicator */
+	--color-bg-marquee: var(--pink-50);
+
+	/* bg/positive */
+	--color-bg-positive-normal: var(--green-50);
+	--color-bg-positive-weak: var(--green-5);
+
+	/* bg/negative */
+	--color-bg-negative-normal: var(--red-50);
+	--color-bg-negative-weak: var(--red-5);
+
+	/* bg/warning */
+	--color-bg-warning-normal: var(--yellow-50);
+	--color-bg-warning-weak: oklch(0.975 0.025 95);
+
+	/* ===== FOREGROUND TEXT (fg/text) ===== */
+	--color-fg-text-strong: var(--grey-80);
+	--color-fg-text-normal: var(--grey-50);
+	--color-fg-text-weak: var(--grey-40);
+	--color-fg-text-inverted: var(--grey-0);
+
+	/* fg/text/brand */
+	--color-fg-text-brand-normal: var(--pink-50);
+	--color-fg-text-brand-weak: var(--pink-20);
+
+	/* fg/text/accent */
+	--color-fg-text-accent-normal: var(--blue-60);
+	--color-fg-text-accent-weak: var(--blue-20);
+
+	/* fg/text/positive */
+	--color-fg-text-positive-normal: var(--green-50);
+	--color-fg-text-positive-weak: var(--green-20);
+
+	/* fg/text/negative */
+	--color-fg-text-negative-normal: var(--red-50);
+	--color-fg-text-negative-weak: var(--red-20);
+
+	/* fg/text/warning */
+	--color-fg-text-warning-normal: var(--yellow-50);
+	--color-fg-text-warning-weak: var(--yellow-20);
+
+	/* ===== FOREGROUND ICON (fg/icon) ===== */
+	--color-fg-icon-strong: var(--grey-80);
+	--color-fg-icon-normal: var(--grey-50);
+	--color-fg-icon-weak: var(--grey-40);
+	--color-fg-icon-inverted: var(--grey-0);
+
+	/* fg/icon/brand */
+	--color-fg-icon-brand-normal: var(--pink-50);
+	--color-fg-icon-brand-weak: var(--pink-20);
+
+	/* fg/icon/accent */
+	--color-fg-icon-accent-normal: var(--blue-50);
+	--color-fg-icon-accent-weak: var(--blue-20);
+
+	/* fg/icon/positive */
+	--color-fg-icon-positive-normal: var(--green-50);
+	--color-fg-icon-positive-weak: var(--green-20);
+
+	/* fg/icon/negative */
+	--color-fg-icon-negative-normal: var(--red-50);
+	--color-fg-icon-negative-weak: var(--red-20);
+
+	/* fg/icon/warning */
+	--color-fg-icon-warning-normal: var(--yellow-50);
+	--color-fg-icon-warning-weak: var(--yellow-20);
+
+	/* ===== FOREGROUND STROKE (fg/stroke) ===== */
+	--color-fg-stroke-weak: oklch(0% 0 0 / 0.05);
+	--color-fg-stroke-normal: oklch(0% 0 0 / 0.1);
+	--color-fg-stroke-strong: oklch(0% 0 0 / 0.2);
+	--color-fg-stroke-inverted: var(--grey-0);
+
+	/* fg/stroke/brand */
+	--color-fg-stroke-brand-normal: var(--pink-50);
+	--color-fg-stroke-brand-weak: var(--pink-20);
+
+	/* fg/stroke/accent */
+	--color-fg-stroke-accent-normal: var(--blue-50);
+	--color-fg-stroke-accent-weak: var(--blue-20);
+
+	/* fg/stroke/positive */
+	--color-fg-stroke-positive-normal: var(--green-50);
+	--color-fg-stroke-positive-weak: var(--green-20);
+
+	/* fg/stroke/negative */
+	--color-fg-stroke-negative-normal: var(--red-50);
+	--color-fg-stroke-negative-weak: var(--red-20);
+
+	/* fg/stroke/warning */
+	--color-fg-stroke-warning-normal: var(--yellow-50);
+	--color-fg-stroke-warning-weak: var(--yellow-20);
+
+	/* ===== DEPTH — Amount knobs ===== */
+	--depth-elevation-amount-1: 50%;
+	--depth-elevation-amount-2: 80%;
+	--depth-inset-amount-1: 4%;
+	--depth-inset-amount-2: 9%;
+
+	/* ===== DEPTH — Alpha overlays (kept for shadows/gradients) ===== */
+	--color-depth-elevation-1: oklch(100% 0 0 / 0.5);
+	--color-depth-elevation-2: oklch(100% 0 0 / 0.8);
+	--color-depth-inset-1: oklch(0% 0 0 / 0.04);
+	--color-depth-inset-2: oklch(0% 0 0 / 0.09);
+
+	/* ===== DEPTH — Flat composites (opaque, computed via color-mix) ===== */
+	--color-bg-surface-elevated-1: color-mix(
+		in oklch,
+		var(--color-bg-surface),
+		white var(--depth-elevation-amount-1)
+	);
+	--color-bg-surface-elevated-2: color-mix(
+		in oklch,
+		var(--color-bg-surface),
+		white var(--depth-elevation-amount-2)
+	);
+	--color-bg-surface-inset-1: color-mix(
+		in oklch,
+		var(--color-bg-surface),
+		black var(--depth-inset-amount-1)
+	);
+	--color-bg-surface-inset-2: color-mix(
+		in oklch,
+		var(--color-bg-surface),
+		black var(--depth-inset-amount-2)
+	);
+	--color-bg-canvas-inset-1: color-mix(
+		in oklch,
+		var(--color-bg-canvas),
+		black var(--depth-inset-amount-1)
+	);
+	--color-bg-canvas-inset-2: color-mix(
+		in oklch,
+		var(--color-bg-canvas),
+		black var(--depth-inset-amount-2)
+	);
+
+	/* ===== SHADOWS ===== */
+	--shadow-elevation-1:
+		0 1px 3px oklch(0% 0 0 / 0.06), 0 1px 2px oklch(0% 0 0 / 0.04);
+	--shadow-elevation-2:
+		0 4px 12px oklch(0% 0 0 / 0.1), 0 2px 4px oklch(0% 0 0 / 0.06);
+
+	/* ===== INTERACTION ===== */
+	/* Regular: black overlays for colored backgrounds (brand, accent, etc.) */
+	/* Subtle: lighter black overlays for neutral surfaces (most common use) */
+	/* Inverted: white overlays for dark/inverted backgrounds (neutral filled button) */
+	--color-interaction-hover: oklch(0% 0 0 / 0.08);
+	--color-interaction-hover-subtle: oklch(0% 0 0 / 0.04);
+	--color-interaction-hover-inverted: oklch(100% 0 0 / 0.1);
+	--color-interaction-selected: oklch(0% 0 0 / 0.12);
+	--color-interaction-selected-subtle: oklch(0% 0 0 / 0.06);
+	--color-interaction-selected-inverted: oklch(100% 0 0 / 0.14);
+	--color-interaction-pressed: oklch(0% 0 0 / 0.14);
+	--color-interaction-pressed-subtle: oklch(0% 0 0 / 0.08);
+	--color-interaction-pressed-inverted: oklch(100% 0 0 / 0.18);
+	--color-interaction-disabled: oklch(100% 0 0 / 0.4);
+	--color-interaction-focused: var(--color-fg-stroke-accent-normal);
+
+	/* ===== SELECTION (timeline element selection outline/glow) ===== */
+	--color-selection-outline: var(--yellow-40);
+	--color-selection-glow: var(--yellow-30);
+
+	/* ===== PREMIUM (pro badge text) ===== */
+	--color-fg-text-premium: var(--yellow-80);
+
+	/* ===== STATIC (same in light and dark) ===== */
+	--color-static-white: var(--grey-0);
+	--color-static-black: var(--grey-90);
+
+	/* ===== ICON COLORS (for element type indicators - same in light and dark) ===== */
+	--color-icon-graphic: #c36ffa; /* Text, Arrow, Rectangle */
+	--color-icon-visual: #6e92ea; /* Image, Video, Avatar */
+	--color-icon-effect: #e09a73; /* Blur, Zoom, Callout, Spotlight */
+	--color-icon-audio: #34cc84; /* Music */
+}
+
+/* ============================================================================
+   SEMANTIC TOKENS - Dark Mode
+   ============================================================================ */
+
+.dark {
+	/* ===== BACKGROUND (bg) ===== */
+	--color-bg-canvas: var(--grey-90);
+	--color-bg-surface: var(--grey-80);
+	--color-bg-weak: var(--grey-70);
+	--color-bg-normal: var(--grey-60);
+	--color-bg-strong: var(--grey-50);
+	--color-bg-inverted: var(--grey-5);
+
+	/* bg/brand */
+	--color-bg-brand-normal: var(--pink-50);
+	--color-bg-brand-weak: var(--pink-90);
+
+	/* bg/accent */
+	--color-bg-accent-normal: var(--blue-50);
+	--color-bg-accent-weak: var(--blue-90);
+
+	/* bg/selection */
+	--color-bg-selection: rgba(255, 255, 255, 0.4);
+
+	/* bg/marquee — canvas rubber-band selection indicator */
+	--color-bg-marquee: var(--pink-50);
+
+	/* bg/positive */
+	--color-bg-positive-normal: var(--green-50);
+	--color-bg-positive-weak: var(--green-90);
+
+	/* bg/negative */
+	--color-bg-negative-normal: var(--red-50);
+	--color-bg-negative-weak: var(--red-90);
+
+	/* bg/warning */
+	--color-bg-warning-normal: var(--yellow-50);
+	--color-bg-warning-weak: var(--yellow-90);
+
+	/* ===== FOREGROUND TEXT (fg/text) ===== */
+	--color-fg-text-strong: var(--grey-0);
+	--color-fg-text-normal: var(--grey-30);
+	--color-fg-text-weak: var(--grey-40);
+	--color-fg-text-inverted: var(--grey-80);
+
+	/* fg/text/brand */
+	--color-fg-text-brand-normal: var(--pink-40);
+	--color-fg-text-brand-weak: var(--pink-70);
+
+	/* fg/text/accent */
+	--color-fg-text-accent-normal: var(--blue-40);
+	--color-fg-text-accent-weak: var(--blue-70);
+
+	/* fg/text/positive */
+	--color-fg-text-positive-normal: var(--green-50);
+	--color-fg-text-positive-weak: var(--green-70);
+
+	/* fg/text/negative */
+	--color-fg-text-negative-normal: var(--red-50);
+	--color-fg-text-negative-weak: var(--red-70);
+
+	/* fg/text/warning */
+	--color-fg-text-warning-normal: var(--yellow-50);
+	--color-fg-text-warning-weak: var(--yellow-70);
+
+	/* ===== FOREGROUND ICON (fg/icon) ===== */
+	--color-fg-icon-strong: var(--grey-10);
+	--color-fg-icon-normal: var(--grey-30);
+	--color-fg-icon-weak: var(--grey-50);
+	--color-fg-icon-inverted: var(--grey-90);
+
+	/* fg/icon/brand */
+	--color-fg-icon-brand-normal: var(--pink-40);
+	--color-fg-icon-brand-weak: var(--pink-70);
+
+	/* fg/icon/accent */
+	--color-fg-icon-accent-normal: var(--blue-50);
+	--color-fg-icon-accent-weak: var(--blue-70);
+
+	/* fg/icon/positive */
+	--color-fg-icon-positive-normal: var(--green-50);
+	--color-fg-icon-positive-weak: var(--green-70);
+
+	/* fg/icon/negative */
+	--color-fg-icon-negative-normal: var(--red-50);
+	--color-fg-icon-negative-weak: var(--red-70);
+
+	/* fg/icon/warning */
+	--color-fg-icon-warning-normal: var(--yellow-50);
+	--color-fg-icon-warning-weak: var(--yellow-70);
+
+	/* ===== FOREGROUND STROKE (fg/stroke) ===== */
+	--color-fg-stroke-weak: oklch(100% 0 0 / 0.07);
+	--color-fg-stroke-normal: oklch(100% 0 0 / 0.2);
+	--color-fg-stroke-strong: oklch(100% 0 0 / 0.3);
+	--color-fg-stroke-inverted: var(--grey-90);
+
+	/* fg/stroke/brand */
+	--color-fg-stroke-brand-normal: var(--pink-50);
+	--color-fg-stroke-brand-weak: var(--pink-80);
+
+	/* fg/stroke/accent */
+	--color-fg-stroke-accent-normal: var(--blue-50);
+	--color-fg-stroke-accent-weak: var(--blue-80);
+
+	/* fg/stroke/positive */
+	--color-fg-stroke-positive-normal: var(--green-50);
+	--color-fg-stroke-positive-weak: var(--green-80);
+
+	/* fg/stroke/negative */
+	--color-fg-stroke-negative-normal: var(--red-50);
+	--color-fg-stroke-negative-weak: var(--red-80);
+
+	/* fg/stroke/warning */
+	--color-fg-stroke-warning-normal: var(--yellow-50);
+	--color-fg-stroke-warning-weak: var(--yellow-80);
+
+	/* ===== DEPTH — Amount knobs ===== */
+	--depth-elevation-amount-1: 3%;
+	--depth-elevation-amount-2: 6%;
+	--depth-inset-amount-1: 16%;
+	--depth-inset-amount-2: 28%;
+
+	/* ===== DEPTH — Alpha overlays (kept for shadows/gradients) ===== */
+	--color-depth-elevation-1: oklch(100% 0 0 / 0.02);
+	--color-depth-elevation-2: oklch(100% 0 0 / 0.04);
+	--color-depth-inset-1: oklch(0% 0 0 / 0.16);
+	--color-depth-inset-2: oklch(0% 0 0 / 0.28);
+
+	/* ===== DEPTH — Flat composites (opaque, computed via color-mix) ===== */
+	--color-bg-surface-elevated-1: color-mix(
+		in oklch,
+		var(--color-bg-surface),
+		white var(--depth-elevation-amount-1)
+	);
+	--color-bg-surface-elevated-2: color-mix(
+		in oklch,
+		var(--color-bg-surface),
+		white var(--depth-elevation-amount-2)
+	);
+	--color-bg-surface-inset-1: color-mix(
+		in oklch,
+		var(--color-bg-surface),
+		black var(--depth-inset-amount-1)
+	);
+	--color-bg-surface-inset-2: color-mix(
+		in oklch,
+		var(--color-bg-surface),
+		black var(--depth-inset-amount-2)
+	);
+	--color-bg-canvas-inset-1: color-mix(
+		in oklch,
+		var(--color-bg-canvas),
+		black var(--depth-inset-amount-1)
+	);
+	--color-bg-canvas-inset-2: color-mix(
+		in oklch,
+		var(--color-bg-canvas),
+		black var(--depth-inset-amount-2)
+	);
+
+	/* ===== SHADOWS ===== */
+	--shadow-elevation-1: 0 1px 3px oklch(0% 0 0 / 0.24);
+	--shadow-elevation-2: 0 4px 12px oklch(0% 0 0 / 0.4);
+
+	/* ===== INTERACTION ===== */
+	--color-interaction-hover: oklch(100% 0 0 / 0.1);
+	--color-interaction-hover-subtle: oklch(100% 0 0 / 0.06);
+	--color-interaction-hover-inverted: oklch(0% 0 0 / 0.1);
+	--color-interaction-selected: oklch(100% 0 0 / 0.12);
+	--color-interaction-selected-subtle: oklch(100% 0 0 / 0.08);
+	--color-interaction-selected-inverted: oklch(0% 0 0 / 0.14);
+	--color-interaction-pressed: oklch(100% 0 0 / 0.14);
+	--color-interaction-pressed-subtle: oklch(100% 0 0 / 0.1);
+	--color-interaction-pressed-inverted: oklch(0% 0 0 / 0.18);
+	--color-interaction-disabled: oklch(0% 0 0 / 0.35);
+	--color-interaction-focused: var(--color-fg-stroke-accent-normal);
+
+	/* ===== SELECTION (timeline element selection outline/glow) ===== */
+	--color-selection-outline: var(--yellow-40);
+	--color-selection-glow: var(--yellow-30);
+
+	/* ===== PREMIUM (pro badge text) ===== */
+	--color-fg-text-premium: var(--yellow-80);
+
+	/* ===== STATIC (same in light and dark) ===== */
+	--color-static-white: var(--grey-0);
+	--color-static-black: var(--grey-90);
+}
+
+/* ============================================================================
+   TAILWIND THEME REGISTRATION
+   ============================================================================ */
+
+@theme {
+	/* Background */
+	--color-bg-canvas: var(--color-bg-canvas);
+	--color-bg-surface: var(--color-bg-surface);
+	--color-bg-weak: var(--color-bg-weak);
+	--color-bg-normal: var(--color-bg-normal);
+	--color-bg-strong: var(--color-bg-strong);
+	--color-bg-inverted: var(--color-bg-inverted);
+	--color-bg-brand-normal: var(--color-bg-brand-normal);
+	--color-bg-brand-weak: var(--color-bg-brand-weak);
+	--color-bg-accent-normal: var(--color-bg-accent-normal);
+	--color-bg-accent-weak: var(--color-bg-accent-weak);
+	--color-bg-selection: var(--color-bg-selection);
+	--color-bg-marquee: var(--color-bg-marquee);
+	--color-bg-positive-normal: var(--color-bg-positive-normal);
+	--color-bg-positive-weak: var(--color-bg-positive-weak);
+	--color-bg-negative-normal: var(--color-bg-negative-normal);
+	--color-bg-negative-weak: var(--color-bg-negative-weak);
+	--color-bg-warning-normal: var(--color-bg-warning-normal);
+	--color-bg-warning-weak: var(--color-bg-warning-weak);
+
+	/* Foreground Text */
+	--color-fg-text-strong: var(--color-fg-text-strong);
+	--color-fg-text-normal: var(--color-fg-text-normal);
+	--color-fg-text-weak: var(--color-fg-text-weak);
+	--color-fg-text-inverted: var(--color-fg-text-inverted);
+	--color-fg-text-brand-normal: var(--color-fg-text-brand-normal);
+	--color-fg-text-brand-weak: var(--color-fg-text-brand-weak);
+	--color-fg-text-accent-normal: var(--color-fg-text-accent-normal);
+	--color-fg-text-accent-weak: var(--color-fg-text-accent-weak);
+	--color-fg-text-positive-normal: var(--color-fg-text-positive-normal);
+	--color-fg-text-positive-weak: var(--color-fg-text-positive-weak);
+	--color-fg-text-negative-normal: var(--color-fg-text-negative-normal);
+	--color-fg-text-negative-weak: var(--color-fg-text-negative-weak);
+	--color-fg-text-warning-normal: var(--color-fg-text-warning-normal);
+	--color-fg-text-warning-weak: var(--color-fg-text-warning-weak);
+
+	/* Foreground Icon */
+	--color-fg-icon-strong: var(--color-fg-icon-strong);
+	--color-fg-icon-normal: var(--color-fg-icon-normal);
+	--color-fg-icon-weak: var(--color-fg-icon-weak);
+	--color-fg-icon-inverted: var(--color-fg-icon-inverted);
+	--color-fg-icon-brand-normal: var(--color-fg-icon-brand-normal);
+	--color-fg-icon-brand-weak: var(--color-fg-icon-brand-weak);
+	--color-fg-icon-accent-normal: var(--color-fg-icon-accent-normal);
+	--color-fg-icon-accent-weak: var(--color-fg-icon-accent-weak);
+	--color-fg-icon-positive-normal: var(--color-fg-icon-positive-normal);
+	--color-fg-icon-positive-weak: var(--color-fg-icon-positive-weak);
+	--color-fg-icon-negative-normal: var(--color-fg-icon-negative-normal);
+	--color-fg-icon-negative-weak: var(--color-fg-icon-negative-weak);
+	--color-fg-icon-warning-normal: var(--color-fg-icon-warning-normal);
+	--color-fg-icon-warning-weak: var(--color-fg-icon-warning-weak);
+
+	/* Foreground Stroke */
+	--color-fg-stroke-weak: var(--color-fg-stroke-weak);
+	--color-fg-stroke-normal: var(--color-fg-stroke-normal);
+	--color-fg-stroke-strong: var(--color-fg-stroke-strong);
+	--color-fg-stroke-inverted: var(--color-fg-stroke-inverted);
+	--color-fg-stroke-brand-normal: var(--color-fg-stroke-brand-normal);
+	--color-fg-stroke-brand-weak: var(--color-fg-stroke-brand-weak);
+	--color-fg-stroke-accent-normal: var(--color-fg-stroke-accent-normal);
+	--color-fg-stroke-accent-weak: var(--color-fg-stroke-accent-weak);
+	--color-fg-stroke-positive-normal: var(--color-fg-stroke-positive-normal);
+	--color-fg-stroke-positive-weak: var(--color-fg-stroke-positive-weak);
+	--color-fg-stroke-negative-normal: var(--color-fg-stroke-negative-normal);
+	--color-fg-stroke-negative-weak: var(--color-fg-stroke-negative-weak);
+	--color-fg-stroke-warning-normal: var(--color-fg-stroke-warning-normal);
+	--color-fg-stroke-warning-weak: var(--color-fg-stroke-warning-weak);
+
+	/* Depth — alpha overlays */
+	--color-depth-elevation-1: var(--color-depth-elevation-1);
+	--color-depth-elevation-2: var(--color-depth-elevation-2);
+	--color-depth-inset-1: var(--color-depth-inset-1);
+	--color-depth-inset-2: var(--color-depth-inset-2);
+
+	/* Depth — amount knobs */
+	--depth-elevation-amount-1: var(--depth-elevation-amount-1);
+	--depth-elevation-amount-2: var(--depth-elevation-amount-2);
+	--depth-inset-amount-1: var(--depth-inset-amount-1);
+	--depth-inset-amount-2: var(--depth-inset-amount-2);
+
+	/* Depth — flat composites */
+	--color-bg-surface-elevated-1: var(--color-bg-surface-elevated-1);
+	--color-bg-surface-elevated-2: var(--color-bg-surface-elevated-2);
+	--color-bg-surface-inset-1: var(--color-bg-surface-inset-1);
+	--color-bg-surface-inset-2: var(--color-bg-surface-inset-2);
+	--color-bg-canvas-inset-1: var(--color-bg-canvas-inset-1);
+	--color-bg-canvas-inset-2: var(--color-bg-canvas-inset-2);
+
+	/* Interaction */
+	--color-interaction-hover: var(--color-interaction-hover);
+	--color-interaction-hover-subtle: var(--color-interaction-hover-subtle);
+	--color-interaction-hover-inverted: var(--color-interaction-hover-inverted);
+	--color-interaction-selected: var(--color-interaction-selected);
+	--color-interaction-selected-subtle: var(
+		--color-interaction-selected-subtle
+	);
+	--color-interaction-selected-inverted: var(
+		--color-interaction-selected-inverted
+	);
+	--color-interaction-pressed: var(--color-interaction-pressed);
+	--color-interaction-pressed-subtle: var(--color-interaction-pressed-subtle);
+	--color-interaction-pressed-inverted: var(
+		--color-interaction-pressed-inverted
+	);
+	--color-interaction-disabled: var(--color-interaction-disabled);
+	--color-interaction-focused: var(--color-interaction-focused);
+
+	/* Shadows */
+	--shadow-elevation-1: var(--shadow-elevation-1);
+	--shadow-elevation-2: var(--shadow-elevation-2);
+
+	/* Selection */
+	--color-selection-outline: var(--color-selection-outline);
+	--color-selection-glow: var(--color-selection-glow);
+
+	/* Premium */
+	--color-fg-text-premium: var(--color-fg-text-premium);
+
+	/* Static */
+	--color-static-white: var(--color-static-white);
+	--color-static-black: var(--color-static-black);
+}
+
+/* ============================================================================
+   BACKGROUND UTILITIES
+   ============================================================================ */
+
+/* bg/semantic */
+@utility bg-canvas {
+	background-color: var(--color-bg-canvas);
+}
+
+@utility bg-surface {
+	background-color: var(--color-bg-surface);
+}
+
+@utility bg-weak {
+	background-color: var(--color-bg-weak);
+}
+
+@utility bg-normal {
+	background-color: var(--color-bg-normal);
+}
+
+@utility bg-strong {
+	background-color: var(--color-bg-strong);
+}
+
+@utility bg-inverted {
+	background-color: var(--color-bg-inverted);
+}
+
+@utility bg-brand-normal {
+	background-color: var(--color-bg-brand-normal);
+}
+
+@utility bg-brand-weak {
+	background-color: var(--color-bg-brand-weak);
+}
+
+@utility bg-accent-normal {
+	background-color: var(--color-bg-accent-normal);
+}
+
+@utility bg-accent-weak {
+	background-color: var(--color-bg-accent-weak);
+}
+
+@utility bg-blue-60 {
+	background-color: var(--blue-60);
+}
+
+@utility bg-positive-normal {
+	background-color: var(--color-bg-positive-normal);
+}
+
+@utility bg-positive-weak {
+	background-color: var(--color-bg-positive-weak);
+}
+
+@utility bg-negative-normal {
+	background-color: var(--color-bg-negative-normal);
+}
+
+@utility bg-negative-weak {
+	background-color: var(--color-bg-negative-weak);
+}
+
+@utility bg-warning-normal {
+	background-color: var(--color-bg-warning-normal);
+}
+
+@utility bg-warning-weak {
+	background-color: var(--color-bg-warning-weak);
+}
+
+/* bg/depth */
+@utility bg-depth-elevation-1 {
+	background-color: var(--color-depth-elevation-1);
+}
+
+@utility bg-depth-elevation-2 {
+	background-color: var(--color-depth-elevation-2);
+}
+
+@utility bg-depth-inset-1 {
+	background-color: var(--color-depth-inset-1);
+}
+
+@utility bg-depth-inset-2 {
+	background-color: var(--color-depth-inset-2);
+}
+
+/* bg/surface + depth composites (opaque via color-mix) */
+@utility bg-surface-elevated-1 {
+	background-color: var(--color-bg-surface-elevated-1);
+}
+
+@utility bg-surface-elevated-2 {
+	background-color: var(--color-bg-surface-elevated-2);
+}
+
+/* Shadow utilities (apply intentionally alongside elevation when needed) */
+@utility shadow-elevation-1 {
+	box-shadow: var(--shadow-elevation-1);
+}
+
+@utility shadow-elevation-2 {
+	box-shadow: var(--shadow-elevation-2);
+}
+
+@utility bg-surface-inset-1 {
+	background-color: var(--color-bg-surface-inset-1);
+}
+
+@utility bg-surface-inset-2 {
+	background-color: var(--color-bg-surface-inset-2);
+}
+
+@utility bg-canvas-inset-1 {
+	background-color: var(--color-bg-canvas-inset-1);
+}
+
+@utility bg-canvas-inset-2 {
+	background-color: var(--color-bg-canvas-inset-2);
+}
+
+/* bg/interaction */
+@utility bg-interaction-hover {
+	background-color: var(--color-interaction-hover);
+}
+
+@utility bg-interaction-selected {
+	background-color: var(--color-interaction-selected);
+}
+
+@utility bg-interaction-pressed {
+	background-color: var(--color-interaction-pressed);
+}
+
+@utility bg-interaction-disabled {
+	background-color: var(--color-interaction-disabled);
+}
+
+@utility bg-interaction-hover-subtle {
+	background-color: var(--color-interaction-hover-subtle);
+}
+
+@utility bg-interaction-selected-subtle {
+	background-color: var(--color-interaction-selected-subtle);
+}
+
+@utility bg-interaction-pressed-subtle {
+	background-color: var(--color-interaction-pressed-subtle);
+}
+
+@utility bg-interaction-hover-inverted {
+	background-color: var(--color-interaction-hover-inverted);
+}
+
+@utility bg-interaction-selected-inverted {
+	background-color: var(--color-interaction-selected-inverted);
+}
+
+@utility bg-interaction-pressed-inverted {
+	background-color: var(--color-interaction-pressed-inverted);
+}
+
+/* bg/clip (video editor gradients) */
+@utility bg-clip-audio-waveform-bg {
+	background: var(--color-clip-audio-waveform-bg);
+}
+
+@utility bg-clip-video {
+	background-image: linear-gradient(
+		270deg,
+		var(--color-clip-video-start) 0%,
+		var(--color-clip-video-end) 100%
+	);
+}
+
+@utility bg-clip-video-40 {
+	background-image: linear-gradient(
+		270deg,
+		var(--color-clip-video-start-40) 0%,
+		var(--color-clip-video-end-40) 100%
+	);
+}
+
+@utility bg-clip-audio {
+	background-image: linear-gradient(
+		270deg,
+		var(--color-clip-audio-start) 0%,
+		var(--color-clip-audio-end) 100%
+	);
+}
+
+@utility bg-clip-element {
+	background: linear-gradient(
+		270deg,
+		oklch(42% 0.15 310) 0%,
+		oklch(35% 0.15 310) 100%
+	);
+}
+
+@utility bg-clip-image {
+	background-image: linear-gradient(
+		270deg,
+		var(--yellow-40) 0%,
+		var(--yellow-50) 100%
+	);
+}
+
+@utility bg-clip-effect {
+	background: linear-gradient(
+		270deg,
+		oklch(50% 0.12 40) 0%,
+		oklch(40% 0.1 40) 100%
+	);
+}
+
+/* ============================================================================
+   BORDER UTILITIES
+   ============================================================================ */
+
+@utility border-weak {
+	border-color: var(--color-fg-stroke-weak);
+}
+
+@utility border-normal {
+	border-color: var(--color-fg-stroke-normal);
+}
+
+@utility border-strong {
+	border-color: var(--color-fg-stroke-strong);
+}
+
+@utility border-inverted {
+	border-color: var(--color-fg-stroke-inverted);
+}
+
+@utility border-brand-normal {
+	border-color: var(--color-fg-stroke-brand-normal);
+}
+
+@utility border-brand-weak {
+	border-color: var(--color-fg-stroke-brand-weak);
+}
+
+@utility border-accent-normal {
+	border-color: var(--color-fg-stroke-accent-normal);
+}
+
+@utility border-accent-weak {
+	border-color: var(--color-fg-stroke-accent-weak);
+}
+
+@utility border-blue-60 {
+	border-color: var(--blue-60);
+}
+
+@utility border-positive-normal {
+	border-color: var(--color-fg-stroke-positive-normal);
+}
+
+@utility border-positive-weak {
+	border-color: var(--color-fg-stroke-positive-weak);
+}
+
+@utility border-negative-normal {
+	border-color: var(--color-fg-stroke-negative-normal);
+}
+
+@utility border-negative-weak {
+	border-color: var(--color-fg-stroke-negative-weak);
+}
+
+@utility border-warning-normal {
+	border-color: var(--color-fg-stroke-warning-normal);
+}
+
+@utility border-warning-weak {
+	border-color: var(--color-fg-stroke-warning-weak);
+}
+
+/* ============================================================================
+   STROKE & FILL UTILITIES (SVG icons)
+   ============================================================================ */
+
+/* stroke/icon - applies to element and all SVG children */
+@utility stroke-strong {
+	stroke: var(--color-fg-icon-strong);
+	& svg,
+	& path,
+	& line,
+	& polyline,
+	& polygon,
+	& circle,
+	& ellipse,
+	& rect {
+		stroke: var(--color-fg-icon-strong);
+	}
+}
+
+@utility stroke-normal {
+	stroke: var(--color-fg-icon-normal);
+	& svg,
+	& path,
+	& line,
+	& polyline,
+	& polygon,
+	& circle,
+	& ellipse,
+	& rect {
+		stroke: var(--color-fg-icon-normal);
+	}
+}
+
+@utility stroke-weak {
+	stroke: var(--color-fg-icon-weak);
+	& svg,
+	& path,
+	& line,
+	& polyline,
+	& polygon,
+	& circle,
+	& ellipse,
+	& rect {
+		stroke: var(--color-fg-icon-weak);
+	}
+}
+
+@utility stroke-inverted {
+	stroke: var(--color-fg-icon-inverted);
+	& svg,
+	& path,
+	& line,
+	& polyline,
+	& polygon,
+	& circle,
+	& ellipse,
+	& rect {
+		stroke: var(--color-fg-icon-inverted);
+	}
+}
+
+@utility stroke-brand-normal {
+	stroke: var(--color-fg-icon-brand-normal);
+	& svg,
+	& path,
+	& line,
+	& polyline,
+	& polygon,
+	& circle,
+	& ellipse,
+	& rect {
+		stroke: var(--color-fg-icon-brand-normal);
+	}
+}
+
+@utility stroke-brand-weak {
+	stroke: var(--color-fg-icon-brand-weak);
+	& svg,
+	& path,
+	& line,
+	& polyline,
+	& polygon,
+	& circle,
+	& ellipse,
+	& rect {
+		stroke: var(--color-fg-icon-brand-weak);
+	}
+}
+
+@utility stroke-accent-normal {
+	stroke: var(--color-fg-icon-accent-normal);
+	& svg,
+	& path,
+	& line,
+	& polyline,
+	& polygon,
+	& circle,
+	& ellipse,
+	& rect {
+		stroke: var(--color-fg-icon-accent-normal);
+	}
+}
+
+@utility stroke-accent-weak {
+	stroke: var(--color-fg-icon-accent-weak);
+	& svg,
+	& path,
+	& line,
+	& polyline,
+	& polygon,
+	& circle,
+	& ellipse,
+	& rect {
+		stroke: var(--color-fg-icon-accent-weak);
+	}
+}
+
+@utility stroke-positive-normal {
+	stroke: var(--color-fg-icon-positive-normal);
+	& svg,
+	& path,
+	& line,
+	& polyline,
+	& polygon,
+	& circle,
+	& ellipse,
+	& rect {
+		stroke: var(--color-fg-icon-positive-normal);
+	}
+}
+
+@utility stroke-positive-weak {
+	stroke: var(--color-fg-icon-positive-weak);
+	& svg,
+	& path,
+	& line,
+	& polyline,
+	& polygon,
+	& circle,
+	& ellipse,
+	& rect {
+		stroke: var(--color-fg-icon-positive-weak);
+	}
+}
+
+@utility stroke-negative-normal {
+	stroke: var(--color-fg-icon-negative-normal);
+	& svg,
+	& path,
+	& line,
+	& polyline,
+	& polygon,
+	& circle,
+	& ellipse,
+	& rect {
+		stroke: var(--color-fg-icon-negative-normal);
+	}
+}
+
+@utility stroke-negative-weak {
+	stroke: var(--color-fg-icon-negative-weak);
+	& svg,
+	& path,
+	& line,
+	& polyline,
+	& polygon,
+	& circle,
+	& ellipse,
+	& rect {
+		stroke: var(--color-fg-icon-negative-weak);
+	}
+}
+
+@utility stroke-warning-normal {
+	stroke: var(--color-fg-icon-warning-normal);
+	& svg,
+	& path,
+	& line,
+	& polyline,
+	& polygon,
+	& circle,
+	& ellipse,
+	& rect {
+		stroke: var(--color-fg-icon-warning-normal);
+	}
+}
+
+@utility stroke-warning-weak {
+	stroke: var(--color-fg-icon-warning-weak);
+	& svg,
+	& path,
+	& line,
+	& polyline,
+	& polygon,
+	& circle,
+	& ellipse,
+	& rect {
+		stroke: var(--color-fg-icon-warning-weak);
+	}
+}
+
+/* fill/icon — cascades to child SVG elements (mirrors stroke-* pattern) */
+@utility fill-strong {
+	fill: var(--color-fg-icon-strong);
+	& svg,
+	& path,
+	& line,
+	& polyline,
+	& polygon,
+	& circle,
+	& ellipse,
+	& rect {
+		fill: var(--color-fg-icon-strong);
+	}
+}
+
+@utility fill-normal {
+	fill: var(--color-fg-icon-normal);
+	& svg,
+	& path,
+	& line,
+	& polyline,
+	& polygon,
+	& circle,
+	& ellipse,
+	& rect {
+		fill: var(--color-fg-icon-normal);
+	}
+}
+
+@utility fill-weak {
+	fill: var(--color-fg-icon-weak);
+	& svg,
+	& path,
+	& line,
+	& polyline,
+	& polygon,
+	& circle,
+	& ellipse,
+	& rect {
+		fill: var(--color-fg-icon-weak);
+	}
+}
+
+@utility fill-inverted {
+	fill: var(--color-fg-icon-inverted);
+	& svg,
+	& path,
+	& line,
+	& polyline,
+	& polygon,
+	& circle,
+	& ellipse,
+	& rect {
+		fill: var(--color-fg-icon-inverted);
+	}
+}
+
+@utility caret-brand-normal {
+	caret-color: var(--color-fg-stroke-brand-normal);
+}
+
+@utility fill-brand-normal {
+	fill: var(--color-fg-icon-brand-normal);
+	& svg,
+	& path,
+	& line,
+	& polyline,
+	& polygon,
+	& circle,
+	& ellipse,
+	& rect {
+		fill: var(--color-fg-icon-brand-normal);
+	}
+}
+
+@utility fill-brand-weak {
+	fill: var(--color-fg-icon-brand-weak);
+	& svg,
+	& path,
+	& line,
+	& polyline,
+	& polygon,
+	& circle,
+	& ellipse,
+	& rect {
+		fill: var(--color-fg-icon-brand-weak);
+	}
+}
+
+@utility fill-accent-normal {
+	fill: var(--color-fg-icon-accent-normal);
+	& svg,
+	& path,
+	& line,
+	& polyline,
+	& polygon,
+	& circle,
+	& ellipse,
+	& rect {
+		fill: var(--color-fg-icon-accent-normal);
+	}
+}
+
+@utility fill-accent-weak {
+	fill: var(--color-fg-icon-accent-weak);
+	& svg,
+	& path,
+	& line,
+	& polyline,
+	& polygon,
+	& circle,
+	& ellipse,
+	& rect {
+		fill: var(--color-fg-icon-accent-weak);
+	}
+}
+
+@utility fill-positive-normal {
+	fill: var(--color-fg-icon-positive-normal);
+	& svg,
+	& path,
+	& line,
+	& polyline,
+	& polygon,
+	& circle,
+	& ellipse,
+	& rect {
+		fill: var(--color-fg-icon-positive-normal);
+	}
+}
+
+@utility fill-positive-weak {
+	fill: var(--color-fg-icon-positive-weak);
+	& svg,
+	& path,
+	& line,
+	& polyline,
+	& polygon,
+	& circle,
+	& ellipse,
+	& rect {
+		fill: var(--color-fg-icon-positive-weak);
+	}
+}
+
+@utility fill-negative-normal {
+	fill: var(--color-fg-icon-negative-normal);
+	& svg,
+	& path,
+	& line,
+	& polyline,
+	& polygon,
+	& circle,
+	& ellipse,
+	& rect {
+		fill: var(--color-fg-icon-negative-normal);
+	}
+}
+
+@utility fill-negative-weak {
+	fill: var(--color-fg-icon-negative-weak);
+	& svg,
+	& path,
+	& line,
+	& polyline,
+	& polygon,
+	& circle,
+	& ellipse,
+	& rect {
+		fill: var(--color-fg-icon-negative-weak);
+	}
+}
+
+@utility fill-warning-normal {
+	fill: var(--color-fg-icon-warning-normal);
+	& svg,
+	& path,
+	& line,
+	& polyline,
+	& polygon,
+	& circle,
+	& ellipse,
+	& rect {
+		fill: var(--color-fg-icon-warning-normal);
+	}
+}
+
+@utility fill-warning-weak {
+	fill: var(--color-fg-icon-warning-weak);
+	& svg,
+	& path,
+	& line,
+	& polyline,
+	& polygon,
+	& circle,
+	& ellipse,
+	& rect {
+		fill: var(--color-fg-icon-warning-weak);
+	}
+}
+
+@utility fill-transparent {
+	fill: transparent;
+	& svg,
+	& path,
+	& line,
+	& polyline,
+	& polygon,
+	& circle,
+	& ellipse,
+	& rect {
+		fill: transparent;
+	}
+}
+
+/* stroke/clip */
+@utility stroke-clip-icon {
+	stroke: oklch(100% 0 0 / 0.5);
+	& svg,
+	& path,
+	& line,
+	& polyline,
+	& polygon,
+	& circle,
+	& ellipse,
+	& rect {
+		stroke: oklch(100% 0 0 / 0.5);
+	}
+}
+
+/* ============================================================================
+   TEXT COLOR UTILITIES
+   ============================================================================ */
+
+@utility text-strong {
+	color: var(--color-fg-text-strong);
+}
+
+@utility text-normal {
+	color: var(--color-fg-text-normal);
+}
+
+@utility text-weak {
+	color: var(--color-fg-text-weak);
+}
+
+@utility text-inverted {
+	color: var(--color-fg-text-inverted);
+}
+
+@utility text-brand-normal {
+	color: var(--color-fg-text-brand-normal);
+}
+
+@utility text-brand-weak {
+	color: var(--color-fg-text-brand-weak);
+}
+
+@utility text-accent-normal {
+	color: var(--color-fg-text-accent-normal);
+}
+
+@utility text-accent-weak {
+	color: var(--color-fg-text-accent-weak);
+}
+
+@utility text-positive-normal {
+	color: var(--color-fg-text-positive-normal);
+}
+
+@utility text-positive-weak {
+	color: var(--color-fg-text-positive-weak);
+}
+
+@utility text-negative-normal {
+	color: var(--color-fg-text-negative-normal);
+}
+
+@utility text-negative-weak {
+	color: var(--color-fg-text-negative-weak);
+}
+
+@utility text-warning-normal {
+	color: var(--color-fg-text-warning-normal);
+}
+
+@utility text-warning-weak {
+	color: var(--color-fg-text-warning-weak);
+}
+
+/* text/static */
+@utility text-static-white {
+	color: var(--color-static-white);
+}
+
+@utility text-static-black {
+	color: var(--color-static-black);
+}
+
+/* ============================================================================
+   STATIC UTILITIES (colors that don't change between modes)
+   ============================================================================ */
+
+@utility bg-static-white {
+	background-color: var(--color-static-white);
+}
+
+@utility bg-static-black {
+	background-color: var(--color-static-black);
+}
+
+@utility border-static-white {
+	border-color: var(--color-static-white);
+}
+
+@utility border-static-black {
+	border-color: var(--color-static-black);
+}
+
+@utility stroke-static-white {
+	stroke: var(--color-static-white);
+	& svg,
+	& path,
+	& line,
+	& polyline,
+	& polygon,
+	& circle,
+	& ellipse,
+	& rect {
+		stroke: var(--color-static-white);
+	}
+}
+
+@utility stroke-none {
+	stroke: none;
+	& svg,
+	& path,
+	& line,
+	& polyline,
+	& polygon,
+	& circle,
+	& ellipse,
+	& rect {
+		stroke: none;
+	}
+}
+
+@utility stroke-static-black {
+	stroke: var(--color-static-black);
+	& svg,
+	& path,
+	& line,
+	& polyline,
+	& polygon,
+	& circle,
+	& ellipse,
+	& rect {
+		stroke: var(--color-static-black);
+	}
+}
+
+@utility fill-static-white {
+	fill: var(--color-static-white);
+	& svg,
+	& path,
+	& line,
+	& polyline,
+	& polygon,
+	& circle,
+	& ellipse,
+	& rect {
+		fill: var(--color-static-white);
+	}
+}
+
+@utility fill-static-black {
+	fill: var(--color-static-black);
+	& svg,
+	& path,
+	& line,
+	& polyline,
+	& polygon,
+	& circle,
+	& ellipse,
+	& rect {
+		fill: var(--color-static-black);
+	}
+}
+
+/* ============================================================================
+   VIDEO PLAYER UTILITIES
+   ============================================================================ */
+
+@utility bg-player-scrim {
+	background: linear-gradient(
+		180deg,
+		transparent 0%,
+		var(--color-static-black) 130%
+	);
+}

@@ -1,0 +1,335 @@
+/* ============================================================================
+   Token architecture v1, clueso.design
+   ============================================================================
+
+   These names are frozen. When @clueso-ai/jigsaw publishes, only the right-hand side of each
+   mapping changes. Never rename.
+
+   Tiers
+   - Definition: raw palettes. Today they come from the Jigsaw snapshot
+     (lib/design-system/jigsaw/foundations/colors.css: --grey-*, --pink-*, ...).
+   - Semantic: the v1 names below (property-intent-emphasis).
+   - Contextual: component-level overrides, set where a component needs them.
+
+   Colour: property (bg, fg, border) + intent (neutral, brand, positive, negative, warning, accent)
+   + emphasis (weak, normal, strong). Accent is the configurable highlight, not the brand colour.
+   Info messaging uses accent. States are alpha overlays, not separate colours.
+
+   Today every v1 colour aliases a Jigsaw semantic token. Jigsaw has no neutral intent word, no
+   sunken/raised naming and no overlay level; this file is the one place that bridges it.
+   See docs/ARCHITECTURE.md, "Token mapping". */
+
+:root,
+[data-theme="lab"] {
+	/* ── Neutral ── */
+	--bg-neutral-weak: var(--color-bg-weak);
+	--bg-neutral-normal: var(--color-bg-normal);
+	--bg-neutral-strong: var(--color-bg-strong);
+	--bg-neutral-inverted: var(--color-bg-inverted);
+	--fg-neutral-weak: var(--color-fg-text-weak);
+	--fg-neutral-normal: var(--color-fg-text-normal);
+	--fg-neutral-strong: var(--color-fg-text-strong);
+	--fg-neutral-inverted: var(--color-fg-text-inverted);
+	--border-neutral-weak: var(--color-fg-stroke-weak);
+	--border-neutral-normal: var(--color-fg-stroke-normal);
+	--border-neutral-strong: var(--color-fg-stroke-strong);
+	--border-neutral-inverted: var(--color-fg-stroke-inverted);
+
+	/* ── Brand (#DA5CC7). Sparingly in the lab theme. ── */
+	--bg-brand-weak: var(--color-bg-brand-weak);
+	--bg-brand-normal: var(--color-bg-brand-normal);
+	--fg-brand-weak: var(--color-fg-text-brand-weak);
+	--fg-brand-normal: var(--color-fg-text-brand-normal);
+	--border-brand-weak: var(--color-fg-stroke-brand-weak);
+	--border-brand-normal: var(--color-fg-stroke-brand-normal);
+
+	/* ── Positive ── */
+	--bg-positive-weak: var(--color-bg-positive-weak);
+	--bg-positive-normal: var(--color-bg-positive-normal);
+	--fg-positive-weak: var(--color-fg-text-positive-weak);
+	--fg-positive-normal: var(--color-fg-text-positive-normal);
+	--border-positive-weak: var(--color-fg-stroke-positive-weak);
+	--border-positive-normal: var(--color-fg-stroke-positive-normal);
+
+	/* ── Negative ── */
+	--bg-negative-weak: var(--color-bg-negative-weak);
+	--bg-negative-normal: var(--color-bg-negative-normal);
+	--fg-negative-weak: var(--color-fg-text-negative-weak);
+	--fg-negative-normal: var(--color-fg-text-negative-normal);
+	--border-negative-weak: var(--color-fg-stroke-negative-weak);
+	--border-negative-normal: var(--color-fg-stroke-negative-normal);
+
+	/* ── Warning ── */
+	--bg-warning-weak: var(--color-bg-warning-weak);
+	--bg-warning-normal: var(--color-bg-warning-normal);
+	--fg-warning-weak: var(--color-fg-text-warning-weak);
+	--fg-warning-normal: var(--color-fg-text-warning-normal);
+	--border-warning-weak: var(--color-fg-stroke-warning-weak);
+	--border-warning-normal: var(--color-fg-stroke-warning-normal);
+
+	/* ── Accent (configurable highlight; info uses it) ── */
+	--bg-accent-weak: var(--color-bg-accent-weak);
+	--bg-accent-normal: var(--color-bg-accent-normal);
+	--fg-accent-weak: var(--color-fg-text-accent-weak);
+	--fg-accent-normal: var(--color-fg-text-accent-normal);
+	--border-accent-weak: var(--color-fg-stroke-accent-weak);
+	--border-accent-normal: var(--color-fg-stroke-accent-normal);
+
+	/* ── Elevation. Jigsaw: canvas = page, surface-inset = sunken, surface-elevated = raised.
+	   v1 wants these resolved relative to the parent surface; today they resolve against the page
+	   (Jigsaw's composites). Overlay has no Jigsaw equivalent yet and uses raised-2. ── */
+	--surface-page: var(--color-bg-canvas);
+	--surface-sunken-1: var(--color-bg-canvas-inset-1);
+	--surface-sunken-2: var(--color-bg-canvas-inset-2);
+	--surface-raised-1: var(--color-bg-surface);
+	--surface-raised-2: var(--color-bg-surface-elevated-1);
+	--surface-overlay: var(--color-bg-surface-elevated-2);
+	--shadow-raised: var(--shadow-elevation-1);
+	--shadow-overlay: var(--shadow-elevation-2);
+
+	/* ── States (alpha overlays) ── */
+	--state-hover: var(--color-interaction-hover-inverted);
+	--state-pressed: var(--color-interaction-pressed-inverted);
+	--state-disabled: var(--color-interaction-disabled);
+	--state-focus: var(--color-interaction-focused);
+
+	/* ── Typography: two roles, Title and Text. Sizes change by breakpoint, see below. ── */
+	--font-title-family: "Nohemi", "Geist", sans-serif;
+	--font-text-family: "Geist", system-ui, sans-serif;
+	--font-mono-family: "Geist Mono", ui-monospace, monospace;
+
+	--title-xl-size: 40px;
+	--title-xl-leading: 1;
+	--title-l-size: 32px;
+	--title-l-leading: 1.05;
+	--title-m-size: 24px;
+	--title-m-leading: 1.15;
+	--title-s-size: 18px;
+	--title-s-leading: 1.25;
+	--text-l-size: 17px;
+	--text-l-leading: 1.55;
+	--text-m-size: 15px;
+	--text-m-leading: 1.5;
+	--text-s-size: 13px;
+	--text-s-leading: 1.45;
+
+	/* ── Gap: one name for gaps and paddings. Changes by breakpoint. ── */
+	--gap-3xs: 2px;
+	--gap-2xs: 4px;
+	--gap-xs: 8px;
+	--gap-s: 12px;
+	--gap-m: 16px;
+	--gap-l: 24px;
+	--gap-xl: 32px;
+	--gap-2xl: 48px;
+	--gap-3xl: 64px;
+
+	/* ── Layout widths. Tailwind's max-w-2xl and friends collide with Jigsaw's spacing scale, so
+	   page code uses these instead. ── */
+	--width-page: 72rem;
+	--width-measure-wide: 56rem;
+	--width-measure: 42rem;
+
+	/* ── Radius. Four steps, chosen by container size: tiny for small marks and tags, small for
+	   compact controls, medium for buttons and inputs, large for cards and media. Nothing above 12px. ── */
+	--radius-t: 2px;
+	--radius-s: 4px;
+	--radius-m: 8px;
+	--radius-l: 12px;
+}
+
+/* Breakpoints: small is the base above. Medium and large change spacing and text size. Radius stays fixed (max 12px).
+   Colours never change by breakpoint. */
+@media (min-width: 768px) {
+	:root {
+		--title-xl-size: 56px;
+		--title-l-size: 40px;
+		--title-m-size: 28px;
+		--title-s-size: 20px;
+		--gap-l: 32px;
+		--gap-xl: 40px;
+		--gap-2xl: 64px;
+		--gap-3xl: 96px;
+	}
+}
+@media (min-width: 1200px) {
+	:root {
+		--title-xl-size: 72px;
+		--title-l-size: 48px;
+		--text-l-size: 18px;
+		--gap-2xl: 80px;
+		--gap-3xl: 128px;
+	}
+}
+
+/* ============================================================================
+   Tailwind registration. Utilities: bg-neutral-weak, text-neutral-strong, border-brand-normal,
+   bg-raised-1, p-gap-m, gap-gap-s, rounded-medium, type-title-l, type-text-m, font-text, font-code ...
+   Intent utilities for brand/positive/negative/warning/accent share their names with Jigsaw's
+   (same meaning, same value), so they are not registered twice.
+   ============================================================================ */
+
+@theme inline {
+	--spacing-gap-3xs: var(--gap-3xs);
+	--spacing-gap-2xs: var(--gap-2xs);
+	--spacing-gap-xs: var(--gap-xs);
+	--spacing-gap-s: var(--gap-s);
+	--spacing-gap-m: var(--gap-m);
+	--spacing-gap-l: var(--gap-l);
+	--spacing-gap-xl: var(--gap-xl);
+	--spacing-gap-2xl: var(--gap-2xl);
+	--spacing-gap-3xl: var(--gap-3xl);
+
+	--radius-tiny: var(--radius-t);
+	--radius-small: var(--radius-s);
+	--radius-medium: var(--radius-m);
+	--radius-large: var(--radius-l);
+}
+
+@utility bg-neutral-weak {
+	background-color: var(--bg-neutral-weak);
+}
+@utility bg-neutral-normal {
+	background-color: var(--bg-neutral-normal);
+}
+@utility bg-neutral-strong {
+	background-color: var(--bg-neutral-strong);
+}
+@utility bg-neutral-inverted {
+	background-color: var(--bg-neutral-inverted);
+}
+@utility text-neutral-weak {
+	color: var(--fg-neutral-weak);
+}
+@utility text-neutral-normal {
+	color: var(--fg-neutral-normal);
+}
+@utility text-neutral-strong {
+	color: var(--fg-neutral-strong);
+}
+@utility text-neutral-inverted {
+	color: var(--fg-neutral-inverted);
+}
+@utility border-neutral-weak {
+	border-color: var(--border-neutral-weak);
+}
+@utility border-neutral-normal {
+	border-color: var(--border-neutral-normal);
+}
+@utility border-neutral-strong {
+	border-color: var(--border-neutral-strong);
+}
+
+@utility max-w-page {
+	max-width: var(--width-page);
+}
+@utility max-w-measure-wide {
+	max-width: var(--width-measure-wide);
+}
+@utility max-w-measure {
+	max-width: var(--width-measure);
+}
+
+@utility bg-page {
+	background-color: var(--surface-page);
+}
+@utility bg-sunken-1 {
+	background-color: var(--surface-sunken-1);
+}
+@utility bg-sunken-2 {
+	background-color: var(--surface-sunken-2);
+}
+@utility bg-raised-1 {
+	background-color: var(--surface-raised-1);
+}
+@utility bg-raised-2 {
+	background-color: var(--surface-raised-2);
+}
+@utility bg-overlay {
+	background-color: var(--surface-overlay);
+}
+@utility shadow-raised {
+	box-shadow: var(--shadow-raised);
+}
+@utility shadow-overlay {
+	box-shadow: var(--shadow-overlay);
+}
+
+/* State overlays: put on an element with position:relative; draws over its background. */
+@utility state-layer {
+	position: relative;
+	&::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
+		background: transparent;
+		pointer-events: none;
+		transition: background-color 120ms ease-out;
+	}
+	&:hover::after {
+		background: var(--state-hover);
+	}
+	&:active::after {
+		background: var(--state-pressed);
+	}
+}
+@utility focus-ring {
+	&:focus-visible {
+		outline: 2px solid var(--state-focus);
+		outline-offset: 2px;
+	}
+}
+
+@utility font-text {
+	font-family: var(--font-text-family);
+}
+@utility font-code {
+	font-family: var(--font-mono-family);
+}
+
+@utility type-title-xl {
+	font-family: var(--font-title-family);
+	font-size: var(--title-xl-size);
+	line-height: var(--title-xl-leading);
+	font-weight: 400;
+	letter-spacing: -0.02em;
+}
+@utility type-title-l {
+	font-family: var(--font-title-family);
+	font-size: var(--title-l-size);
+	line-height: var(--title-l-leading);
+	font-weight: 400;
+	letter-spacing: -0.015em;
+}
+@utility type-title-m {
+	font-family: var(--font-title-family);
+	font-size: var(--title-m-size);
+	line-height: var(--title-m-leading);
+	font-weight: 400;
+	letter-spacing: -0.01em;
+}
+@utility type-title-s {
+	font-family: var(--font-title-family);
+	font-size: var(--title-s-size);
+	line-height: var(--title-s-leading);
+	font-weight: 400;
+}
+@utility type-text-l {
+	font-family: var(--font-text-family);
+	font-size: var(--text-l-size);
+	line-height: var(--text-l-leading);
+	font-weight: 400;
+}
+@utility type-text-m {
+	font-family: var(--font-text-family);
+	font-size: var(--text-m-size);
+	line-height: var(--text-m-leading);
+	font-weight: 400;
+}
+@utility type-text-s {
+	font-family: var(--font-text-family);
+	font-size: var(--text-s-size);
+	line-height: var(--text-s-leading);
+	font-weight: 400;
+}

@@ -1,0 +1,34 @@
+/* Gradient Color Picker — Animations & utility overrides */
+
+@keyframes gcpSlideIn {
+	from {
+		opacity: 0;
+		transform: scale(0.96) translateY(-4px);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1) translateY(0);
+	}
+}
+
+@keyframes gcpSlideOut {
+	from {
+		opacity: 1;
+		transform: scale(1) translateY(0);
+	}
+	to {
+		opacity: 0;
+		transform: scale(0.96) translateY(-4px);
+	}
+}
+
+/* Number input: hide spin buttons (for non-Jigsaw inputs like hex) */
+.gcp-num-input::-webkit-inner-spin-button,
+.gcp-num-input::-webkit-outer-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
+
+.gcp-num-input {
+	-moz-appearance: textfield;
+}

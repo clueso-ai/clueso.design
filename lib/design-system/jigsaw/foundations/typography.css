@@ -1,0 +1,409 @@
+/* ============================================================================
+   TYPOGRAPHY - Jigsaw Design System
+   Synced from Figma: Typography (Large Desktops mode)
+   Last sync: 2026-01-22
+   ============================================================================ */
+
+/* ============================================================================
+   TYPOGRAPHY DEFINITION TOKENS
+   Font sizes, weights, and families from Figma
+   ============================================================================ */
+
+@theme inline {
+	/* Font Size Tokens (from Figma + extended) */
+	--text-base-3: 10px; /* Extended: smaller than base-2 */
+	--text-base-2: 12px; /* size/base-2 */
+	--text-base-1: 14px; /* size/base-1 */
+	--text-base0: 16px; /* size/base0 */
+	--text-base1: 18px; /* size/base+1 */
+	--text-base2: 20px; /* size/base+2 */
+	--text-base3: 24px; /* size/base+3 */
+	--text-base4: 32px; /* size/base+4 */
+	--text-base5: 48px; /* size/base+5 */
+	--text-base6: 64px; /* size/base+6 */
+	--text-base7: 72px; /* size/base+7 */
+
+	/* Font Weight Tokens (from Figma) */
+	--font-weight-regular: 400; /* weight/regular */
+	--font-weight-medium: 500; /* weight/medium */
+	--font-weight-strong: 600; /* weight/strong */
+
+	/* Font Family Tokens (from Figma) */
+	--font-title: "Nohemi", sans-serif; /* family/title */
+	--font-body: "Geist", sans-serif; /* family/body */
+	--font-mono: "Geist Mono", monospace; /* family/mono */
+}
+
+/* ============================================================================
+   FONT SIZE UTILITIES
+   ============================================================================ */
+
+@utility text-base-3 {
+	font-size: var(--text-base-3); /* 9px */
+}
+
+@utility text-base-2 {
+	font-size: var(--text-base-2); /* 11px */
+}
+
+@utility text-base-1 {
+	font-size: var(--text-base-1); /* 13px */
+}
+
+@utility text-base0 {
+	font-size: var(--text-base0); /* 15px */
+}
+
+@utility text-base1 {
+	font-size: var(--text-base1); /* 17px */
+}
+
+@utility text-base2 {
+	font-size: var(--text-base2); /* 20px */
+}
+
+@utility text-base3 {
+	font-size: var(--text-base3); /* 24px */
+}
+
+@utility text-base4 {
+	font-size: var(--text-base4); /* 32px */
+}
+
+@utility text-base5 {
+	font-size: var(--text-base5); /* 48px */
+}
+
+@utility text-base6 {
+	font-size: var(--text-base6); /* 64px */
+}
+
+@utility text-base7 {
+	font-size: var(--text-base7); /* 72px */
+}
+
+/* ============================================================================
+   FONT FAMILY UTILITIES
+   ============================================================================ */
+
+@utility font-title {
+	font-family: var(--font-title);
+}
+
+@utility font-body {
+	font-family: var(--font-body);
+}
+
+@utility font-mono {
+	font-family: var(--font-mono);
+}
+
+/* ============================================================================
+   FONT WEIGHT UTILITIES
+   ============================================================================ */
+
+@utility font-regular {
+	font-weight: var(--font-weight-regular); /* 400 */
+}
+
+@utility font-medium {
+	font-weight: var(--font-weight-medium); /* 500 */
+}
+
+@utility font-strong {
+	font-weight: var(--font-weight-strong); /* 600 */
+}
+
+/* ============================================================================
+   TITLE UTILITIES (Nohemi font)
+   Composed title styles - all use medium weight, 110% line-height, 0% letter-spacing
+   ============================================================================ */
+
+@utility title-xlarge {
+	font-family: var(--font-title);
+	font-size: var(--text-base7); /* 72px */
+	font-weight: var(--font-weight-regular); /* 400, clueso.design patch */
+	line-height: 110%;
+	letter-spacing: 0%;
+}
+
+@utility title-large {
+	font-family: var(--font-title);
+	font-size: var(--text-base6); /* 64px */
+	font-weight: var(--font-weight-regular); /* 400, clueso.design patch */
+	line-height: 110%;
+	letter-spacing: 0%;
+}
+
+@utility title-medium {
+	font-family: var(--font-title);
+	font-size: var(--text-base5); /* 48px */
+	font-weight: var(--font-weight-regular); /* 400, clueso.design patch */
+	line-height: 110%;
+	letter-spacing: 0%;
+}
+
+@utility title-small {
+	font-family: var(--font-title);
+	font-size: var(--text-base4); /* 32px */
+	font-weight: var(--font-weight-regular); /* 400, clueso.design patch */
+	line-height: 110%;
+	letter-spacing: 0%;
+}
+
+@utility title-xsmall {
+	font-family: var(--font-title);
+	font-size: var(--text-base3); /* 24px */
+	font-weight: var(--font-weight-regular); /* 400, clueso.design patch */
+	line-height: 110%;
+	letter-spacing: 0%;
+}
+
+@utility title-xxsmall {
+	font-family: var(--font-title);
+	font-size: var(--text-base2); /* 20px */
+	font-weight: var(--font-weight-regular); /* 400, clueso.design patch */
+	line-height: 110%;
+	letter-spacing: 0%;
+}
+
+/* ============================================================================
+   PARAGRAPH UTILITIES (Geist font)
+   Composed paragraph styles - regular weight, 145% line-height, -1.5% letter-spacing
+   ============================================================================ */
+
+@utility para-xlarge {
+	font-family: var(--font-body);
+	font-size: var(--text-base2); /* 20px */
+	font-weight: var(--font-weight-regular); /* 400 */
+	line-height: 145%;
+	letter-spacing: -1.5%;
+}
+
+@utility para-large {
+	font-family: var(--font-body);
+	font-size: var(--text-base1); /* 17px */
+	font-weight: var(--font-weight-regular); /* 400 */
+	line-height: 145%;
+	letter-spacing: -1.5%;
+}
+
+@utility para-medium {
+	font-family: var(--font-body);
+	font-size: var(--text-base0); /* 15px */
+	font-weight: var(--font-weight-regular); /* 400 */
+	line-height: 145%;
+	letter-spacing: -1.5%;
+}
+
+@utility para-small {
+	font-family: var(--font-body);
+	font-size: var(--text-base-1); /* 13px */
+	font-weight: var(--font-weight-regular); /* 400 */
+	line-height: 145%;
+	letter-spacing: -1.5%;
+}
+
+@utility para-xsmall {
+	font-family: var(--font-body);
+	font-size: var(--text-base-2); /* 11px */
+	font-weight: var(--font-weight-regular); /* 400 */
+	line-height: 145%;
+	letter-spacing: -1.5%;
+}
+
+@utility para-xxsmall {
+	font-family: var(--font-body);
+	font-size: var(--text-base-3); /* 9px */
+	font-weight: var(--font-weight-regular); /* 400 */
+	line-height: 145%;
+	letter-spacing: -1.5%;
+}
+
+/* ============================================================================
+   PARAGRAPH STRONG UTILITIES (Geist font)
+   Bold variants - medium weight, 145% line-height, -1.5% letter-spacing
+   ============================================================================ */
+
+@utility para-xlarge-strong {
+	font-family: var(--font-body);
+	font-size: var(--text-base2); /* 20px */
+	font-weight: var(--font-weight-medium); /* 500 */
+	line-height: 145%;
+	letter-spacing: -1.5%;
+}
+
+@utility para-large-strong {
+	font-family: var(--font-body);
+	font-size: var(--text-base1); /* 17px */
+	font-weight: var(--font-weight-medium); /* 500 */
+	line-height: 145%;
+	letter-spacing: -1.5%;
+}
+
+@utility para-medium-strong {
+	font-family: var(--font-body);
+	font-size: var(--text-base0); /* 15px */
+	font-weight: var(--font-weight-medium); /* 500 */
+	line-height: 145%;
+	letter-spacing: -1.5%;
+}
+
+@utility para-small-strong {
+	font-family: var(--font-body);
+	font-size: var(--text-base-1); /* 13px */
+	font-weight: var(--font-weight-medium); /* 500 */
+	line-height: 145%;
+	letter-spacing: -1.5%;
+}
+
+@utility para-xsmall-strong {
+	font-family: var(--font-body);
+	font-size: var(--text-base-2); /* 11px */
+	font-weight: var(--font-weight-medium); /* 500 */
+	line-height: 145%;
+	letter-spacing: -1.5%;
+}
+
+@utility para-xxsmall-strong {
+	font-family: var(--font-body);
+	font-size: var(--text-base-3); /* 9px */
+	font-weight: var(--font-weight-medium); /* 500 */
+	line-height: 145%;
+	letter-spacing: -1.5%;
+}
+
+/* ============================================================================
+   LABEL UTILITIES (Geist font)
+   Composed label styles - regular weight, 100% line-height, 0% letter-spacing
+   ============================================================================ */
+
+@utility label-large {
+	font-family: var(--font-body);
+	font-size: var(--text-base1); /* 17px */
+	font-weight: var(--font-weight-regular); /* 400 */
+	line-height: 100%;
+	letter-spacing: -1.5%;
+}
+
+@utility label-medium {
+	font-family: var(--font-body);
+	font-size: var(--text-base0); /* 15px */
+	font-weight: var(--font-weight-regular); /* 400 */
+	line-height: 100%;
+	letter-spacing: -1.5%;
+}
+
+@utility label-small {
+	font-family: var(--font-body);
+	font-size: var(--text-base-1); /* 13px */
+	font-weight: var(--font-weight-regular); /* 400 */
+	line-height: 100%;
+	letter-spacing: -1.5%;
+}
+
+@utility label-xsmall {
+	font-family: var(--font-body);
+	font-size: var(--text-base-2); /* 11px */
+	font-weight: var(--font-weight-regular); /* 400 */
+	line-height: 100%;
+	letter-spacing: -1.5%;
+}
+
+@utility label-xxsmall {
+	font-family: var(--font-body);
+	font-size: var(--text-base-3); /* 9px */
+	font-weight: var(--font-weight-regular); /* 400 */
+	line-height: 100%;
+	letter-spacing: -1.5%;
+}
+
+/* ============================================================================
+   LABEL STRONG UTILITIES (Geist font)
+   Bold variants - medium weight, 100% line-height, -1.5% letter-spacing
+   ============================================================================ */
+
+@utility label-large-strong {
+	font-family: var(--font-body);
+	font-size: var(--text-base1); /* 17px */
+	font-weight: var(--font-weight-medium); /* 500 */
+	line-height: 100%;
+	letter-spacing: -1.5%;
+}
+
+@utility label-medium-strong {
+	font-family: var(--font-body);
+	font-size: var(--text-base0); /* 15px */
+	font-weight: var(--font-weight-medium); /* 500 */
+	line-height: 100%;
+	letter-spacing: -1.5%;
+}
+
+@utility label-small-strong {
+	font-family: var(--font-body);
+	font-size: var(--text-base-1); /* 13px */
+	font-weight: var(--font-weight-medium); /* 500 */
+	line-height: 100%;
+	letter-spacing: -1.5%;
+}
+
+@utility label-xsmall-strong {
+	font-family: var(--font-body);
+	font-size: var(--text-base-2); /* 11px */
+	font-weight: var(--font-weight-medium); /* 500 */
+	line-height: 100%;
+	letter-spacing: -1.5%;
+}
+
+@utility label-xxsmall-strong {
+	font-family: var(--font-body);
+	font-size: var(--text-base-3); /* 9px */
+	font-weight: var(--font-weight-medium); /* 500 */
+	line-height: 100%;
+	letter-spacing: -1.5%;
+}
+
+/* ============================================================================
+   MONO UTILITIES (Geist Mono font)
+   Composed monospace styles - regular weight, 100% line-height, 0% letter-spacing
+   ============================================================================ */
+
+@utility mono-large {
+	font-family: var(--font-mono);
+	font-size: var(--text-base1); /* 17px */
+	font-weight: var(--font-weight-regular); /* 400 */
+	line-height: 100%;
+	letter-spacing: -1.5%;
+}
+
+@utility mono-medium {
+	font-family: var(--font-mono);
+	font-size: var(--text-base0); /* 15px */
+	font-weight: var(--font-weight-regular); /* 400 */
+	line-height: 100%;
+	letter-spacing: -1.5%;
+}
+
+@utility mono-small {
+	font-family: var(--font-mono);
+	font-size: var(--text-base-1); /* 13px */
+	font-weight: var(--font-weight-regular); /* 400 */
+	line-height: 100%;
+	letter-spacing: -1.5%;
+}
+
+@utility mono-xsmall {
+	font-family: var(--font-mono);
+	font-size: var(--text-base-2); /* 11px */
+	font-weight: var(--font-weight-regular); /* 400 */
+	line-height: 100%;
+	letter-spacing: -1.5%;
+}
+
+@utility mono-xxsmall {
+	font-family: var(--font-mono);
+	font-size: var(--text-base-3); /* 9px */
+	font-weight: var(--font-weight-regular); /* 400 */
+	line-height: 100%;
+	letter-spacing: -1.5%;
+}

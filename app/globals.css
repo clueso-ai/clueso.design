@@ -1,0 +1,33 @@
+/* Tailwind entry for clueso.design.
+   Order: Tailwind, Jigsaw foundations (definition tier, temporary snapshot), v1 tokens (semantic
+   tier), shadcn aliases, fonts, then tool styles. */
+
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@import "../lib/design-system/jigsaw/foundations/colors.css";
+@import "../lib/design-system/jigsaw/foundations/typography.css";
+@import "../lib/design-system/jigsaw/foundations/layout.css";
+
+@import "../styles/tokens.css";
+@import "../styles/shadcn-map.css";
+@import "../styles/fonts.css";
+
+@import "../tools/brand-lab/styles/brand-lab.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@layer base {
+	html {
+		-webkit-font-smoothing: antialiased;
+		text-rendering: optimizeLegibility;
+	}
+	body {
+		background: var(--surface-page);
+		color: var(--fg-neutral-strong);
+		font-family: var(--font-text-family);
+	}
+	::selection {
+		background: var(--bg-brand-weak);
+	}
+}
