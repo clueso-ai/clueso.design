@@ -17,3 +17,41 @@
 	font-weight: 100 900;
 	font-display: swap;
 }
+/* Geist Pixel (Square, plus Circle, Grid, Line and Triangle below) and Geist Serif: SIL Open Font License (public/fonts/GEIST-OFL.txt). One weight each.
+   Only the homepage type tuner uses them, so they load on demand. */
+@font-face {
+	font-family: "Geist Pixel";
+	src: url("/fonts/geist-pixel-square.woff2") format("woff2");
+	font-weight: 500;
+	font-display: swap;
+}
+@font-face {
+	font-family: "Geist Serif";
+	src: url("/fonts/geist-serif-regular.woff2") format("woff2");
+	font-weight: 400;
+	font-display: swap;
+}
+@font-face {
+	font-family: "Geist Pixel Circle";
+	src: url("/fonts/geist-pixel-circle.woff2") format("woff2");
+	font-weight: 500;
+	font-display: swap;
+}
+@font-face {
+	font-family: "Geist Pixel Grid";
+	src: url("/fonts/geist-pixel-grid.woff2") format("woff2");
+	font-weight: 500;
+	font-display: swap;
+}
+@font-face {
+	font-family: "Geist Pixel Line";
+	src: url("/fonts/geist-pixel-line.woff2") format("woff2");
+	font-weight: 500;
+	font-display: swap;
+}
+@font-face {
+	font-family: "Geist Pixel Triangle";
+	src: url("/fonts/geist-pixel-triangle.woff2") format("woff2");
+	font-weight: 500;
+	font-display: swap;
+}

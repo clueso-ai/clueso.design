@@ -6,6 +6,7 @@ Read docs/ARCHITECTURE.md before structural changes.
 ## Branches
 - Branch from `staging`. Open PRs into `staging` (`gh pr create --base staging`). `main` is production and only moves through a `staging` → `main` release PR.
 - `main` is still the GitHub default branch, so always pass the base explicitly.
+- Rulesets protect `main` and `staging`: changes only through a PR, no force-push, no deletion. Branches are deleted after merge.
 
 ## Hard rules
 - Style with Tailwind classes backed by v1 tokens (styles/tokens.css). Never hardcode colors, spacing, radius or type sizes. No arbitrary values like bg-[#DA5CC7].
@@ -27,7 +28,8 @@ Read docs/ARCHITECTURE.md before structural changes.
 - Short, plain, direct sentences. No em dashes.
 
 ## Brand
-- Nohemi for titles and brand moments. Geist for body and controls. Geist Mono for values and code.
+- Site titles default to Nohemi 200 (visitors can retune fonts and the type scale from the hero). Nohemi for the logo and brand moments. Geist for body and controls. Geist Mono for values and code.
+- No full stops at the end of titles or headings.
 - Brand color #DA5CC7, used sparingly in the lab theme.
 
 ## Commands

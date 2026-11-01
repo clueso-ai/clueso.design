@@ -12,6 +12,10 @@ const svgr = {
 
 const config: NextConfig = {
 	reactStrictMode: true,
+	// Static playground pieces live in public/playground/<slug>/ and keep their exported files as is.
+	async rewrites() {
+		return [{ source: "/playground/:slug", destination: "/playground/:slug/index.html" }];
+	},
 	turbopack: {
 		root: import.meta.dirname,
 		rules: {

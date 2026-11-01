@@ -12,6 +12,9 @@ import { mulberry32, shuffleParams } from "./shuffle";
 import { remapColorRefs, type VariationMode, vary } from "./variations";
 
 const STORAGE_KEY = "clueso-brand-lab:doc";
+// clueso.design: the homepage embeds Brand Lab at /tools/brand-lab?embed. The embed shares the
+// visitor's localStorage, so it never reads or overwrites their autosaved project.
+const EMBED = new URLSearchParams(location.search).has("embed");
 const HISTORY_LIMIT = 100;
 /** Edits to the same control within this window collapse into one undo step (slider drags). */
 const COALESCE_MS = 600;
@@ -130,7 +133,7 @@ interface State {
 /** The autosaved project; docs saved before multiple canvases open as a one-canvas project. */
 function loadInitial(): Project {
 	try {
-		const raw = localStorage.getItem(STORAGE_KEY);
+		const raw = EMBED ? null : localStorage.getItem(STORAGE_KEY); // clueso.design: see EMBED
 		if (raw) {
 			const data = JSON.parse(raw) as Partial<Project> & Partial<Doc>;
 			if (Array.isArray(data.canvases) && data.canvases.length) {
@@ -654,7 +657,7 @@ export const useStore = create<State>((set, get) => ({
 	setPlaying: (playing) => set({ playing }),
 	setZoom: (zoom) => set({ zoom }),
 	setTheme: (theme) => {
-		localStorage.setItem("clueso-brand-lab:theme", theme);
+		if (!EMBED) localStorage.setItem("clueso-brand-lab:theme", theme); // clueso.design: see EMBED
 		set({ theme });
 	},
 }));
@@ -677,6 +680,7 @@ function editProject(get: () => State, set: (p: Partial<State>) => void, recipe:
 
 let saveTimer: number | undefined;
 useStore.subscribe((s, prev) => {
+	if (EMBED) return; // clueso.design: see EMBED
 	if (s.canvases === prev.canvases && s.projectName === prev.projectName && s.active === prev.active) return;
 	clearTimeout(saveTimer);
 	saveTimer = window.setTimeout(() => {

@@ -1,0 +1,63 @@
+/* The Clueso cursor on the site. Inside a .site-cursor scope the native pointer hides and
+   components/site/site-cursor.tsx draws the piece instead. Text fields keep the text cursor. */
+@media (pointer: fine) {
+	.site-cursor,
+	.site-cursor * {
+		cursor: none;
+	}
+	.site-cursor :is(input:not([type="range"]), textarea, [contenteditable="true"]) {
+		cursor: text;
+	}
+}
+
+/* Switching light and dark (lib/theme-wipe.ts): both views hold still while the old one is clipped
+   away behind a 135° band. The band's canvas is its own live layer on top. */
+@keyframes theme-wipe-hold {
+	from {
+		opacity: 1;
+	}
+	to {
+		opacity: 1;
+	}
+}
+:root.theme-wipe [data-theme-band] {
+	view-transition-name: theme-band;
+}
+:root.theme-wipe::view-transition-group(*) {
+	animation: theme-wipe-hold 60s linear both;
+}
+:root.theme-wipe::view-transition-old(*),
+:root.theme-wipe::view-transition-new(*) {
+	animation: none;
+	mix-blend-mode: normal;
+	opacity: 1;
+}
+:root.theme-wipe::view-transition-old(root) {
+	z-index: 2;
+	clip-path: var(--theme-wipe-old, inset(0));
+}
+:root.theme-wipe::view-transition-new(root) {
+	z-index: 1;
+}
+:root.theme-wipe::view-transition-group(theme-band) {
+	z-index: 3;
+}
+:root.theme-wipe::view-transition-old(theme-band) {
+	display: none;
+}
+/* The Clueso cursor stays live above the wipe, and the native one stays hidden where it was. */
+:root.theme-wipe [data-site-cursor] {
+	view-transition-name: site-cursor;
+}
+:root.theme-wipe::view-transition-group(site-cursor) {
+	z-index: 4;
+}
+:root.theme-wipe::view-transition-old(site-cursor) {
+	display: none;
+}
+/* Mid wipe the browser hit-tests the page root, so hide the native cursor there too. */
+:root.theme-wipe-cursorless,
+:root.theme-wipe-cursorless body,
+:root.theme-wipe-cursorless::view-transition {
+	cursor: none;
+}

@@ -80,6 +80,8 @@
 	   (Jigsaw's composites). Overlay has no Jigsaw equivalent yet and uses raised-2. ── */
 	--surface-page: var(--color-bg-canvas);
 	--surface-sunken-1: var(--color-bg-canvas-inset-1);
+	/* The team portraits' backdrop. The same in both modes: the videos are drawn on it. */
+	--surface-portrait: #161616;
 	--surface-sunken-2: var(--color-bg-canvas-inset-2);
 	--surface-raised-1: var(--color-bg-surface);
 	--surface-raised-2: var(--color-bg-surface-elevated-1);
@@ -94,24 +96,24 @@
 	--state-focus: var(--color-interaction-focused);
 
 	/* ── Typography: two roles, Title and Text. Sizes change by breakpoint, see below. ── */
-	--font-title-family: "Nohemi", "Geist", sans-serif;
+	--font-title-family: "Nohemi", sans-serif;
 	--font-text-family: "Geist", system-ui, sans-serif;
 	--font-mono-family: "Geist Mono", ui-monospace, monospace;
 
-	--title-xl-size: 40px;
+	/* Every size is a step on one modular scale: base × ratio^step. Breakpoints only change the
+	   ratio, and a visitor's type scale (hero tuner) overrides base and ratio. Big titles are capped
+	   by the window width so a large ratio still fits on a phone. */
+	--type-base: 15px;
+	--type-ratio: 1.22;
 	--title-xl-leading: 1;
-	--title-l-size: 32px;
 	--title-l-leading: 1.05;
-	--title-m-size: 24px;
 	--title-m-leading: 1.15;
-	--title-s-size: 18px;
 	--title-s-leading: 1.25;
-	--text-l-size: 17px;
 	--text-l-leading: 1.55;
-	--text-m-size: 15px;
 	--text-m-leading: 1.5;
-	--text-s-size: 13px;
 	--text-s-leading: 1.45;
+	--text-xs-size: 12px;
+	--text-xs-leading: 1.35;
 
 	/* ── Gap: one name for gaps and paddings. Changes by breakpoint. ── */
 	--gap-3xs: 2px;
@@ -142,10 +144,7 @@
    Colours never change by breakpoint. */
 @media (min-width: 768px) {
 	:root {
-		--title-xl-size: 56px;
-		--title-l-size: 40px;
-		--title-m-size: 28px;
-		--title-s-size: 20px;
+		--type-ratio: 1.3;
 		--gap-l: 32px;
 		--gap-xl: 40px;
 		--gap-2xl: 64px;
@@ -154,12 +153,23 @@
 }
 @media (min-width: 1200px) {
 	:root {
-		--title-xl-size: 72px;
-		--title-l-size: 48px;
-		--text-l-size: 18px;
+		--type-ratio: 1.37;
 		--gap-2xl: 80px;
 		--gap-3xl: 128px;
 	}
+}
+
+/* The sizes, worked out wherever base or ratio is set: on :root, and on the site wrapper that carries
+   a visitor's own type scale (components/site/site-prefs-root.tsx). */
+:root,
+[data-type-scope] {
+	--text-s-size: calc(var(--type-base) * pow(var(--type-ratio), -0.5));
+	--text-m-size: var(--type-base);
+	--text-l-size: calc(var(--type-base) * pow(var(--type-ratio), 0.35));
+	--title-s-size: calc(var(--type-base) * pow(var(--type-ratio), 1.5));
+	--title-m-size: min(calc(var(--type-base) * pow(var(--type-ratio), 2.5)), 8vw);
+	--title-l-size: min(calc(var(--type-base) * pow(var(--type-ratio), 4)), 10vw);
+	--title-xl-size: min(calc(var(--type-base) * pow(var(--type-ratio), 5)), 12vw);
 }
 
 /* ============================================================================
@@ -233,6 +243,9 @@
 @utility bg-page {
 	background-color: var(--surface-page);
 }
+@utility bg-portrait {
+	background-color: var(--surface-portrait);
+}
 @utility bg-sunken-1 {
 	background-color: var(--surface-sunken-1);
 }
@@ -292,44 +305,97 @@
 	font-family: var(--font-title-family);
 	font-size: var(--title-xl-size);
 	line-height: var(--title-xl-leading);
-	font-weight: 400;
+	font-weight: var(--title-weight, 200);
 	letter-spacing: -0.02em;
 }
 @utility type-title-l {
 	font-family: var(--font-title-family);
 	font-size: var(--title-l-size);
 	line-height: var(--title-l-leading);
-	font-weight: 400;
+	font-weight: var(--title-weight, 200);
 	letter-spacing: -0.015em;
 }
 @utility type-title-m {
 	font-family: var(--font-title-family);
 	font-size: var(--title-m-size);
 	line-height: var(--title-m-leading);
-	font-weight: 400;
+	font-weight: var(--title-weight, 200);
 	letter-spacing: -0.01em;
 }
 @utility type-title-s {
 	font-family: var(--font-title-family);
 	font-size: var(--title-s-size);
 	line-height: var(--title-s-leading);
-	font-weight: 400;
+	font-weight: var(--title-weight, 200);
 }
+/* The clueso.design logo: the mark, then "Design" in Nohemi Regular. The mark sits on the
+   baseline and is 1.14x Nohemi's cap height (0.715em), so it reads centred on the capitals,
+   matching the logo artwork. */
+@utility type-logo {
+	display: inline-flex;
+	align-items: baseline;
+	gap: 0.3em;
+	/* Always Nohemi, even when a visitor retunes the title font. */
+	font-family: "Nohemi", sans-serif;
+	font-size: 22px;
+	line-height: 1;
+	font-weight: 400;
+	letter-spacing: -0.01em;
+}
+@utility logo-mark {
+	width: 0.815em;
+	height: 0.815em;
+	flex: none;
+}
+
 @utility type-text-l {
 	font-family: var(--font-text-family);
 	font-size: var(--text-l-size);
 	line-height: var(--text-l-leading);
-	font-weight: 400;
+	font-weight: var(--text-weight, 300);
 }
 @utility type-text-m {
 	font-family: var(--font-text-family);
 	font-size: var(--text-m-size);
 	line-height: var(--text-m-leading);
-	font-weight: 400;
+	font-weight: var(--text-weight, 300);
 }
 @utility type-text-s {
 	font-family: var(--font-text-family);
 	font-size: var(--text-s-size);
 	line-height: var(--text-s-leading);
-	font-weight: 400;
+	font-weight: var(--text-weight, 300);
+}
+
+/* Tags on cursors and other tiny labels. Fixed size and weight: they don't follow the visitor's type scale. */
+@utility type-text-xs {
+	font-family: var(--font-text-family);
+	font-size: var(--text-xs-size);
+	line-height: var(--text-xs-leading);
+	font-weight: 450;
+}
+
+/* ── Motion. One curve for things arriving and responding: fast start, soft landing.
+   Use with duration-200 for hover and press, duration-500 for entrances. ── */
+@theme {
+	--ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* ── Guide lines. The page frame, section rules and the hatched gutters outside the frame. ── */
+@utility hatch {
+	background-image: repeating-linear-gradient(45deg, color-mix(in srgb, var(--border-neutral-weak) 55%, transparent) 0 1px, transparent 1px 8px);
+}
+/* A fine grid for illustration cells. */
+@utility grid-lines {
+	background-image:
+		linear-gradient(var(--border-neutral-weak) 1px, transparent 1px),
+		linear-gradient(90deg, var(--border-neutral-weak) 1px, transparent 1px);
+	background-size: 36px 36px;
+	background-position: -1px -1px;
+}
+@utility decoration-neutral-weak {
+	text-decoration-color: var(--border-neutral-weak);
+}
+@utility outline-neutral-strong {
+	outline-color: var(--border-neutral-strong);
 }

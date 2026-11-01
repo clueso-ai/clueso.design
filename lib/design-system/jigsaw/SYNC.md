@@ -22,5 +22,5 @@ To re-sync: copy the same paths again from `repos/gigauser`, then run `pnpm type
 Note: `components/ui/color/` is vendored whole. Brand Lab uses its primitives (SaturationPanel, HueSlider,
 ColorSwatch, ColorBox) in `src/components/color.tsx`; jigsaw's GradientColorPicker portals a fixed panel
 below modal z-index and outside Radix's focus scope, so it isn't used directly inside sheets.
-- Title weight (clueso.design): every `title-*` utility in `foundations/typography.css` uses weight 400
-  (Nohemi Regular) instead of 500, per the design team's type decision (Nov 2026).
+- Title weight (clueso.design): every `title-*` utility in `foundations/typography.css` uses weight 300
+  (Nohemi Light) instead of 500, per the design team's type decision (Nov 2026).

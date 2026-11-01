@@ -1,25 +1,23 @@
 import type { Metadata } from "next";
+import { Band, SectionHeading } from "@/components/site/frame";
 import { ToolCard } from "@/components/site/tool-card";
 import { publicItems } from "@/lib/registry";
 
 export const metadata: Metadata = {
 	title: "Tools",
-	description: "Utilities the Clueso design team builds for itself.",
+	description: "Small tools the Clueso design team builds for itself.",
 };
 
 export default function ToolsPage() {
 	const tools = publicItems("tool");
 	return (
-		<section className="mx-auto flex max-w-page flex-col gap-gap-xl px-gap-l pt-gap-2xl pb-gap-3xl">
-			<div className="flex flex-col gap-gap-s">
-				<h1 className="type-title-xl text-neutral-strong">Tools</h1>
-				<p className="type-text-l max-w-measure text-neutral-normal">Utilities we build for ourselves, then share. Each one is credited to the person who made it.</p>
-			</div>
-			<div className="grid gap-gap-l md:grid-cols-2">
+		<Band rule={false} labelledBy="tools-title">
+			<SectionHeading id="tools-title" title="Built because we needed them." intro="We make small tools to solve the little problems that slow us down. Some are useful. Some are just fun. A few become indispensable." />
+			<div className="grid gap-gap-l border-t border-neutral-weak p-gap-l md:grid-cols-2">
 				{tools.map((item) => (
 					<ToolCard key={item.slug} item={item} />
 				))}
 			</div>
-		</section>
+		</Band>
 	);
 }

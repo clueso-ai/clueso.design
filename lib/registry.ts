@@ -44,6 +44,19 @@ export const registry: RegistryItem[] = [
 		tags: ["brand", "generative", "webgl", "export"],
 		updated: "2026-11-01",
 	},
+	{
+		slug: "cluego",
+		title: "Cluego",
+		type: "experiment",
+		owner: "Preshita",
+		status: "exploring",
+		visibility: "public",
+		theme: "lab",
+		href: "/playground/cluego",
+		description: "A stamp trip across three islands of the Clueso app. Solve each screen, collect its stamp and find the secret ones.",
+		tags: ["game", "onboarding", "illustration"],
+		updated: "2026-11-01",
+	},
 ];
 
 /** Items a signed-out visitor may see. There is no sign-in yet, so internal items are never listed. */

@@ -29,6 +29,7 @@
     "fflate": "0.8.3",
     "framer-motion": "14.9.0",
     "gifenc": "1.0.3",
+    "glimm": "0.3.1",
     "mp4-muxer": "5.2.2",
     "next": "16.4.3",
     "react": "19.3.1",
