@@ -7,7 +7,7 @@ Last updated 1 November 2026. This records how clueso.design is built today and 
 - Public site, no sign-in: `/`, `/tools`, `/tools/brand-lab`, `/playground/cluego`.
 - The homepage has sections for Tools (with Brand Lab embedded live), Playground, Team and the changelog, and the nav links to them. Each becomes its own page once there is enough to fill it. Systems (Jigsaw) comes back when there is something to show.
 - No backend yet. Brand Lab saves in the browser (localStorage and IndexedDB) and to `.brandlab.json` files, as it always has.
-- Usage is measured with Vercel Analytics, which uses no cookies.
+- No usage analytics yet. Vercel Analytics was removed when hosting moved to AWS.
 
 ## Stack
 
