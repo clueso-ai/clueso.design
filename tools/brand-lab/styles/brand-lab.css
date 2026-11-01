@@ -1,0 +1,216 @@
+/* Brand Lab chrome is Tailwind + Jigsaw. This file only holds what utilities can't say well: the
+   artboard checkerboard, the SVG selection overlay on the canvas and the custom cursor.
+
+   Ported from Brand Lab's app.scss. Rules that used to target html/body are scoped with
+   :root:has(.brand-lab-root), so they apply (including to portalled menus) only while Brand Lab is
+   mounted and never leak into the rest of clueso.design. */
+
+:root {
+	--checker-a: #dcdce0;
+	--checker-b: #f4f4f6;
+	--artboard-shadow: 0 30px 80px -30px rgba(20, 20, 30, 0.35), 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+.dark {
+	--checker-a: #1f1f23;
+	--checker-b: #29292e;
+	--artboard-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+/* clueso-icons are drawn with 1-unit strokes on a 24-unit grid; keep them a crisp 1px at any size. */
+svg :is(path, line, polyline, polygon, rect, circle, ellipse)[stroke] {
+	vector-effect: non-scaling-stroke;
+}
+
+/* Jigsaw's focus reset (from its index.css), only inside Brand Lab. The site keeps visible focus. */
+:root:has(.brand-lab-root) {
+	:is(button, a, [role="button"]):is(:focus, :focus-visible) {
+		outline: none;
+	}
+	*:is(:focus, :focus-visible) {
+		outline: 2px solid transparent;
+		outline-offset: 2px;
+		-webkit-tap-highlight-color: transparent;
+	}
+	button:is(:focus, :focus-visible) svg {
+		outline: none !important;
+		box-shadow: none !important;
+	}
+}
+
+/* The Clueso puzzle-piece cursor wherever the arrow or hand would show. With a mouse, <CustomCursor>
+   draws it as an element and these states become `cursor: none`; elsewhere the static SVG (26×23,
+   tip at 5,8) is the fallback. */
+:root:has(.brand-lab-root) {
+	&,
+	body,
+	.cursor-default {
+		cursor: url("/cursor.svg") 5 8, default;
+	}
+	:is(.cursor-pointer, button:not(:disabled), a[href], [role="button"], [role="menuitem"], [role="option"], [role="radio"], [role="switch"], [role="slider"], label) {
+		cursor: url("/cursor.svg") 5 8, pointer;
+	}
+	&.custom-cursor {
+		&,
+		body,
+		:is(.cursor-pointer, button:not(:disabled), a[href], [role="button"], [role="menuitem"], [role="option"], [role="radio"], [role="switch"], [role="slider"], label) {
+			cursor: none;
+		}
+		&.dup-cursor [data-dup],
+		&.dup-cursor [data-dup] * {
+			cursor: none !important;
+		}
+	}
+	body {
+		overflow: hidden;
+	}
+}
+
+.viewport {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+	scrollbar-width: none;
+	&::-webkit-scrollbar {
+		display: none;
+	}
+}
+
+.stage {
+	position: relative;
+	display: grid;
+	place-items: center;
+	width: max-content;
+	height: max-content;
+	min-width: 100%;
+	min-height: 100%;
+}
+
+.artboard {
+	position: relative;
+	flex: none;
+	box-shadow: var(--artboard-shadow);
+	background-color: var(--checker-b);
+	background-image:
+		linear-gradient(45deg, var(--checker-a) 25%, transparent 25%),
+		linear-gradient(-45deg, var(--checker-a) 25%, transparent 25%),
+		linear-gradient(45deg, transparent 75%, var(--checker-a) 75%),
+		linear-gradient(-45deg, transparent 75%, var(--checker-a) 75%);
+	background-size: 16px 16px;
+	background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+
+	canvas {
+		display: block;
+		width: 100%;
+		height: 100%;
+	}
+}
+
+/* ── canvas overlay ─────────────────────────────────────────────── */
+
+.canvas-overlay {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	overflow: visible;
+	touch-action: none;
+	--sel: var(--color-bg-accent-normal);
+	--measure: #ff5a36;
+
+	* {
+		vector-effect: non-scaling-stroke;
+	}
+	.hover-outline,
+	.sel-outline,
+	.sel-group,
+	.sel-fill,
+	.marquee,
+	.measure-target {
+		fill: none;
+		pointer-events: none;
+	}
+	.hover-outline {
+		stroke: var(--sel);
+		stroke-width: 1;
+	}
+	.sel-outline {
+		stroke: var(--sel);
+		stroke-width: 1;
+	}
+	.sel-group {
+		stroke: var(--sel);
+		stroke-width: 1;
+		stroke-dasharray: 4 3;
+	}
+	.hover-fill {
+		fill: none;
+		pointer-events: none;
+		stroke: var(--sel);
+		stroke-width: 1;
+		stroke-dasharray: 4 4;
+	}
+	.sel-fill {
+		stroke: var(--sel);
+		stroke-width: 1;
+		stroke-dasharray: 6 4;
+	}
+	.handle {
+		fill: #fff;
+		stroke: var(--sel);
+		stroke-width: 1;
+	}
+	.rotate-handle {
+		line {
+			stroke: var(--sel);
+			stroke-width: 1;
+			pointer-events: none;
+		}
+		circle {
+			fill: #fff;
+			stroke: var(--sel);
+			stroke-width: 1;
+			cursor: grab;
+		}
+	}
+	&.dragging .rotate-handle circle {
+		cursor: grabbing;
+	}
+	.marquee {
+		fill: color-mix(in srgb, var(--sel) 10%, transparent);
+		stroke: var(--sel);
+		stroke-width: 1;
+	}
+	.guide {
+		stroke: var(--measure);
+		stroke-width: 1;
+		pointer-events: none;
+	}
+	.pill {
+		pointer-events: none;
+
+		rect {
+			fill: var(--sel);
+		}
+		text {
+			fill: #fff;
+			font-family: "Geist", sans-serif;
+			font-weight: 600;
+		}
+		&.measure-pill rect {
+			fill: var(--measure);
+		}
+	}
+	.measure {
+		pointer-events: none;
+
+		line {
+			stroke: var(--measure);
+			stroke-width: 1;
+		}
+		.measure-target {
+			stroke: var(--measure);
+			stroke-width: 1;
+			stroke-dasharray: 3 3;
+		}
+	}
+}
