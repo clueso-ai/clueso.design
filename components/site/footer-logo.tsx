@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "reac
 import { LOGO_PATHS, LOGO_VIEWBOX, WORDMARK_FILL } from "@/lib/clueso-logo";
 import { markFillDoc } from "@/lib/mark-fill";
 import { useIsDark } from "@/lib/use-dark";
+import { useFinePointer } from "@/lib/use-fine-pointer";
 import { anchorAt, type Handle, lerpPath, moveAnchor, parsePath, pickHandles, type Subpath, writePath } from "@/lib/path-edit";
 import type { Doc } from "@/tools/brand-lab/state/doc";
 import { mulberry32 } from "@/tools/brand-lab/state/shuffle";
@@ -16,6 +17,9 @@ const HeroCanvas = dynamic(() => import("./hero-canvas").then((m) => m.HeroCanva
 // stretches; let go and it springs back. The mark is filled with a live Brand Lab design that
 // re-rolls every few seconds, and every hover switches it to the next effect. Hovering a letter
 // fills it in.
+//
+// Phones get the mark alone, across the whole footer: the full logo is too small there to grab
+// anything. On touch, handles get a target of at least 44px whatever the size.
 
 const ORIGINAL: Record<string, Subpath[]> = Object.fromEntries(LOGO_PATHS.map((p) => [p.id, parsePath(p.d)]));
 const SHUFFLE_EVERY = 7000;
@@ -25,6 +29,18 @@ const PAD = 30;
 const noop = () => () => {};
 const handleKey = (id: string, h: Handle) => `${id}/${h.anchors.map((a) => a.join(":")).join("|")}`;
 const useMounted = () => useSyncExternalStore(noop, () => true, () => false);
+
+/** md and up. The server draws the full logo; phones switch to the mark once they load. */
+const WIDE = "(min-width: 48rem)";
+const subscribeWide = (fn: () => void) => {
+	const mq = matchMedia(WIDE);
+	mq.addEventListener("change", fn);
+	return () => mq.removeEventListener("change", fn);
+};
+const useWide = () => useSyncExternalStore(subscribeWide, () => matchMedia(WIDE).matches, () => true);
+
+/** Smallest touch target, in px. */
+const TOUCH_TARGET = 44;
 
 /** Drops handles that sit inside the letter's filled area, like the corners of a crossbar that overlaps the bowl. */
 function visibleHandles(id: string, handles: Handle[]): Handle[] {
@@ -48,6 +64,12 @@ export function FooterLogo() {
 	/** The handle last pressed, shown filled in brand pink until you press somewhere else. */
 	const [selected, setSelected] = useState<string | null>(null);
 	const dark = useIsDark();
+	const wide = useWide();
+	const fine = useFinePointer();
+	const paths = wide ? LOGO_PATHS : LOGO_PATHS.filter((p) => p.id === "mark");
+	/** Width of what's drawn, in logo units: the whole logo, or the mark alone. */
+	const width = wide ? 524 : 100;
+	const [pxPerUnit, setPxPerUnit] = useState(1);
 	const [effect, setEffect] = useState(0);
 	const [seed, setSeed] = useState(7);
 	const fill = useMemo<Doc>(() => markFillDoc(mulberry32(seed), effect, dark), [seed, effect, dark]);
@@ -56,6 +78,15 @@ export function FooterLogo() {
 
 	// Picked once from the original drawing, so handles keep their identity while they move.
 	const handles = useMemo(() => (mounted ? Object.fromEntries(LOGO_PATHS.map(({ id }) => [id, visibleHandles(id, pickHandles(ORIGINAL[id]))])) : {}), [mounted]);
+
+	useEffect(() => {
+		const el = svg.current!;
+		const ro = new ResizeObserver(() => setPxPerUnit(el.clientWidth / width));
+		ro.observe(el);
+		return () => ro.disconnect();
+	}, [width]);
+	/** Each handle's invisible target, in logo units. */
+	const hit = fine ? 10 : Math.max(10, TOUCH_TARGET / pxPerUnit);
 
 	// Re-roll the mark's fill. Still for reduced motion.
 	useEffect(() => {
@@ -112,9 +143,9 @@ export function FooterLogo() {
 				aria-hidden
 				className="absolute"
 				style={{
-					left: `${(-PAD / 524) * 100}%`,
+					left: `${(-PAD / width) * 100}%`,
 					top: `${-PAD}%`,
-					width: `${((100 + 2 * PAD) / 524) * 100}%`,
+					width: `${((100 + 2 * PAD) / width) * 100}%`,
 					height: `${100 + 2 * PAD}%`,
 					clipPath: "url(#footer-mark-clip)",
 				}}
@@ -123,9 +154,9 @@ export function FooterLogo() {
 			</div>
 			<svg
 				ref={svg}
-				viewBox={LOGO_VIEWBOX}
+				viewBox={wide ? LOGO_VIEWBOX : "0 0 100 100"}
 				role="img"
-				aria-label="The Clueso logo"
+				aria-label={wide ? "The Clueso logo" : "The Clueso mark"}
 				className="relative w-full touch-none overflow-visible select-none"
 				onPointerMove={move}
 				onPointerDown={() => setSelected(null)}
@@ -137,7 +168,7 @@ export function FooterLogo() {
 						<path d={markPath} fillRule="evenodd" transform={`scale(${1 / (100 + 2 * PAD)}) translate(${PAD} ${PAD})`} />
 					</clipPath>
 				</defs>
-				{LOGO_PATHS.map(({ id }) => (
+				{paths.map(({ id }) => (
 					<g
 						key={id}
 						onPointerEnter={() => {
@@ -166,7 +197,7 @@ export function FooterLogo() {
 							return (
 								<g key={handleKey(id, h)} onPointerDown={down(id, h)} className="cursor-grab active:cursor-grabbing">
 									{/* A bigger invisible target, so small handles are easy to grab. */}
-									<rect x={x - 5} y={y - 5} width={10} height={10} fill="transparent" />
+									<rect x={x - hit / 2} y={y - hit / 2} width={hit} height={hit} fill="transparent" />
 									<rect
 										x={x - 1.6}
 										y={y - 1.6}

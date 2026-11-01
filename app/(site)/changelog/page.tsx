@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function ChangelogPage() {
 	return (
 		<Band rule={false} labelledBy="changelog-title" flush>
-			<SectionHeading id="changelog-title" align="left" title="Changelog" intro="What's new on clueso.design, newest first." />
+			<SectionHeading id="changelog-title" title="Changelog" intro="What's new on clueso.design, newest first." />
 			<Timeline entries={changelog} headingLevel="h2" />
 		</Band>
 	);

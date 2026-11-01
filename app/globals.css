@@ -55,8 +55,8 @@
 	@media (prefers-reduced-motion: no-preference) {
 		:where([class*="type-title"], [class*="type-text"]) {
 			transition:
-				font-weight 240ms var(--ease-out-strong),
-				font-size 240ms var(--ease-out-strong);
+				font-weight 120ms var(--ease-out-strong),
+				font-size 120ms var(--ease-out-strong);
 		}
 		::view-transition-old(root),
 		::view-transition-new(root) {

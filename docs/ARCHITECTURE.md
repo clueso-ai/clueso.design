@@ -40,14 +40,14 @@ Tool pages get the full viewport and no site nav. Brand Lab's mark and name in i
 ## Site features
 
 - **Make it yours.** The homepage hero asks for a name and favourite colour for the visitor's cursor. The Customize website button (bottom right) lets visitors pick the title and text fonts (Nohemi, Geist, Geist Mono, Geist Pixel, Geist Serif), their weights, a type scale (base size and ratio, which override `--type-base` and `--type-ratio`; every size token is computed from them), and a Clueso cursor colour (palette, OKLCH picker or shuffle), name and tilt. Shuffle changes the whole look at once. Font swaps cross-fade with a view transition; weights and sizes animate with CSS. The cursor colour is also the text highlight colour, with ink picked from its OKLCH lightness. Saved in localStorage (`lib/site-prefs.ts` for the data, `lib/site-prefs-store.ts` for the store) and applied by `components/site/site-prefs-root.tsx` to site pages only. Tool pages ignore it. The logo is always Nohemi.
-- **The cursor.** `.site-cursor` hides the native pointer inside its scope (`styles/site.css`) and `site-cursor.tsx` draws the piece. The hero is always a scope. "Use it on every page" makes the whole site one.
+- **The cursor.** `.site-cursor` hides the native pointer inside its scope (`styles/site.css`) and `site-cursor.tsx` draws the piece. The hero asks whether to use the Clueso cursor or the visitor's own (`cluesoCursor`, on by default). On makes the whole site one scope. Near the right edge the name tag moves to the left of the piece.
 - **Type guides.** `hero-title.tsx` draws cap height, x-height and baseline across the hero, measured from the live font.
 - **Team.** Each card's cursor leans towards yours and high-fives it (`team-card.tsx`).
 - **Footer logo.** The Clueso logo as editable paths (`footer-logo.tsx`, `lib/path-edit.ts`, `lib/clueso-logo.ts`).
 - **Guide lines.** `components/site/frame.tsx`: each band has a full-width rule, a framed content column, hatched gutters and crosses where rules meet. Illustrations (`illustration.tsx`) are the Clueso mark in Brand Lab treatments: halftone, line screen, LED pixels, construction grid, assembly. The hatch runs at the logo's 135° diagonal.
 - **Team data.** `lib/team.ts`. Photos go in `public/team/<slug>.jpg` at 4:5.
 - **Changelog.** Add an entry to `lib/changelog.ts` when something ships.
-- The theme toggle wipes in the new theme through a Clueso piece mask (view transition, `styles/site.css`).
+- The theme toggle sweeps the new theme in behind a glimm band (view transition, `lib/theme-wipe.ts`, `styles/site.css`). Switching again mid sweep turns the band around.
 - Brand Lab embeds at `/tools/brand-lab?embed`: it opens on posters and never reads or writes the visitor's autosave (`EMBED` in its store).
 - Say hi (`components/site/say-hi.tsx`) is parked: built but not on any page yet. It posts to `/api/hello`, which forwards to a Slack incoming webhook in `HELLO_WEBHOOK_URL`. Without it, production answers 503 and dev logs to the console.
 - Geist Pixel and Geist Serif are OFL (`public/fonts/GEIST-OFL.txt`).
@@ -85,7 +85,7 @@ v1 is canonical and is the direction Jigsaw is expected to move. Today every v1 
 | Type roles Title and Text | Jigsaw has title, para, label, mono. Para and label map to Text with weight set per component. Mono is a family, not a role. |
 | `gap-*` | `spacing-*` |
 
-Type: site titles default to Nohemi 200, and visitors can change them. The logo is always Nohemi 400. Brand Lab keeps Nohemi 300 titles through Jigsaw's `title-*` utilities (patched in the snapshot, see its SYNC.md).
+Type: site titles default to Nohemi 350 and body to Geist 350, and visitors can change them. The logo is always Nohemi 400. Brand Lab keeps Nohemi 300 titles through Jigsaw's `title-*` utilities (patched in the snapshot, see its SYNC.md).
 
 Radius: four steps by container size, 2px, 4px, 8px and 12px. Nothing larger. `rounded-full` appears only on small dots, bars and switches, where it never exceeds 12px.
 

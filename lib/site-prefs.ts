@@ -135,8 +135,8 @@ export interface SitePrefs {
 	cursorName: string;
 	/** Tilt of the cursor piece in degrees. 0 is upright. */
 	cursorTilt: number;
-	/** Use the Clueso cursor across the site, not only in the hero. */
-	cursorEverywhere: boolean;
+	/** Use the Clueso cursor on the site. Off keeps the visitor's own cursor. */
+	cluesoCursor: boolean;
 	/** Type scale: body size in px, and the ratio between steps. No ratio keeps the site's own, which grows by breakpoint. */
 	typeBase: number;
 	typeRatio: number | null;
@@ -144,15 +144,15 @@ export interface SitePrefs {
 
 export const DEFAULT_PREFS: SitePrefs = {
 	titleFont: "nohemi",
-	titleWeight: 200,
+	titleWeight: 350,
 	titleStyle: "square",
 	textFont: "geist",
-	textWeight: 300,
+	textWeight: 350,
 	textStyle: "square",
 	cursorColor: "ink",
 	cursorName: "",
 	cursorTilt: 0,
-	cursorEverywhere: false,
+	cluesoCursor: true,
 	typeBase: 15,
 	typeRatio: null,
 };

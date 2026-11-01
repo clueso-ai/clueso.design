@@ -305,28 +305,28 @@
 	font-family: var(--font-title-family);
 	font-size: var(--title-xl-size);
 	line-height: var(--title-xl-leading);
-	font-weight: var(--title-weight, 200);
+	font-weight: var(--title-weight, 350);
 	letter-spacing: -0.02em;
 }
 @utility type-title-l {
 	font-family: var(--font-title-family);
 	font-size: var(--title-l-size);
 	line-height: var(--title-l-leading);
-	font-weight: var(--title-weight, 200);
+	font-weight: var(--title-weight, 350);
 	letter-spacing: -0.015em;
 }
 @utility type-title-m {
 	font-family: var(--font-title-family);
 	font-size: var(--title-m-size);
 	line-height: var(--title-m-leading);
-	font-weight: var(--title-weight, 200);
+	font-weight: var(--title-weight, 350);
 	letter-spacing: -0.01em;
 }
 @utility type-title-s {
 	font-family: var(--font-title-family);
 	font-size: var(--title-s-size);
 	line-height: var(--title-s-leading);
-	font-weight: var(--title-weight, 200);
+	font-weight: var(--title-weight, 350);
 }
 /* The clueso.design logo: the mark, then "Design" in Nohemi Regular. The mark sits on the
    baseline and is 1.14x Nohemi's cap height (0.715em), so it reads centred on the capitals,
@@ -352,19 +352,19 @@
 	font-family: var(--font-text-family);
 	font-size: var(--text-l-size);
 	line-height: var(--text-l-leading);
-	font-weight: var(--text-weight, 300);
+	font-weight: var(--text-weight, 350);
 }
 @utility type-text-m {
 	font-family: var(--font-text-family);
 	font-size: var(--text-m-size);
 	line-height: var(--text-m-leading);
-	font-weight: var(--text-weight, 300);
+	font-weight: var(--text-weight, 350);
 }
 @utility type-text-s {
 	font-family: var(--font-text-family);
 	font-size: var(--text-s-size);
 	line-height: var(--text-s-leading);
-	font-weight: var(--text-weight, 300);
+	font-weight: var(--text-weight, 350);
 }
 
 /* Tags on cursors and other tiny labels. Fixed size and weight: they don't follow the visitor's type scale. */
