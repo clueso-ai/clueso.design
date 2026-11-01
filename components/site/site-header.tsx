@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LiveVisitors } from "./live-visitors";
 import { Logo } from "./logo";
 import { MobileNav } from "./mobile-nav";
 import { ThemeToggle } from "./theme-toggle";
@@ -29,6 +30,7 @@ export function SiteHeader() {
 							</Link>
 						))}
 					</nav>
+					<LiveVisitors />
 					<ThemeToggle />
 					<MobileNav items={NAV} />
 				</div>

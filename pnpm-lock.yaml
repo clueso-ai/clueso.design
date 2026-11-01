@@ -53,9 +53,6 @@ importers:
       gifenc:
         specifier: 1.0.3
         version: 1.0.3
-      glimm:
-        specifier: 0.3.1
-        version: 0.3.1(next@16.4.3(@babel/core@7.29.7)(@types/node@26.6.6)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react@19.3.1)
       mp4-muxer:
         specifier: 5.2.2
         version: 5.2.2
@@ -2313,18 +2310,6 @@ packages:
 
   gifenc@1.0.3:
     resolution: {integrity: sha512-xdr6AdrfGBcfzncONUOlXMBuc5wJDtOueE3c5rdG0oNgtINLD+f2iFZltrBRZYzACRbKr+mSVU/x98zv2u3jmw==}
-
-  glimm@0.3.1:
-    resolution: {integrity: sha512-7O+Ga+cqqP8FEFDa63X+BXCYKndlnZZEMjTl1DhMfQ3yWweDgl8nC+ImP/zLo351YEn/6WpnOL6jKfvFWmnyDg==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      next: '>=14'
-      react: '>=18'
-    peerDependenciesMeta:
-      next:
-        optional: true
-      react:
-        optional: true
 
   glob-parent@5.1.2:
     resolution: {integrity: sha512-AOIgSQCepiJYwP3ARnGx+5VnTu2HBYdzbGP45eLw1vr3zB3vZLeyed1sC9hnbcOc9/SrMyM5RPQrkGz4aS9Zow==}
@@ -5824,11 +5809,6 @@ snapshots:
       resolve-pkg-maps: 1.0.0
 
   gifenc@1.0.3: {}
-
-  glimm@0.3.1(next@16.4.3(@babel/core@7.29.7)(@types/node@26.6.6)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react@19.3.1):
-    optionalDependencies:
-      next: 16.4.3(@babel/core@7.29.7)(@types/node@26.6.6)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
-      react: 19.3.1
 
   glob-parent@5.1.2:
     dependencies:

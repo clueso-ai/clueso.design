@@ -367,6 +367,13 @@
 	font-weight: var(--text-weight, 350);
 }
 
+/* Weight modifier for any type-title-* or type-text-* style: the same size, a heavier cut. For panel
+   headers and labels that need to read as a heading without growing. */
+@utility type-strong {
+	--title-weight: 500;
+	--text-weight: 500;
+}
+
 /* Tags on cursors and other tiny labels. Fixed size and weight: they don't follow the visitor's type scale. */
 @utility type-text-xs {
 	font-family: var(--font-text-family);

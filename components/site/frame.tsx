@@ -50,7 +50,8 @@ export function SectionHeading({ id, title, intro, children }: { id: string; tit
 				<h2 id={id} className="type-title-l text-neutral-strong">
 					{title}
 				</h2>
-				{intro && <p className="type-text-l text-pretty text-neutral-normal">{intro}</p>}
+				{/* A "\n" in the intro breaks the line there. */}
+				{intro && <p className="type-text-l text-pretty whitespace-pre-line text-neutral-normal">{intro}</p>}
 			</div>
 			{children && <div className="flex shrink-0 flex-wrap gap-gap-s">{children}</div>}
 		</div>
