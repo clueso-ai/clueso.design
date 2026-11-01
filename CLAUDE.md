@@ -28,7 +28,7 @@ Read docs/ARCHITECTURE.md before structural changes.
 - Short, plain, direct sentences. No em dashes.
 
 ## Brand
-- Site titles default to Nohemi 200 (visitors can retune fonts and the type scale from the hero). Nohemi for the logo and brand moments. Geist for body and controls. Geist Mono for values and code.
+- Site titles default to Nohemi 350, body to Geist 350 (visitors can retune fonts and the type scale from the hero). Nohemi for the logo and brand moments. Geist for body and controls. Geist Mono for values and code.
 - No full stops at the end of titles or headings.
 - Brand color #DA5CC7, used sparingly in the lab theme.
 

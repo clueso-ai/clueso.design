@@ -20,7 +20,7 @@ export function SitePrefsRoot({ children }: { children: ReactNode }) {
 	} as CSSProperties;
 
 	return (
-		<div data-type-scope style={style} className={`flex min-h-dvh flex-col ${p.cursorEverywhere ? "site-cursor" : ""}`}>
+		<div data-type-scope style={style} className={`flex min-h-dvh flex-col ${p.cluesoCursor ? "site-cursor" : ""}`}>
 			{children}
 			<SiteCursor />
 		</div>

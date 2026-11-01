@@ -55,7 +55,7 @@ export function setPrefsSmooth(patch: Partial<SitePrefs>) {
 /** Back to the default look. The cursor keeps its colour and name. */
 export function resetPrefs() {
 	load();
-	setPrefsSmooth({ ...DEFAULT_PREFS, cursorColor: current.cursorColor, cursorName: current.cursorName, cursorEverywhere: current.cursorEverywhere });
+	setPrefsSmooth({ ...DEFAULT_PREFS, cursorColor: current.cursorColor, cursorName: current.cursorName, cluesoCursor: current.cluesoCursor });
 }
 
 const subscribe = (l: () => void) => {

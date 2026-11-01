@@ -6,8 +6,8 @@ import { buttonVariants } from "./jigsaw/components/ui/controls/button/button";
 // variants and label structure to a Next.js <Link>. Remove when Jigsaw ships asChild or a link
 // variant. Jigsaw buttons drop the focus outline, so focus-ring puts a visible one back.
 
-// Below md, buttons step down one size (large to medium, medium to small) so they sit right on
-// phones. From md up they're the size you asked for. The md: classes repeat Jigsaw's size
+// Below md, large buttons step down to medium so they sit right on phones. Medium stays medium:
+// any smaller is too small to tap comfortably. From md up they're the size you asked for. The md: classes repeat Jigsaw's size
 // variants, written out in full so Tailwind finds them.
 
 const LABEL = { small: "label-xsmall", medium: "label-small", large: "label-medium" } as const;
@@ -16,9 +16,9 @@ const ICON = { small: "size-[16px]", medium: "size-[16px]", large: "size-[20px]"
 
 type Size = keyof typeof LABEL;
 
-const STEP_DOWN: Record<Size, Size> = { small: "small", medium: "small", large: "medium" };
-const MD_BUTTON = { small: "", medium: "md:h-[32px] md:px-xl md:gap-2xs md:rounded-sm", large: "md:h-[40px] md:px-2xl md:gap-xs md:rounded-sm" } as const;
-const MD_LABEL = { small: "", medium: "md:label-small", large: "md:label-medium" } as const;
+const STEP_DOWN: Record<Size, Size> = { small: "small", medium: "medium", large: "medium" };
+const MD_BUTTON = { small: "", medium: "", large: "md:h-[40px] md:px-2xl md:gap-xs md:rounded-sm" } as const;
+const MD_LABEL = { small: "", medium: "", large: "md:label-medium" } as const;
 const MD_LABEL_HEIGHT = { small: "", medium: "", large: "md:h-[20px]" } as const;
 const MD_ICON = { small: "", medium: "", large: "md:size-[20px]" } as const;
 
