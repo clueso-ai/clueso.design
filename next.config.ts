@@ -16,7 +16,11 @@ const config: NextConfig = {
 	output: "standalone",
 	// Static playground pieces live in public/playground/<slug>/ and keep their exported files as is.
 	async rewrites() {
-		return [{ source: "/playground/:slug", destination: "/playground/:slug/index.html" }];
+		return [
+			{ source: "/playground/:slug", destination: "/playground/:slug/index.html" },
+			// Browsers ask for /favicon.ico regardless of the <link rel="icon">.
+			{ source: "/favicon.ico", destination: "/mark.svg" },
+		];
 	},
 	turbopack: {
 		root: import.meta.dirname,
