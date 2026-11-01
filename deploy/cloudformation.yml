@@ -1,0 +1,337 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >-
+  clueso.design: Next.js on ECS Fargate (arm64) behind an ALB, fronted by CloudFront.
+  Deployed by .github/workflows/deploy.yml. One-time setup (zone, certs, ECR, deploy role) is deploy/setup.sh.
+
+Parameters:
+  ImageUrl:
+    Type: String
+  DomainName:
+    Type: String
+    Default: clueso.design
+  HostedZoneId:
+    Type: AWS::Route53::HostedZone::Id
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+  PublicSubnets:
+    Type: List<AWS::EC2::Subnet::Id>
+  AppSubnets:
+    Type: List<AWS::EC2::Subnet::Id>
+  AlbCertArn:
+    Type: String
+    Description: ap-south-1 ACM cert for the apex and *.domain. CloudFront forwards the viewer Host, so the ALB must present a cert for it.
+  CdnCertArn:
+    Type: String
+    Description: us-east-1 ACM cert for the apex and *.domain.
+  DesiredCount:
+    Type: Number
+    Default: 1
+  Cpu:
+    Type: String
+    Default: "512"
+  Memory:
+    Type: String
+    Default: "1024"
+  HelloWebhookSecretArn:
+    Type: String
+    Default: ""
+    Description: Optional Secrets Manager secret holding the Slack webhook for /api/hello. Empty means the form answers 503.
+
+Conditions:
+  HasHelloWebhook: !Not [!Equals [!Ref HelloWebhookSecretArn, ""]]
+
+Mappings:
+  Static:
+    Ids:
+      CloudFrontOriginPrefixList: pl-9aa247f3 # com.amazonaws.global.cloudfront.origin-facing, ap-south-1
+      CachingDisabled: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
+      CachingOptimized: 658327ea-f89d-4fab-a63d-7e88639e58f6
+      AllViewer: 216adef6-5c7f-47e4-b989-5492eafa07d3
+      CloudFrontZone: Z2FDTNDATAQYW2
+
+Resources:
+  Cluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Ref AWS::StackName
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /ecs/${AWS::StackName}
+      RetentionInDays: 30
+
+  ExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-exec
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: ecs-tasks.amazonaws.com }
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      Policies:
+        - !If
+          - HasHelloWebhook
+          - PolicyName: read-hello-webhook
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: Allow
+                  Action: secretsmanager:GetSecretValue
+                  Resource: !Ref HelloWebhookSecretArn
+          - !Ref AWS::NoValue
+
+  TaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-task
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: ecs-tasks.amazonaws.com }
+            Action: sts:AssumeRole
+
+  AlbSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: clueso.design ALB, reachable only from CloudFront
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          SourcePrefixListId: !FindInMap [Static, Ids, CloudFrontOriginPrefixList]
+
+  TaskSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: clueso.design Fargate tasks
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3000
+          ToPort: 3000
+          SourceSecurityGroupId: !Ref AlbSecurityGroup
+
+  LoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: !Ref AWS::StackName
+      Scheme: internet-facing
+      Subnets: !Ref PublicSubnets
+      SecurityGroups: [!Ref AlbSecurityGroup]
+      LoadBalancerAttributes:
+        - { Key: idle_timeout.timeout_seconds, Value: "60" }
+
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: !Ref AWS::StackName
+      VpcId: !Ref VpcId
+      Protocol: HTTP
+      Port: 3000
+      TargetType: ip
+      HealthCheckPath: /
+      HealthCheckIntervalSeconds: 15
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 3
+      Matcher: { HttpCode: "200" }
+      TargetGroupAttributes:
+        - { Key: deregistration_delay.timeout_seconds, Value: "20" }
+
+  HttpsListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref LoadBalancer
+      Protocol: HTTPS
+      Port: 443
+      SslPolicy: ELBSecurityPolicy-TLS13-1-2-2021-06
+      Certificates: [{ CertificateArn: !Ref AlbCertArn }]
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup
+
+  # CloudFront reaches the ALB through this name. It is covered by the *.domain cert.
+  OriginRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Sub origin.${DomainName}
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt LoadBalancer.DNSName
+        HostedZoneId: !GetAtt LoadBalancer.CanonicalHostedZoneID
+
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Ref AWS::StackName
+      RequiresCompatibilities: [FARGATE]
+      NetworkMode: awsvpc
+      Cpu: !Ref Cpu
+      Memory: !Ref Memory
+      RuntimePlatform:
+        CpuArchitecture: ARM64
+        OperatingSystemFamily: LINUX
+      ExecutionRoleArn: !GetAtt ExecutionRole.Arn
+      TaskRoleArn: !GetAtt TaskRole.Arn
+      ContainerDefinitions:
+        - Name: web
+          Image: !Ref ImageUrl
+          Essential: true
+          PortMappings: [{ ContainerPort: 3000, Protocol: tcp }]
+          Secrets: !If
+            - HasHelloWebhook
+            - [{ Name: HELLO_WEBHOOK_URL, ValueFrom: !Ref HelloWebhookSecretArn }]
+            - !Ref AWS::NoValue
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref LogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: web
+
+  Service:
+    Type: AWS::ECS::Service
+    DependsOn: HttpsListener
+    Properties:
+      ServiceName: web
+      Cluster: !Ref Cluster
+      LaunchType: FARGATE
+      DesiredCount: !Ref DesiredCount
+      TaskDefinition: !Ref TaskDefinition
+      HealthCheckGracePeriodSeconds: 30
+      DeploymentConfiguration:
+        MinimumHealthyPercent: 100
+        MaximumPercent: 200
+        DeploymentCircuitBreaker: { Enable: true, Rollback: true }
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          Subnets: !Ref AppSubnets
+          SecurityGroups: [!Ref TaskSecurityGroup]
+      LoadBalancers:
+        - ContainerName: web
+          ContainerPort: 3000
+          TargetGroupArn: !Ref TargetGroup
+
+  WwwRedirectFunction:
+    Type: AWS::CloudFront::Function
+    Properties:
+      Name: !Sub ${AWS::StackName}-www-redirect
+      AutoPublish: true
+      FunctionConfig:
+        Comment: Send www to the apex
+        Runtime: cloudfront-js-2.0
+      FunctionCode: !Sub |
+        function handler(event) {
+          var req = event.request;
+          if (req.headers.host && req.headers.host.value === "www.${DomainName}") {
+            var qs = Object.keys(req.querystring).map(function (k) {
+              var v = req.querystring[k];
+              return v.value === "" ? k : k + "=" + v.value;
+            }).join("&");
+            return {
+              statusCode: 301,
+              statusDescription: "Moved Permanently",
+              headers: { location: { value: "https://${DomainName}" + req.uri + (qs ? "?" + qs : "") } }
+            };
+          }
+          return req;
+        }
+
+  Distribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: !Ref DomainName
+        Aliases: [!Ref DomainName, !Sub "www.${DomainName}"]
+        HttpVersion: http2and3
+        IPV6Enabled: true
+        PriceClass: PriceClass_All
+        ViewerCertificate:
+          AcmCertificateArn: !Ref CdnCertArn
+          SslSupportMethod: sni-only
+          MinimumProtocolVersion: TLSv1.2_2021
+        Origins:
+          - Id: alb
+            DomainName: !Sub origin.${DomainName}
+            CustomOriginConfig:
+              OriginProtocolPolicy: https-only
+              OriginSSLProtocols: [TLSv1.2]
+              OriginReadTimeout: 60
+              OriginKeepaliveTimeout: 5
+        # Pages are not cached at the edge: Next varies on RSC headers that CloudFront ignores.
+        DefaultCacheBehavior:
+          TargetOriginId: alb
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [GET, HEAD, OPTIONS, PUT, PATCH, POST, DELETE]
+          CachedMethods: [GET, HEAD]
+          Compress: true
+          CachePolicyId: !FindInMap [Static, Ids, CachingDisabled]
+          OriginRequestPolicyId: !FindInMap [Static, Ids, AllViewer]
+          FunctionAssociations:
+            - EventType: viewer-request
+              FunctionARN: !GetAtt WwwRedirectFunction.FunctionMetadata.FunctionARN
+        CacheBehaviors:
+          # Fingerprinted build output, safe to cache forever.
+          - PathPattern: /_next/static/*
+            TargetOriginId: alb
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods: [GET, HEAD]
+            CachedMethods: [GET, HEAD]
+            Compress: true
+            CachePolicyId: !FindInMap [Static, Ids, CachingOptimized]
+
+  ApexRecordA:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Ref DomainName
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt Distribution.DomainName
+        HostedZoneId: !FindInMap [Static, Ids, CloudFrontZone]
+  ApexRecordAAAA:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Ref DomainName
+      Type: AAAA
+      AliasTarget:
+        DNSName: !GetAtt Distribution.DomainName
+        HostedZoneId: !FindInMap [Static, Ids, CloudFrontZone]
+  WwwRecordA:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Sub www.${DomainName}
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt Distribution.DomainName
+        HostedZoneId: !FindInMap [Static, Ids, CloudFrontZone]
+  WwwRecordAAAA:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Sub www.${DomainName}
+      Type: AAAA
+      AliasTarget:
+        DNSName: !GetAtt Distribution.DomainName
+        HostedZoneId: !FindInMap [Static, Ids, CloudFrontZone]
+
+Outputs:
+  DistributionId:
+    Value: !Ref Distribution
+  DistributionDomain:
+    Value: !GetAtt Distribution.DomainName
+  ClusterName:
+    Value: !Ref Cluster
+  ServiceName:
+    Value: !GetAtt Service.Name
