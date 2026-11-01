@@ -61,3 +61,71 @@
 :root.theme-wipe-cursorless::view-transition {
 	cursor: none;
 }
+
+/* While the theme class changes (lib/theme.ts), nothing transitions. Otherwise every button fades from
+   the old theme's colours for 150ms after the wipe, which flickers when a wipe is turned around. The
+   toggle's sun and moon keep animating. */
+:root.theme-instant :not(.theme-icon, .theme-icon *),
+:root.theme-instant ::before,
+:root.theme-instant ::after {
+	transition: none !important;
+}
+
+/* The theme toggle's shade comes from [data-hover], which the toggle sets from the pointer's position,
+   because mid wipe the browser hovers nothing. Pressing doesn't darken it: the press starts the sweep,
+   and a pressed shade caught in the wipe's snapshot would flicker as the band crosses the button. */
+.theme-toggle:not(:disabled) {
+	&:hover,
+	&:active {
+		background-color: transparent;
+	}
+	&[data-hover] {
+		background-color: var(--color-interaction-hover);
+	}
+}
+
+/* The theme toggle's sun and moon (components/site/theme-toggle.tsx). Both sit in one cell: the one
+   for the current theme turns and grows in while the other turns away and shrinks out. Transitions,
+   not keyframes, so a quick second click reverses them from wherever they are. Strokes stay 1px at
+   any icon size. */
+.theme-icon {
+	display: grid;
+}
+.theme-icon > svg {
+	grid-area: 1 / 1;
+	width: 100%;
+	height: 100%;
+	opacity: 0;
+	scale: 0.5;
+	filter: blur(2px);
+	transition-property: opacity, scale, rotate, filter;
+	transition-duration: 400ms;
+	transition-timing-function: var(--ease-out-strong);
+}
+.theme-icon path {
+	stroke-width: 1px;
+	vector-effect: non-scaling-stroke;
+}
+/* Before it's in view, the sun has turned back a quarter and the moon has swung down. */
+.theme-icon > [data-icon="sun"] {
+	rotate: -90deg;
+}
+.theme-icon > [data-icon="moon"] {
+	rotate: 45deg;
+}
+.theme-icon[data-theme="dark"] > [data-icon="sun"],
+.theme-icon[data-theme="light"] > [data-icon="moon"] {
+	opacity: 1;
+	scale: 1;
+	rotate: 0deg;
+	filter: none;
+}
+@media (prefers-reduced-motion: reduce) {
+	.theme-icon > svg {
+		scale: 1;
+		rotate: 0deg;
+		filter: none;
+		transition-property: opacity;
+		transition-duration: 150ms;
+	}
+}

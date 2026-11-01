@@ -28,7 +28,7 @@ interface BandProps {
 /** One horizontal band of the page: full-width rule, hatched gutters, framed content column. */
 export function Band({ id, labelledBy, rule = true, flush = false, className = "", children, as: Tag = "section" }: BandProps) {
 	return (
-		<Tag id={id} aria-labelledby={labelledBy} className={`hatch scroll-mt-28 md:scroll-mt-16 ${rule ? "border-t border-neutral-weak" : ""}`}>
+		<Tag id={id} aria-labelledby={labelledBy} className={`hatch scroll-mt-16 ${rule ? "border-t border-neutral-weak" : ""}`}>
 			<div className={`relative mx-auto max-w-page bg-page ${flush ? "" : "pb-gap-3xl"} xl:border-x xl:border-neutral-weak ${className}`}>
 				{rule && (
 					<>
@@ -42,27 +42,17 @@ export function Band({ id, labelledBy, rule = true, flush = false, className = "
 	);
 }
 
-/** A section heading with its intro. Centred, or left-aligned with any actions on the right. */
-export function SectionHeading({ id, title, intro, align = "center", children }: { id: string; title: string; intro?: string; align?: "center" | "left"; children?: ReactNode }) {
-	if (align === "left")
-		return (
-			<div className="flex flex-col gap-gap-m px-gap-l pt-gap-3xl pb-gap-xl md:flex-row md:items-end md:justify-between">
-				<div className="flex max-w-measure flex-col gap-gap-s">
-					<h2 id={id} className="type-title-l text-neutral-strong">
-						{title}
-					</h2>
-					{intro && <p className="type-text-l text-neutral-normal">{intro}</p>}
-				</div>
-				{children && <div className="flex shrink-0 flex-wrap gap-gap-s">{children}</div>}
-			</div>
-		);
+/** A section heading with its intro, left-aligned like everything else, with any actions on the right. */
+export function SectionHeading({ id, title, intro, children }: { id: string; title: string; intro?: string; children?: ReactNode }) {
 	return (
-		<div className="mx-auto flex max-w-measure-wide flex-col items-center gap-gap-s px-gap-l pt-gap-3xl pb-gap-2xl text-center">
-			<h2 id={id} className="type-title-l text-balance text-neutral-strong">
-				{title}
-			</h2>
-			{intro && <p className="type-text-l max-w-measure text-pretty text-neutral-normal">{intro}</p>}
-			{children}
+		<div className="flex flex-col gap-gap-m px-gap-l pt-gap-3xl pb-gap-xl md:flex-row md:items-end md:justify-between">
+			<div className="flex max-w-measure flex-col gap-gap-s">
+				<h2 id={id} className="type-title-l text-neutral-strong">
+					{title}
+				</h2>
+				{intro && <p className="type-text-l text-pretty text-neutral-normal">{intro}</p>}
+			</div>
+			{children && <div className="flex shrink-0 flex-wrap gap-gap-s">{children}</div>}
 		</div>
 	);
 }

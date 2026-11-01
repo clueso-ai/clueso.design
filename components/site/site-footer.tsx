@@ -4,7 +4,7 @@ import { Logo } from "./logo";
 
 export function SiteFooter() {
 	return (
-		<footer className="hatch border-t border-neutral-weak">
+		<footer className="hatch overflow-x-clip border-t border-neutral-weak">
 			<div className="relative mx-auto max-w-page bg-page xl:border-x xl:border-neutral-weak">
 				<Cross className="top-0 left-0 hidden -translate-x-1/2 -translate-y-1/2 xl:block" />
 				<Cross className="top-0 right-0 hidden translate-x-1/2 -translate-y-1/2 xl:block" />

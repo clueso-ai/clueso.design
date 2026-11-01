@@ -13,8 +13,30 @@ export const CURSOR_SIZE = 19;
 /** Where the pointer tip sits inside the drawing, in px. */
 export const CURSOR_TIP: [number, number] = [0.75, 0.75];
 
-/** `label` false tucks the name tag away (the site cursor does this when the mouse rests). */
-export function CluesoCursor({ color, name, tilt = 0, label = true, className }: { color: CursorColor; name?: string; tilt?: number; label?: boolean; className?: string }) {
+/**
+ * `label` false hides the name tag (the site cursor shows it only while the pointer rests). `flip`
+ * puts the tag on the left of the piece, for when the right edge of the window is close. The tag
+ * grows out of the corner next to the piece and shrinks back into it, both on an ease-out curve:
+ * a gentle settle coming in, a quick tuck going out.
+ */
+export function CluesoCursor({
+	color,
+	name,
+	tilt = 0,
+	label = true,
+	flip = false,
+	className,
+}: {
+	color: CursorColor;
+	name?: string;
+	tilt?: number;
+	label?: boolean;
+	flip?: boolean;
+	className?: string;
+}) {
+	// Anchored on the corner nearest the piece: top left when the tag is on the right, top right when it's on the left.
+	const side = flip ? "right-full mr-0.5" : "left-full ml-1.5";
+	const pill = "block max-w-48 truncate type-text-xs rounded-tiny px-1 whitespace-nowrap";
 	return (
 		<span aria-hidden className={`relative block ${className ?? ""}`} style={{ width: CURSOR_SIZE, height: CURSOR_SIZE }}>
 			<svg
@@ -29,7 +51,8 @@ export function CluesoCursor({ color, name, tilt = 0, label = true, className }:
 			</svg>
 			{name && (
 				<span
-					className={`absolute top-2.5 left-full ml-1.5 max-w-48 origin-left truncate type-text-xs rounded-tiny px-1 whitespace-nowrap shadow-raised transition-[opacity,scale,translate] duration-200 ease-out-strong motion-reduce:transition-none ${label ? "" : "-translate-x-1 scale-90 opacity-0"}`}
+					data-cursor-tag
+					className={`absolute top-2.5 shadow-raised ${pill} ${side} ${flip ? "origin-top-right" : "origin-top-left"} transition-[scale,opacity] ease-out-strong motion-reduce:transition-none ${label ? "scale-100 opacity-100 duration-300" : "scale-60 opacity-0 duration-150"}`}
 					style={{ background: color.fill, color: color.ink }}
 				>
 					{name}

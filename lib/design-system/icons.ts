@@ -6,3 +6,5 @@ export { default as ArrowRightIcon } from "./jigsaw/icons/icons/Arrows and Direc
 export { default as ShuffleIcon } from "./jigsaw/icons/icons/Media/Shuffle.svg?react";
 export { default as SlidersIcon } from "./jigsaw/icons/icons/Technical Concepts/Sliding-knobs.svg?react";
 export { default as ExternalLinkIcon } from "./jigsaw/icons/icons/Technical Concepts/External-link.svg?react";
+export { default as CloseIcon } from "./jigsaw/icons/icons/Mathematics/Cross.svg?react";
+export { MenuIcon } from "./menu-icon";

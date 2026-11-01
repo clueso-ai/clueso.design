@@ -17,9 +17,16 @@ export function resolvedTheme(): SiteTheme {
 	return storedTheme() ?? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
 }
 
+/** Colours switch in one frame: nothing fades between themes on its own (styles/site.css, .theme-instant). */
 export function applySiteTheme(theme: SiteTheme = resolvedTheme()) {
-	document.documentElement.classList.toggle("dark", theme === "dark");
-	document.documentElement.style.colorScheme = theme;
+	const root = document.documentElement;
+	root.classList.add("theme-instant");
+	root.classList.toggle("dark", theme === "dark");
+	root.style.colorScheme = theme;
+	// Force a style and layout pass with transitions off, so the whole page takes the new colours
+	// now and turning transitions back on doesn't start any.
+	void root.offsetHeight;
+	root.classList.remove("theme-instant");
 }
 
 /** Inlined in <head> so the first paint is already in the right theme. */

@@ -1,10 +1,10 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useState } from "react";
-import { Button, InputGroup, InputGroupInput, Slider, ToggleSwitch, WrappedSelect } from "@/lib/design-system";
+import { useEffect, useRef, useState } from "react";
+import { Button, InputGroup, InputGroupInput, Slider, WrappedSelect } from "@/lib/design-system";
 import { CURSOR_COLORS, DEFAULT_PREFS, FONTS, cursorById, fontById, oklchCss, shuffleColor, shuffleSite, siteTypeRatio } from "@/lib/site-prefs";
-import { ShuffleIcon, SlidersIcon } from "@/lib/design-system/icons";
+import { CloseIcon, ShuffleIcon, SlidersIcon } from "@/lib/design-system/icons";
 import { resetPrefs, setPrefs, setPrefsSmooth, useSitePrefs } from "@/lib/site-prefs-store";
 import { useFinePointer } from "@/lib/use-fine-pointer";
 
@@ -41,7 +41,8 @@ function FontControl({ role, compact, font, weight, style, onFont, onWeight, onS
 			) : typeof range === "number" ? (
 				<span className="type-text-s flex h-8 items-center text-neutral-weak">Comes in one weight</span>
 			) : (
-				<Slider label="Weight" min={range[0]} max={range[1]} step={100} value={weight} onValueChange={(w) => onWeight(Math.round(w / 100) * 100)} />
+				// Variable fonts take any weight, so the slider glides instead of jumping in hundreds.
+				<Slider label="Weight" min={range[0]} max={range[1]} step={1} value={weight} onValueChange={(w) => onWeight(Math.round(w))} />
 			)}
 		</Group>
 	);
@@ -52,7 +53,7 @@ function ScaleControl({ compact }: { compact?: boolean }) {
 	const p = useSitePrefs();
 	return (
 		<Group label="Type scale" compact={compact}>
-			<Slider label="Base" unit="px" min={12} max={20} step={1} value={p.typeBase} onValueChange={(v) => setPrefs({ typeBase: Math.round(v) })} />
+			<Slider label="Base" unit="px" min={12} max={20} step={0.1} value={p.typeBase} onValueChange={(v) => setPrefs({ typeBase: Math.round(v * 10) / 10 })} />
 			<Slider label="Ratio" min={1.05} max={1.6} step={0.01} value={p.typeRatio ?? siteTypeRatio()} onValueChange={(v) => setPrefs({ typeRatio: Math.round(v * 100) / 100 })} />
 		</Group>
 	);
@@ -82,7 +83,7 @@ function ColorPicker() {
 	const swatch = "focus-ring size-5 rounded-small outline-offset-2 transition-transform duration-200 ease-out-strong active:scale-95";
 	return (
 		<>
-			<div className="flex flex-wrap items-center gap-gap-xs">
+			<div className="flex flex-wrap items-center gap-1.5">
 				<div role="radiogroup" aria-label="Cursor colour" className="contents">
 					{CURSOR_COLORS.map((c) => (
 						<button
@@ -148,6 +149,31 @@ function NameField() {
 	);
 }
 
+/** Clueso cursor or the visitor's own. A two-option radio group drawn as a segmented control. */
+function CursorChoice() {
+	const p = useSitePrefs();
+	const options = [
+		{ on: true, label: "Clueso cursor" },
+		{ on: false, label: "My own" },
+	];
+	return (
+		<div role="radiogroup" aria-label="Cursor" className="grid grid-cols-2 gap-gap-3xs rounded-medium bg-sunken-1 p-gap-3xs">
+			{options.map((o) => (
+				<button
+					key={o.label}
+					type="button"
+					role="radio"
+					aria-checked={p.cluesoCursor === o.on}
+					onClick={() => setPrefs({ cluesoCursor: o.on })}
+					className={`focus-ring type-text-s h-7 rounded-small px-gap-xs transition-[background-color,color,box-shadow] duration-200 ease-out-strong ${p.cluesoCursor === o.on ? "bg-raised-2 text-neutral-strong shadow-raised" : "text-neutral-weak hover:text-neutral-strong"}`}
+				>
+					{o.label}
+				</button>
+			))}
+		</div>
+	);
+}
+
 function CursorControl({ compact }: { compact?: boolean }) {
 	const p = useSitePrefs();
 	// Touch screens have no cursor. Name and colour still count (selection, Say hi), the rest doesn't.
@@ -158,11 +184,8 @@ function CursorControl({ compact }: { compact?: boolean }) {
 			<NameField />
 			{fine && (
 				<>
-					<Slider label="Tilt" unit="°" min={-45} max={45} step={1} value={p.cursorTilt} onValueChange={(t) => setPrefs({ cursorTilt: Math.round(t) })} />
-					<label className="type-text-s flex items-center justify-between gap-gap-s text-neutral-normal">
-						Use it on every page
-						<ToggleSwitch checked={p.cursorEverywhere} onChange={(cursorEverywhere) => setPrefs({ cursorEverywhere })} />
-					</label>
+					<CursorChoice />
+					{p.cluesoCursor && <Slider label="Tilt" unit="°" min={-45} max={45} step={1} value={p.cursorTilt} onValueChange={(t) => setPrefs({ cursorTilt: Math.round(t) })} />}
 				</>
 			)}
 		</Group>
@@ -209,7 +232,7 @@ function Controls({ compact }: { compact?: boolean }) {
 function Actions() {
 	const changed = useChanged();
 	return (
-		<div className="flex items-center gap-gap-2xs">
+		<div className="flex items-center justify-between gap-gap-2xs">
 			<Button variant="transparent" sentiment="neutral" size="xsmall" iconBefore icon={<ShuffleIcon />} className="focus-ring" onClick={() => setPrefsSmooth(shuffleSite())}>
 				Shuffle
 			</Button>
@@ -238,13 +261,19 @@ export function TypeTuner() {
 
 	return (
 		<div className="flex flex-col">
-			<div className="grid border-t border-neutral-weak text-left md:grid-cols-2 [&>*]:border-neutral-weak max-md:[&>*+*]:border-t md:[&>*:first-child]:border-r">
+			<div className="grid border-t border-neutral-weak text-left md:grid-cols-2 md:pointer-fine:grid-cols-3 [&>*]:border-neutral-weak max-md:[&>*+*]:border-t md:[&>*+*]:border-l">
 				<Group label="Your name">
 					<NameField />
 				</Group>
 				<Group label="Favourite colour">
 					<ColorPicker />
 				</Group>
+				{/* Touch screens have no cursor to choose. */}
+				<div className="hidden pointer-fine:block">
+					<Group label="Cursor">
+						<CursorChoice />
+					</Group>
+				</div>
 			</div>
 			<div className="flex items-center justify-between gap-gap-s border-t border-neutral-weak px-gap-l py-gap-xs">
 				<span className="type-text-s text-left text-neutral-normal">
@@ -262,17 +291,31 @@ export function TypeTuner() {
 
 /** Every control, behind a floating button on the right. */
 function FloatingTuner({ show, open, setOpen }: { show: boolean; open: boolean; setOpen: (fn: (o: boolean) => boolean) => void }) {
+	const wrap = useRef<HTMLDivElement>(null);
+
+	// Escape or a click anywhere else closes it. Clicks in its dropdown menus (portalled out of the
+	// panel) don't count as outside.
 	useEffect(() => {
 		if (!open) return;
 		const key = (e: KeyboardEvent) => e.key === "Escape" && setOpen(() => false);
+		const down = (e: PointerEvent) => {
+			const t = e.target as Element;
+			if (wrap.current?.contains(t) || t.closest("[data-radix-popper-content-wrapper], [role='listbox']")) return;
+			setOpen(() => false);
+		};
 		window.addEventListener("keydown", key);
-		return () => window.removeEventListener("keydown", key);
+		window.addEventListener("pointerdown", down);
+		return () => {
+			window.removeEventListener("keydown", key);
+			window.removeEventListener("pointerdown", down);
+		};
 	}, [open, setOpen]);
 
 	return (
 		<AnimatePresence>
 			{show && (
 				<motion.div
+					ref={wrap}
 					initial={{ opacity: 0, x: 12 }}
 					animate={{ opacity: 1, x: 0 }}
 					exit={{ opacity: 0, x: 12 }}
@@ -290,13 +333,19 @@ function FloatingTuner({ show, open, setOpen }: { show: boolean; open: boolean; 
 								exit={{ opacity: 0, scale: 0.96, y: 8 }}
 								transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
 								style={{ transformOrigin: "bottom right" }}
-								className="flex max-h-[calc(100dvh-6rem)] w-72 flex-col overflow-y-auto rounded-medium border border-neutral-weak bg-overlay text-left shadow-overlay [&>*+*]:border-t [&>*]:border-neutral-weak"
+								className="flex max-h-[calc(100dvh-6rem)] w-72 flex-col overflow-hidden rounded-medium border border-neutral-weak bg-overlay text-left shadow-overlay"
 							>
-								<div className="flex items-center justify-between py-gap-2xs pr-gap-2xs pl-gap-m">
+								<div className="flex shrink-0 items-center justify-between border-b border-neutral-weak py-gap-2xs pr-gap-2xs pl-gap-m">
 									<span className="type-text-s text-neutral-normal">Make it yours</span>
+									<Button variant="transparent" sentiment="neutral" size="xsmall" iconOnly icon={<CloseIcon />} aria-label="Close" className="focus-ring" onClick={() => setOpen(() => false)} />
+								</div>
+								<div className="min-h-0 flex-1 overflow-y-auto [&>*+*]:border-t [&>*]:border-neutral-weak">
+									<Controls compact />
+								</div>
+								{/* Always in reach, however far the controls scroll. */}
+								<div className="shrink-0 border-t border-neutral-weak px-gap-2xs py-gap-2xs">
 									<Actions />
 								</div>
-								<Controls compact />
 							</motion.div>
 						)}
 					</AnimatePresence>
@@ -308,7 +357,7 @@ function FloatingTuner({ show, open, setOpen }: { show: boolean; open: boolean; 
 						className="focus-ring type-text-s flex h-9 items-center gap-gap-xs rounded-medium border border-neutral-weak bg-overlay px-gap-s text-neutral-strong shadow-overlay transition-transform duration-200 ease-out-strong active:scale-[0.97]"
 					>
 						<SlidersIcon aria-hidden className="size-4" />
-						{open ? "Done" : "Customize website"}
+						{open ? "Close" : "Customize website"}
 					</button>
 				</motion.div>
 			)}

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useMotionValue, useSpring } from "framer-motion";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { cursorById } from "@/lib/site-prefs";
 import { useSitePrefs } from "@/lib/site-prefs-store";
@@ -25,16 +25,24 @@ const subscribeSuspend = (l: () => void) => {
 	return () => suspendListeners.delete(l);
 };
 
-/** How long the mouse rests before the name tag tucks away. */
-const IDLE_MS = 2000;
+/** The name tag keeps at least this much room to the window's right edge, in px; otherwise it sits on the left. */
+const EDGE = 16;
+/** How long the pointer rests before the name tag appears, in ms. */
+const REST_MS = 2000;
+/** Movement smaller than this, in px, doesn't count: a hand on a mouse is never perfectly still. */
+const JITTER = 3;
+/** The tag's distance from the pointer tip when it sits on the right: the piece plus the gap. */
+const TAG_OFFSET = 19 + 6;
 
 export function SiteCursor() {
 	const off = useSyncExternalStore(subscribeSuspend, () => suspended, () => false);
 	const prefs = useSitePrefs();
 	const fine = useFinePointer();
 	const [visible, setVisible] = useState(false);
-	// The name tag steps aside when the mouse rests, and comes back on the next move.
-	const [awake, setAwake] = useState(true);
+	// The name tag shows only while the pointer rests, so it never trails along while you move.
+	const [resting, setResting] = useState(false);
+	const layer = useRef<HTMLDivElement>(null);
+	const [flip, setFlip] = useState(false);
 	const x = useMotionValue(-100);
 	const y = useMotionValue(-100);
 	const scale = useSpring(1, { stiffness: 700, damping: 18, mass: 0.6 });
@@ -44,6 +52,7 @@ export function SiteCursor() {
 		let last: Element | null = null;
 		let at: [number, number] | null = null;
 		let rest: number | undefined;
+		let still: [number, number] | null = null;
 		const check = (t: Element | null) => {
 			// Mid theme wipe every event lands on the page root: keep showing what was under the pointer.
 			if (document.documentElement.classList.contains("theme-wipe")) return;
@@ -57,9 +66,18 @@ export function SiteCursor() {
 			x.set(e.clientX - CURSOR_TIP[0]);
 			y.set(e.clientY - CURSOR_TIP[1]);
 			check(e.target as Element | null);
-			setAwake(true);
+			if (still && Math.hypot(e.clientX - still[0], e.clientY - still[1]) < JITTER) return;
+			still = null;
+			setResting(false);
 			window.clearTimeout(rest);
-			rest = window.setTimeout(() => setAwake(false), IDLE_MS);
+			rest = window.setTimeout(() => {
+				still = [e.clientX, e.clientY];
+				// Side is decided as it appears, never while it shows: right, unless it would come
+				// within EDGE px of the window's edge.
+				const tag = layer.current?.querySelector<HTMLElement>("[data-cursor-tag]");
+				setFlip(e.clientX + TAG_OFFSET + (tag?.offsetWidth ?? 0) > innerWidth - EDGE);
+				setResting(true);
+			}, REST_MS);
 		};
 		// Scrolling moves the page under a still pointer: look again at what's under it.
 		const scroll = () => at && check(document.elementFromPoint(at[0], at[1]));
@@ -90,12 +108,12 @@ export function SiteCursor() {
 	return createPortal(
 		// A still, full-window layer with the cursor moving inside it. During the theme wipe it becomes
 		// its own live view-transition layer (data-site-cursor, styles/site.css), so it keeps moving.
-		<div aria-hidden data-site-cursor className="pointer-events-none fixed inset-0 z-[2147483646] overflow-hidden select-none">
+		<div ref={layer} aria-hidden data-site-cursor className="pointer-events-none fixed inset-0 z-[2147483646] overflow-hidden select-none">
 			<motion.div
 				className="absolute top-0 left-0"
 				style={{ x, y, scale, opacity: visible && !off ? 1 : 0, transformOrigin: `${CURSOR_TIP[0]}px ${CURSOR_TIP[1]}px` }}
 			>
-				<CluesoCursor color={cursorById(prefs.cursorColor)} name={prefs.cursorName.trim() || undefined} tilt={prefs.cursorTilt} label={awake} />
+				<CluesoCursor color={cursorById(prefs.cursorColor)} name={prefs.cursorName.trim() || undefined} tilt={prefs.cursorTilt} label={resting} flip={flip} />
 			</motion.div>
 		</div>,
 		document.body,

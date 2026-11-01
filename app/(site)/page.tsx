@@ -62,13 +62,15 @@ export default function Home() {
 
 	return (
 		<>
-			<Band rule={false} flush className="site-cursor">
-				<div className="flex flex-col items-center gap-gap-l pt-gap-3xl pb-gap-2xl text-center">
-					<HeroTitle>Designers who ship</HeroTitle>
-					<p className="type-text-l max-w-measure-wide px-gap-l text-balance text-neutral-normal">
-						We&apos;re the design team at Clueso. This is where we experiment with ideas, build tools we wish existed, and turn the good ones into real product experiences.
-					</p>
-					<div className="flex flex-wrap justify-center gap-gap-s">
+			<Band rule={false} flush>
+				<div className="flex flex-col items-start gap-gap-l pt-gap-3xl pb-gap-2xl">
+					<div className="flex w-full flex-col gap-gap-xs">
+						<HeroTitle>Designers who ship</HeroTitle>
+						<p className="type-text-l max-w-measure-wide px-gap-l text-balance text-neutral-normal">
+							We&apos;re the design team at Clueso. This is where we experiment with ideas, build tools we wish existed, and turn the good ones into real product experiences.
+						</p>
+					</div>
+					<div className="flex flex-wrap gap-gap-s px-gap-l">
 						<ButtonLink href="#tools" size="medium" icon={<ArrowRightIcon />}>
 							See what we&apos;ve made
 						</ButtonLink>
@@ -81,7 +83,7 @@ export default function Home() {
 			</Band>
 
 			<Band id="tools" labelledBy="tools-title" flush>
-				<SectionHeading id="tools-title" align="left" title="Tools we built to power our design workflows">
+				<SectionHeading id="tools-title" title="Tools we built to power our design workflows">
 					<ButtonLink href="/tools" variant="outlined" sentiment="neutral" icon={<ArrowRightIcon />}>
 						Explore all tools
 					</ButtonLink>
@@ -104,7 +106,7 @@ export default function Home() {
 			</Band>
 
 			<Band id="playground" labelledBy="playground-title" flush>
-				<SectionHeading id="playground-title" align="left" title="Ideas worth playing with" intro="Not everything makes it into the product. But every good idea deserves a chance to be tried." />
+				<SectionHeading id="playground-title" title="Ideas worth playing with" intro="Not everything makes it into the product. But every good idea deserves a chance to be tried." />
 				<Playground />
 			</Band>
 
@@ -114,7 +116,7 @@ export default function Home() {
 			</Band>
 
 			<Band id="changelog" labelledBy="changelog-title" flush>
-				<SectionHeading id="changelog-title" align="left" title="What's new" intro="We ship small and often. Here's the latest.">
+				<SectionHeading id="changelog-title" title="What's new" intro="We ship small and often. Here's the latest.">
 					<ButtonLink href="/changelog" variant="outlined" sentiment="neutral" icon={<ArrowRightIcon />}>
 						See the changelog
 					</ButtonLink>
@@ -123,7 +125,7 @@ export default function Home() {
 			</Band>
 
 			<Band id="join" labelledBy="join-title" flush>
-				<div className="mx-auto flex max-w-measure-wide flex-col items-center gap-gap-s px-gap-l py-gap-3xl text-center">
+				<div className="flex max-w-measure-wide flex-col items-start gap-gap-s px-gap-l py-gap-3xl">
 					<h2 id="join-title" className="type-title-l text-neutral-strong">
 						There&apos;s always something we&apos;re figuring out
 					</h2>
