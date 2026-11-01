@@ -19,7 +19,7 @@ Last updated 1 November 2026. This records how clueso.design is built today and 
 | Components | Jigsaw snapshot through `lib/design-system` (see below) |
 | State | zustand (Brand Lab) |
 | Icons | Clueso icons, imported as React components with SVGR (`?react`) |
-| Hosting | Vercel. `main` is production, `staging` gets its own address. |
+| Hosting | AWS: ECS Fargate behind CloudFront, deployed by GitHub Actions. `main` is production. `staging` doesn't deploy yet. See README. |
 | Package manager | pnpm, exact versions |
 
 ## Routes and layouts
@@ -133,6 +133,5 @@ On hold until something needs it. When it ships:
 
 - The repo stays public, by decision (1 Nov 2026). The Jigsaw snapshot is public with it. The Nohemi web licence is confirmed.
 
-- Vercel project setup. See the checklist in README.
 - "Export library" button in the old Brand Lab, then freeze it.
 - Social share image made with Brand Lab.
