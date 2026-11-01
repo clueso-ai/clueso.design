@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { CursorColor } from "@/lib/site-prefs";
 
 // The Clueso cursor: an upright brand piece, a square with two cavities cut into its right and
@@ -25,18 +26,24 @@ export function CluesoCursor({
 	tilt = 0,
 	label = true,
 	flip = false,
+	wide = false,
 	className,
 }: {
 	color: CursorColor;
-	name?: string;
+	/** A name, or a short hint with markup (the site cursor's "Press C to customize"). */
+	name?: ReactNode;
 	tilt?: number;
 	label?: boolean;
 	flip?: boolean;
+	/** A hint, not a name: room for a sentence, and a little more padding so it reads as a callout. */
+	wide?: boolean;
 	className?: string;
 }) {
 	// Anchored on the corner nearest the piece: top left when the tag is on the right, top right when it's on the left.
 	const side = flip ? "right-full mr-0.5" : "left-full ml-1.5";
-	const pill = "block max-w-48 truncate type-text-xs rounded-tiny px-1 whitespace-nowrap";
+	const pill = `block truncate type-text-xs whitespace-nowrap ${wide ? "max-w-80 rounded-small px-1.5 py-0.5" : "max-w-48 rounded-tiny px-1"}`;
+	// Coming in, it slides out from under the piece as it grows; going out, it tucks back the same way.
+	const hidden = flip ? "translate-x-1" : "-translate-x-1";
 	return (
 		<span aria-hidden className={`relative block ${className ?? ""}`} style={{ width: CURSOR_SIZE, height: CURSOR_SIZE }}>
 			<svg
@@ -52,7 +59,7 @@ export function CluesoCursor({
 			{name && (
 				<span
 					data-cursor-tag
-					className={`absolute top-2.5 shadow-raised ${pill} ${side} ${flip ? "origin-top-right" : "origin-top-left"} transition-[scale,opacity] ease-out-strong motion-reduce:transition-none ${label ? "scale-100 opacity-100 duration-300" : "scale-60 opacity-0 duration-150"}`}
+					className={`absolute top-2.5 shadow-raised ${pill} ${side} ${flip ? "origin-top-right" : "origin-top-left"} transition-[scale,opacity,translate] ease-out-strong motion-reduce:transition-none ${label ? "translate-x-0 scale-100 opacity-100 duration-300" : `${hidden} scale-60 opacity-0 duration-150`}`}
 					style={{ background: color.fill, color: color.ink }}
 				>
 					{name}

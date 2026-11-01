@@ -13,14 +13,13 @@ export function Timeline({ entries, headingLevel: H = "h3" }: { entries: Changel
 						<time dateTime={entry.date} className="font-code">
 							{formatDate(entry.date)}
 						</time>
-						<span>{entry.area}</span>
 					</div>
 					<div className="relative ml-gap-l flex flex-col gap-gap-2xs border-l border-neutral-weak py-gap-l pr-gap-l pl-gap-l md:col-span-3 md:ml-0">
 						<span
 							aria-hidden
 							className={`absolute top-gap-l left-0 mt-1.5 size-2.5 -translate-x-1/2 border ${i === 0 ? "border-brand-normal bg-brand-normal" : "border-neutral-strong bg-page"}`}
 						/>
-						<H className="type-title-s text-neutral-strong">{entry.title}</H>
+						<H className="type-text-l text-neutral-strong">{entry.title}</H>
 						<p className="type-text-m max-w-measure text-neutral-normal">{entry.body}</p>
 					</div>
 				</li>

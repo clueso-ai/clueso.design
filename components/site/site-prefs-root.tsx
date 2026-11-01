@@ -3,7 +3,9 @@
 import type { CSSProperties, ReactNode } from "react";
 import { effectiveWeight, fontFamily, selectionVars, typeScaleVars } from "@/lib/site-prefs";
 import { useSitePrefs } from "@/lib/site-prefs-store";
+import { RemoteCursors } from "./remote-cursors";
 import { SiteCursor } from "./site-cursor";
+import { TypeTuner } from "./type-tuner";
 
 /** Applies a visitor's fonts, type scale, cursor and highlight colour to every site page. Tool pages sit outside it. */
 export function SitePrefsRoot({ children }: { children: ReactNode }) {
@@ -22,7 +24,9 @@ export function SitePrefsRoot({ children }: { children: ReactNode }) {
 	return (
 		<div data-type-scope style={style} className={`flex min-h-dvh flex-col ${p.cluesoCursor ? "site-cursor" : ""}`}>
 			{children}
+			<RemoteCursors />
 			<SiteCursor />
+			<TypeTuner />
 		</div>
 	);
 }

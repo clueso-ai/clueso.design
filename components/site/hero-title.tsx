@@ -12,7 +12,8 @@ interface Guides {
 
 const LINES = ["cap", "x", "base"] as const;
 
-export function HeroTitle({ children }: { children: string }) {
+/** `className` goes on the heading, for alignment. A "\n" in `children` breaks the line there. */
+export function HeroTitle({ children, className = "" }: { children: string; className?: string }) {
 	const wrap = useRef<HTMLDivElement>(null);
 	const title = useRef<HTMLHeadingElement>(null);
 	const [guides, setGuides] = useState<Guides>({ lines: [] });
@@ -67,7 +68,7 @@ export function HeroTitle({ children }: { children: string }) {
 					)),
 				)}
 			</div>
-			<h1 ref={title} className="type-title-xl relative px-gap-l text-balance text-neutral-strong">
+			<h1 ref={title} className={`type-title-xl relative px-gap-l text-balance whitespace-pre-line text-neutral-strong ${className}`}>
 				{children}
 			</h1>
 		</div>

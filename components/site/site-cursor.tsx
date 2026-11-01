@@ -5,11 +5,13 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { cursorById } from "@/lib/site-prefs";
 import { useSitePrefs } from "@/lib/site-prefs-store";
+import { useTunerOpen } from "@/lib/tuner-store";
 import { useFinePointer } from "@/lib/use-fine-pointer";
 import { CURSOR_TIP, CluesoCursor } from "./clueso-cursor";
 
 // Draws the visitor's Clueso cursor wherever the page hides the native one (a .site-cursor scope,
-// see styles/site.css). Same approach as Brand Lab's cursor: follows the pointer 1:1, presses down
+// see styles/site.css). Until the visitor first opens Customize website, the tag says how, from
+// the first move on, and stays. After that it shows their name while the pointer rests. Same approach as Brand Lab's cursor: follows the pointer 1:1, presses down
 // on click, and sits above everything (menus included) on its own fixed layer. Mouse and pen only.
 
 // Embeds that draw their own cursor (the Brand Lab preview) switch this one off while the pointer is inside them.
@@ -28,7 +30,9 @@ const subscribeSuspend = (l: () => void) => {
 /** The name tag keeps at least this much room to the window's right edge, in px; otherwise it sits on the left. */
 const EDGE = 16;
 /** How long the pointer rests before the name tag appears, in ms. */
-const REST_MS = 2000;
+const REST_MS = 1000;
+/** How long after the first move the hint tag settles in beside the cursor, in ms. */
+const HINT_DELAY_MS = 240;
 /** Movement smaller than this, in px, doesn't count: a hand on a mouse is never perfectly still. */
 const JITTER = 3;
 /** The tag's distance from the pointer tip when it sits on the right: the piece plus the gap. */
@@ -41,11 +45,23 @@ export function SiteCursor() {
 	const [visible, setVisible] = useState(false);
 	// The name tag shows only while the pointer rests, so it never trails along while you move.
 	const [resting, setResting] = useState(false);
+	/** The pointer has moved since the page loaded: the hint comes in only once the cursor is in view. */
+	const [moved, setMoved] = useState(false);
+	const pointer = useRef(0);
 	const layer = useRef<HTMLDivElement>(null);
 	const [flip, setFlip] = useState(false);
 	const x = useMotionValue(-100);
 	const y = useMotionValue(-100);
 	const scale = useSpring(1, { stiffness: 700, damping: 18, mass: 0.6 });
+
+	// No hint while the panel is open: the visitor is already doing what it says. Opening the panel
+	// once (C or the button) sets hintDone, and the hint never comes back.
+	const tunerOpen = useTunerOpen();
+	const hinting = !prefs.hintDone && !prefs.onboarded && !tunerOpen;
+	const hintingRef = useRef(hinting);
+	useEffect(() => {
+		hintingRef.current = hinting;
+	}, [hinting]);
 
 	useEffect(() => {
 		if (!fine) return;
@@ -54,8 +70,6 @@ export function SiteCursor() {
 		let rest: number | undefined;
 		let still: [number, number] | null = null;
 		const check = (t: Element | null) => {
-			// Mid theme wipe every event lands on the page root: keep showing what was under the pointer.
-			if (document.documentElement.classList.contains("theme-wipe")) return;
 			if (t === last) return;
 			last = t;
 			setVisible(!!t && getComputedStyle(t).cursor === "none");
@@ -63,9 +77,17 @@ export function SiteCursor() {
 		const move = (e: PointerEvent) => {
 			if (e.pointerType === "touch") return;
 			at = [e.clientX, e.clientY];
+			pointer.current = e.clientX;
 			x.set(e.clientX - CURSOR_TIP[0]);
 			y.set(e.clientY - CURSOR_TIP[1]);
 			check(e.target as Element | null);
+			setMoved(true);
+			// The hint always shows, so it picks its side as the pointer moves: right, unless that
+			// would bring it within EDGE px of the window's edge.
+			if (hintingRef.current) {
+				const tag = layer.current?.querySelector<HTMLElement>("[data-cursor-tag]");
+				setFlip(e.clientX + TAG_OFFSET + (tag?.offsetWidth ?? 0) > innerWidth - EDGE);
+			}
 			if (still && Math.hypot(e.clientX - still[0], e.clientY - still[1]) < JITTER) return;
 			still = null;
 			setResting(false);
@@ -104,16 +126,33 @@ export function SiteCursor() {
 		};
 	}, [fine, x, y, scale]);
 
+	const name = prefs.cursorName.trim();
+
+	// The hint settles in a beat after the first move, so it lands once the cursor is already there.
+	const [hintIn, setHintIn] = useState(false);
+	useEffect(() => {
+		if (!moved || !hinting) return;
+		const t = window.setTimeout(() => setHintIn(true), HINT_DELAY_MS);
+		return () => window.clearTimeout(t);
+	}, [moved, hinting]);
+
 	if (!fine) return null;
+	const tag = hinting ? (
+		<>
+			Press <kbd className="mx-0.5 rounded-tiny bg-current/20 px-1 font-code">C</kbd> to customize
+		</>
+	) : (
+		name || undefined
+	);
+	const label = hinting ? hintIn : resting;
 	return createPortal(
-		// A still, full-window layer with the cursor moving inside it. During the theme wipe it becomes
-		// its own live view-transition layer (data-site-cursor, styles/site.css), so it keeps moving.
-		<div ref={layer} aria-hidden data-site-cursor className="pointer-events-none fixed inset-0 z-[2147483646] overflow-hidden select-none">
+		// A still, full-window layer with the cursor moving inside it.
+		<div ref={layer} aria-hidden className="pointer-events-none fixed inset-0 z-[2147483646] overflow-hidden select-none">
 			<motion.div
 				className="absolute top-0 left-0"
 				style={{ x, y, scale, opacity: visible && !off ? 1 : 0, transformOrigin: `${CURSOR_TIP[0]}px ${CURSOR_TIP[1]}px` }}
 			>
-				<CluesoCursor color={cursorById(prefs.cursorColor)} name={prefs.cursorName.trim() || undefined} tilt={prefs.cursorTilt} label={resting} flip={flip} />
+				<CluesoCursor color={cursorById(prefs.cursorColor)} name={tag} tilt={prefs.cursorTilt} label={label} flip={flip} wide={hinting} />
 			</motion.div>
 		</div>,
 		document.body,

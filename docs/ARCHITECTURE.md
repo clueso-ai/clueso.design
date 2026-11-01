@@ -47,7 +47,7 @@ Tool pages get the full viewport and no site nav. Brand Lab's mark and name in i
 - **Guide lines.** `components/site/frame.tsx`: each band has a full-width rule, a framed content column, hatched gutters and crosses where rules meet. Illustrations (`illustration.tsx`) are the Clueso mark in Brand Lab treatments: halftone, line screen, LED pixels, construction grid, assembly. The hatch runs at the logo's 135° diagonal.
 - **Team data.** `lib/team.ts`. Photos go in `public/team/<slug>.jpg` at 4:5.
 - **Changelog.** Add an entry to `lib/changelog.ts` when something ships.
-- The theme toggle sweeps the new theme in behind a glimm band (view transition, `lib/theme-wipe.ts`, `styles/site.css`). Switching again mid sweep turns the band around.
+- The theme toggle switches light and dark in one frame, with no animation (`applySiteTheme` in `lib/theme.ts`).
 - Brand Lab embeds at `/tools/brand-lab?embed`: it opens on posters and never reads or writes the visitor's autosave (`EMBED` in its store).
 - Say hi (`components/site/say-hi.tsx`) is parked: built but not on any page yet. It posts to `/api/hello`, which forwards to a Slack incoming webhook in `HELLO_WEBHOOK_URL`. Without it, production answers 503 and dev logs to the console.
 - Geist Pixel and Geist Serif are OFL (`public/fonts/GEIST-OFL.txt`).
