@@ -1,0 +1,67 @@
+/* Tailwind entry for clueso.design.
+   Order: Tailwind, Jigsaw foundations (definition tier, temporary snapshot), v1 tokens (semantic
+   tier), shadcn aliases, fonts, then tool styles. */
+
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@import "../lib/design-system/jigsaw/foundations/colors.css";
+@import "../lib/design-system/jigsaw/foundations/typography.css";
+@import "../lib/design-system/jigsaw/foundations/layout.css";
+
+@import "../styles/tokens.css";
+@import "../styles/shadcn-map.css";
+@import "../styles/fonts.css";
+@import "../styles/site.css";
+
+@import "../tools/brand-lab/styles/brand-lab.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@layer base {
+	html {
+		-webkit-font-smoothing: antialiased;
+		text-rendering: optimizeLegibility;
+	}
+	body {
+		background: var(--surface-page);
+		color: var(--fg-neutral-strong);
+		font-family: var(--font-text-family);
+	}
+	@media (prefers-reduced-motion: no-preference) {
+		html {
+			scroll-behavior: smooth;
+		}
+	}
+	h1,
+	h2,
+	h3,
+	h4 {
+		text-wrap: balance;
+	}
+	p,
+	li,
+	figcaption,
+	blockquote {
+		text-wrap: pretty;
+	}
+	::selection {
+		background: var(--selection-bg, var(--bg-brand-weak));
+		color: var(--selection-fg, inherit);
+	}
+	/* Retuning the type from the hero: weights and sizes glide to their new values. Font swaps
+	   cross-fade instead, see setPrefsSmooth in lib/site-prefs-store.ts. Components with their own
+	   transition classes keep them. */
+	@media (prefers-reduced-motion: no-preference) {
+		:where([class*="type-title"], [class*="type-text"]) {
+			transition:
+				font-weight 240ms var(--ease-out-strong),
+				font-size 240ms var(--ease-out-strong);
+		}
+		::view-transition-old(root),
+		::view-transition-new(root) {
+			animation-duration: 320ms;
+			animation-timing-function: var(--ease-out-strong);
+		}
+	}
+}

@@ -1,0 +1,113 @@
+/* Shared look for the gamified lo-fis: brand fonts, keycaps, stamps, toast. */
+
+@font-face { font-family: "Nohemi"; src: url("fonts/nohemi-regular.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Nohemi"; src: url("fonts/nohemi-medium.woff2") format("woff2"); font-weight: 500; font-display: swap; }
+@font-face { font-family: "Nohemi"; src: url("fonts/nohemi-semibold.woff2") format("woff2"); font-weight: 600; font-display: swap; }
+@font-face { font-family: "Geist"; src: url("fonts/geist-latin.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+@font-face { font-family: "Geist Mono"; src: url("fonts/geist-mono-latin.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+
+:root {
+	--pink: #da5cc7;
+	--pink-ink: #c2459f;
+	--ink: #141414;
+	--grey: #8c8a84;
+	--paper: #f4f1ea;
+	--rule: rgba(20, 20, 20, 0.14);
+	--title: "Nohemi", system-ui, sans-serif;
+	--body: "Geist", system-ui, sans-serif;
+	--mono: "Geist Mono", ui-monospace, monospace;
+	--ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+* { box-sizing: border-box; }
+
+/* Keycaps — every button that "presses" */
+.keycap {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	min-width: 36px;
+	padding: 8px 10px 10px;
+	font: 500 12px/1 var(--mono);
+	letter-spacing: 0.02em;
+	color: var(--ink);
+	background: linear-gradient(#fdfcf9, #efece5);
+	border: 1px solid rgba(0, 0, 0, 0.2);
+	border-radius: 6px;
+	box-shadow: 0 3px 0 rgba(0, 0, 0, 0.22), 0 4px 10px rgba(0, 0, 0, 0.08), inset 0 1px 0 #fff;
+	cursor: pointer;
+	user-select: none;
+	transition: transform 0.06s, box-shadow 0.06s;
+}
+.keycap:active,
+.keycap.is-down {
+	transform: translateY(2px);
+	box-shadow: 0 1px 0 rgba(0, 0, 0, 0.22), 0 1px 3px rgba(0, 0, 0, 0.08), inset 0 1px 0 #fff;
+}
+.keycap.dark {
+	color: #f2f2f2;
+	background: linear-gradient(#2b2b2b, #1c1c1c);
+	border-color: rgba(255, 255, 255, 0.12);
+	box-shadow: 0 3px 0 #000, 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+.keycap.dark:active,
+.keycap.dark.is-down { box-shadow: 0 1px 0 #000, inset 0 1px 0 rgba(255, 255, 255, 0.1); }
+.keycap:focus-visible { outline: 2px solid var(--pink); outline-offset: 3px; }
+
+.kit-sound { position: fixed; top: 16px; right: 16px; z-index: 90; }
+.kit-sound .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--pink); }
+.kit-sound[aria-pressed="false"] .dot { background: #bbb; }
+
+/* Stamps */
+.kit-stamp {
+	--r: -6deg;
+	color: var(--pink-ink);
+	transform: rotate(var(--r));
+	animation: kit-stamp-in 0.42s var(--ease) both;
+	mix-blend-mode: multiply;
+	-webkit-print-color-adjust: exact;
+	print-color-adjust: exact;
+}
+.kit-stamp svg { display: block; width: 100%; height: auto; overflow: visible; }
+@keyframes kit-stamp-in {
+	0% { transform: scale(2.4) rotate(calc(var(--r) - 8deg)); opacity: 0; }
+	55% { transform: scale(0.92) rotate(var(--r)); opacity: 1; }
+	100% { transform: scale(1) rotate(var(--r)); opacity: 1; }
+}
+.kit-shake { animation: kit-shake 0.28s linear; }
+@keyframes kit-shake {
+	20% { transform: translate(2px, -1px); }
+	40% { transform: translate(-2px, 1px); }
+	60% { transform: translate(1px, 1px); }
+	80% { transform: translate(-1px, 0); }
+}
+
+/* Toast — looks like a product notification */
+.kit-toast {
+	position: fixed;
+	left: 50%;
+	bottom: 24px;
+	z-index: 95;
+	max-width: min(440px, calc(100vw - 32px));
+	padding: 12px 16px;
+	font: 400 13px/1.45 var(--mono);
+	color: #f4f4f4;
+	background: #151515;
+	border: 1px solid rgba(255, 255, 255, 0.12);
+	border-radius: 8px;
+	box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+	transform: translate(-50%, 16px);
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.25s, transform 0.35s var(--ease);
+}
+.kit-toast.is-on { opacity: 1; transform: translate(-50%, 0); }
+.kit-toast b { color: var(--pink); font-weight: 500; }
+
+@media (prefers-reduced-motion: reduce) {
+	.kit-stamp, .kit-shake { animation: none; }
+}
+@media print {
+	.kit-sound, .kit-toast { display: none !important; }
+}

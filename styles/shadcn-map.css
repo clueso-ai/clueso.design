@@ -1,0 +1,26 @@
+/* shadcn/ui variables, aliased to token architecture v1. Never use these names as the token system;
+   they exist only so components added with the shadcn CLI pick up v1 values.
+   Note: shadcn `accent` is a subtle hover surface, NOT v1 accent. shadcn `destructive` is v1 negative. */
+
+:root,
+[data-theme="lab"] {
+	--background: var(--surface-page);
+	--foreground: var(--fg-neutral-strong);
+	--card: var(--surface-raised-1);
+	--card-foreground: var(--fg-neutral-strong);
+	--popover: var(--surface-overlay);
+	--popover-foreground: var(--fg-neutral-strong);
+	--primary: var(--bg-neutral-inverted);
+	--primary-foreground: var(--fg-neutral-inverted);
+	--secondary: var(--bg-neutral-weak);
+	--secondary-foreground: var(--fg-neutral-strong);
+	--muted: var(--bg-neutral-weak);
+	--muted-foreground: var(--fg-neutral-weak);
+	--accent: var(--bg-neutral-weak);
+	--accent-foreground: var(--fg-neutral-strong);
+	--destructive: var(--bg-negative-normal);
+	--border: var(--border-neutral-normal);
+	--input: var(--border-neutral-normal);
+	--ring: var(--state-focus);
+	--radius: var(--radius-m);
+}

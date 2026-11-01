@@ -1,0 +1,283 @@
+/* ============================================================================
+   LAYOUT - Jigsaw Design System
+   All layout-related tokens: spacing and border radius
+   ============================================================================ */
+
+/* ============================================================================
+   LAYOUT TOKENS
+   Spacing and border radius values
+   ============================================================================ */
+
+@theme {
+	/* ========================================
+	   RADIUS TOKENS
+	   ======================================== */
+
+	--radius-none: 0;
+	--radius-2xs: 2px;
+	--radius-xs: 4px;
+	--radius-sm: 6px;
+	--radius-md: 8px;
+	--radius-lg: 10px;
+	--radius-xl: 12px;
+	--radius-2xl: 16px;
+	--radius-3xl: 20px;
+	--radius-4xl: 24px;
+	--radius-full: 999px;
+
+	/* ========================================
+	   SPACING TOKENS
+	   ======================================== */
+
+	--spacing-none: 0;
+	--spacing-2xs: 2px;
+	--spacing-xs: 4px;
+	--spacing-sm: 6px;
+	--spacing-md: 8px;
+	--spacing-lg: 10px;
+	--spacing-xl: 12px;
+	--spacing-2xl: 16px;
+	--spacing-3xl: 20px;
+	--spacing-4xl: 24px;
+	--spacing-5xl: 32px;
+	--spacing-6xl: 40px;
+	--spacing-7xl: 48px;
+	--spacing-8xl: 64px;
+	--spacing-9xl: 80px;
+	--spacing-10xl: 96px;
+	--spacing-11xl: 128px;
+	--spacing-12xl: 160px;
+
+	/* ========================================
+	   Z-INDEX TOKENS
+	   Ordered top-of-page layers, sitting above app content (which tops out
+	   around 1e9) but below int32 max (2147483647).
+
+	   IMPORTANT: keep every value to <=6 significant figures (e.g. 1.4e9,
+	   not 2147483100). Tailwind v4 compiles these through Lightning CSS,
+	   which serializes numbers at ~6 sig figs — values like 2147483100 and
+	   2147483200 BOTH round to 2147480000 in the production build, collapsing
+	   the whole ladder to one z-index (dev is unaffected; it isn't minified).
+	   Each step is 1e8 so app code can interpolate locally if needed.
+	   ======================================== */
+
+	--z-index-dropdown: 1100000000;
+	--z-index-toast: 1200000000;
+	--z-index-overlay: 1300000000; /* modal backdrop / blocking surface */
+	--z-index-modal: 1400000000; /* modal content above its overlay */
+	--z-index-popover: 1500000000; /* popovers must sit above modals */
+	--z-index-tooltip: 1600000000;
+}
+
+/* ============================================================================
+   SCROLLBAR UTILITIES
+   ============================================================================ */
+
+/* Hides scrollbar while preserving scroll functionality */
+@utility scrollbar-hide {
+	scrollbar-width: none;
+	-ms-overflow-style: none;
+	&::-webkit-scrollbar {
+		display: none;
+	}
+}
+
+/* Thin, themed scrollbar — strong thumb on transparent track */
+@utility scrollbar-thin {
+	scrollbar-width: thin;
+	scrollbar-color: var(--color-bg-strong) transparent;
+}
+
+/* Overlay scrollbar — does not consume layout width */
+@utility scrollbar-overlay {
+	overflow-y: overlay;
+	scrollbar-width: thin;
+	scrollbar-color: var(--color-bg-strong) transparent;
+}
+
+/* Always-visible scrollbar matching the timeline style — rounded weak thumb on inset track */
+@utility scrollbar-timeline {
+	&::-webkit-scrollbar {
+		width: 6px;
+	}
+	&::-webkit-scrollbar-track {
+		background: transparent;
+		border-radius: 9999px;
+	}
+	&::-webkit-scrollbar-thumb {
+		background: var(--color-bg-normal);
+		border-radius: 9999px;
+	}
+	scrollbar-width: thin;
+	scrollbar-color: var(--color-bg-normal) transparent;
+}
+
+/* Subtle inset shadow for recessed track surfaces */
+@utility shadow-inset {
+	box-shadow: inset 0 1px 2px var(--color-depth-inset-1);
+}
+
+/* ============================================================================
+   GENERATING SHIMMER OVERLAY
+   Diagonal-stripe animation used for loading states (GIF creation, etc.)
+   Usage: apply `generating-shimmer` class on a positioned container
+   ============================================================================ */
+
+@utility generating-shimmer {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	overflow: hidden;
+	border-radius: inherit;
+	background: linear-gradient(
+		135deg,
+		rgba(180, 45, 120, 0.18) 0%,
+		rgba(115, 107, 234, 0.16) 100%
+	);
+
+	&::before {
+		content: "";
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 200%;
+		height: 100%;
+		background: repeating-linear-gradient(
+			45deg,
+			rgba(255, 255, 255, 0.03),
+			rgba(255, 255, 255, 0.03) 10px,
+			rgba(255, 255, 255, 0.08) 10px,
+			rgba(255, 255, 255, 0.08) 20px
+		);
+		animation: generating-shimmer-stripes 1s linear infinite;
+	}
+}
+
+@keyframes generating-shimmer-stripes {
+	0% {
+		transform: translateX(0);
+	}
+	100% {
+		transform: translateX(-28.28px);
+	}
+}
+
+/* ============================================================================
+   CODE PARAM FLASH
+   One-shot highlight for AI-changed code params in the right panel. Duration
+   comes from --cpf-flash-duration (set inline on the panel root) so it stays
+   in sync with the JS step timer, including under reduced-motion.
+   Usage: `code-param-flash` on a row overlay; `code-param-flash-block` on a
+   positioned heading container (flashes via ::after).
+   ============================================================================ */
+
+@keyframes codeParamFlash {
+	0% {
+		opacity: 0;
+	}
+	20% {
+		opacity: 0.3;
+	}
+	55% {
+		opacity: 0.3;
+	}
+	100% {
+		opacity: 0;
+	}
+}
+
+@utility code-param-flash {
+	background-color: var(--blue-50);
+	animation: codeParamFlash var(--cpf-flash-duration, 1.2s) ease-out both;
+}
+
+@utility code-param-flash-block {
+	position: relative;
+
+	&::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		background-color: var(--blue-50);
+		pointer-events: none;
+		opacity: 0;
+		animation: codeParamFlash var(--cpf-flash-duration, 1.2s) ease-out both;
+	}
+}
+
+/* Honor prefers-reduced-motion at the stylesheet level (not only via the JS
+   that sets --cpf-flash-duration): skip the flash entirely. The row keeps no
+   lingering tint — background goes transparent and the block ::after stays at
+   its default opacity:0. */
+@media (prefers-reduced-motion: reduce) {
+	.code-param-flash {
+		animation: none;
+		background-color: transparent;
+	}
+
+	.code-param-flash-block::after {
+		animation: none;
+	}
+}
+
+/* ============================================================================
+   TRANSCRIPT TEXT SHIMMER
+   Diagonal sweep across multi-line text, applied via background-clip: text.
+   The band travels left-to-right and top-to-bottom across the paragraph and
+   cycles until removed. Used on the transcript editor body while a
+   `generate_speech` job is in flight.
+   Usage: apply `transcript-shimmer-active` on a text-containing element.
+   ============================================================================ */
+
+@keyframes transcript-shimmer {
+	0% {
+		background-position: 200% 200%;
+	}
+	100% {
+		background-position: 0% 0%;
+	}
+}
+
+@utility transcript-shimmer-active {
+	/* `background-clip: text` only paints the element's own text glyphs.
+	   In the transcript editor the actual words live deep inside
+	   `.ProseMirror > p > ins`, so applying the gradient on the outer
+	   wrapper renders nothing visible. Scope it to the text-bearing
+	   elements (`p`, `ins`, `del`) and let `background` paint there.
+	   Base = text-weak so the static text matches the surrounding
+	   not-yet-generated `<ins>` text; band is pure white sweeping
+	   diagonally L→R + downward. */
+	& .ProseMirror :is(p, ins, del) {
+		background-image: linear-gradient(
+			110deg,
+			var(--color-fg-text-weak) 0%,
+			var(--color-fg-text-weak) 42%,
+			#ffffff 50%,
+			var(--color-fg-text-weak) 58%,
+			var(--color-fg-text-weak) 100%
+		);
+		background-size: 200% 200%;
+		background-clip: text;
+		-webkit-background-clip: text;
+		color: transparent;
+		-webkit-text-fill-color: transparent;
+		animation: transcript-shimmer 2.5s linear infinite;
+	}
+}
+
+@keyframes dotFall {
+	0%,
+	80%,
+	100% {
+		opacity: 0;
+		transform: translateY(0);
+	}
+	40% {
+		opacity: 1;
+		transform: translateY(-3px);
+	}
+	60% {
+		opacity: 1;
+		transform: translateY(1px);
+	}
+}
