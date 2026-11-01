@@ -45,7 +45,6 @@ Mappings:
     Ids:
       CloudFrontOriginPrefixList: pl-9aa247f3 # com.amazonaws.global.cloudfront.origin-facing, ap-south-1
       CachingDisabled: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
-      CachingOptimized: 658327ea-f89d-4fab-a63d-7e88639e58f6
       AllViewer: 216adef6-5c7f-47e4-b989-5492eafa07d3
       CloudFrontZone: Z2FDTNDATAQYW2
 
@@ -156,7 +155,7 @@ Resources:
         - Type: forward
           TargetGroupArn: !Ref TargetGroup
 
-  # CloudFront reaches the ALB through this name. It is covered by the *.domain cert.
+  # Handy for debugging the ALB directly. CloudFront does not use it (see Distribution origin).
   OriginRecord:
     Type: AWS::Route53::RecordSet
     Properties:
@@ -245,6 +244,39 @@ Resources:
           return req;
         }
 
+  # Fingerprinted build output. MinTTL 0 so CloudFront obeys the origin's no-store: during a
+  # rollout an old task can answer a new chunk with a not-found page, and a nonzero MinTTL
+  # would pin that to the chunk's URL for a year (marketing hit this, see its PR #301).
+  StaticCachePolicy:
+    Type: AWS::CloudFront::CachePolicy
+    Properties:
+      CachePolicyConfig:
+        Name: !Sub ${AWS::StackName}-static
+        Comment: Hashed /_next/static files. 1 year, MinTTL 0 so no-store is obeyed.
+        MinTTL: 0
+        DefaultTTL: 31536000
+        MaxTTL: 31536000
+        ParametersInCacheKeyAndForwardedToOrigin:
+          EnableAcceptEncodingBrotli: true
+          EnableAcceptEncodingGzip: true
+          HeadersConfig: { HeaderBehavior: none }
+          CookiesConfig: { CookieBehavior: none }
+          QueryStringsConfig: { QueryStringBehavior: none }
+
+  # Every behaviour forwards the viewer Host. CloudFront then uses it as the origin TLS name,
+  # which the ALB's apex + wildcard cert covers.
+  HostOnlyOriginRequestPolicy:
+    Type: AWS::CloudFront::OriginRequestPolicy
+    Properties:
+      OriginRequestPolicyConfig:
+        Name: !Sub ${AWS::StackName}-host-only
+        Comment: Forward only the viewer Host header
+        HeadersConfig:
+          HeaderBehavior: whitelist
+          Headers: [Host]
+        CookiesConfig: { CookieBehavior: none }
+        QueryStringsConfig: { QueryStringBehavior: none }
+
   Distribution:
     Type: AWS::CloudFront::Distribution
     Properties:
@@ -260,8 +292,10 @@ Resources:
           SslSupportMethod: sni-only
           MinimumProtocolVersion: TLSv1.2_2021
         Origins:
+          # The ALB's own AWS name, so the origin never depends on our zone's DNS. During the
+          # nameserver move, edges still resolving origin.<domain> through GoDaddy got 502s.
           - Id: alb
-            DomainName: !Sub origin.${DomainName}
+            DomainName: !GetAtt LoadBalancer.DNSName
             CustomOriginConfig:
               OriginProtocolPolicy: https-only
               OriginSSLProtocols: [TLSv1.2]
@@ -287,7 +321,16 @@ Resources:
             AllowedMethods: [GET, HEAD]
             CachedMethods: [GET, HEAD]
             Compress: true
-            CachePolicyId: !FindInMap [Static, Ids, CachingOptimized]
+            CachePolicyId: !Ref StaticCachePolicy
+            OriginRequestPolicyId: !Ref HostOnlyOriginRequestPolicy
+        # Never cache errors. CloudFront's default holds them for 10s, so one bad moment during
+        # a rollout would be served to everyone at that edge.
+        CustomErrorResponses:
+          - { ErrorCode: 404, ErrorCachingMinTTL: 0 }
+          - { ErrorCode: 500, ErrorCachingMinTTL: 0 }
+          - { ErrorCode: 502, ErrorCachingMinTTL: 0 }
+          - { ErrorCode: 503, ErrorCachingMinTTL: 0 }
+          - { ErrorCode: 504, ErrorCachingMinTTL: 0 }
 
   ApexRecordA:
     Type: AWS::Route53::RecordSet

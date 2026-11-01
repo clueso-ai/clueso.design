@@ -69,6 +69,13 @@ jobs:
               CdnCertArn="$CDN_CERT" \
               HelloWebhookSecretArn="${{ vars.HELLO_WEBHOOK_SECRET_ARN }}"
 
+      # After the rollout, so nothing an old task answered during it outlives the deploy.
+      - name: Clear the CloudFront cache
+        run: |
+          DIST=$(aws cloudformation describe-stacks --stack-name "$STACK" \
+            --query "Stacks[0].Outputs[?OutputKey=='DistributionId'].OutputValue" --output text)
+          aws cloudfront create-invalidation --distribution-id "$DIST" --paths '/*' --query Invalidation.Id --output text
+
       - name: Check the live site
         run: |
           for i in $(seq 1 20); do
