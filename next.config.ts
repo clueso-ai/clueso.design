@@ -12,6 +12,8 @@ const svgr = {
 
 const config: NextConfig = {
 	reactStrictMode: true,
+	// A self-contained server bundle for the Docker image (deploy/Dockerfile).
+	output: "standalone",
 	// Static playground pieces live in public/playground/<slug>/ and keep their exported files as is.
 	async rewrites() {
 		return [{ source: "/playground/:slug", destination: "/playground/:slug/index.html" }];

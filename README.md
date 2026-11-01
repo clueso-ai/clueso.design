@@ -24,10 +24,13 @@ pnpm build
 
 Work on a branch from `staging` and open PRs into `staging`. `main` is production and only takes release PRs from `staging`.
 
-## Vercel setup checklist
+## Deploy
 
-1. Import the repo into the Clueso Vercel team. Framework: Next.js. Install command: `pnpm install`.
-2. Settings → Git: production branch `main`.
-3. Settings → Domains: `clueso.design` → production; `staging.clueso.design` → branch `staging`.
-4. Settings → Analytics: enable Web Analytics.
-5. No environment variables are needed yet.
+A merge to `main` deploys https://clueso.design through GitHub Actions (`.github/workflows/deploy.yml`).
+
+- Runs on AWS (CluesoProduction, ap-south-1): Docker image in ECR, ECS Fargate behind a load balancer, CloudFront in front.
+- `deploy/Dockerfile` builds the image. `deploy/cloudformation.yml` is the whole stack.
+- `deploy/setup.sh` is the one-time AWS setup: DNS zone, certificates, image repo and deploy roles.
+- DNS lives in Route 53. GoDaddy is only the registrar, with its nameservers pointed at Route 53.
+- `staging` doesn't deploy yet.
+- The "Say hi" form needs a Slack webhook. Store it in Secrets Manager and put the secret ARN in the repo variable `HELLO_WEBHOOK_SECRET_ARN`. Until then the form answers "We can't take messages right now".
