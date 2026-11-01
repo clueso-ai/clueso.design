@@ -10,84 +10,26 @@
 	}
 }
 
-/* Switching light and dark (lib/theme-wipe.ts): both views hold still while the old one is clipped
-   away behind a 135° band. The band's canvas is its own live layer on top. */
-@keyframes theme-wipe-hold {
-	from {
-		opacity: 1;
-	}
-	to {
-		opacity: 1;
-	}
-}
-:root.theme-wipe [data-theme-band] {
-	view-transition-name: theme-band;
-}
-:root.theme-wipe::view-transition-group(*) {
-	animation: theme-wipe-hold 60s linear both;
-}
-:root.theme-wipe::view-transition-old(*),
-:root.theme-wipe::view-transition-new(*) {
-	animation: none;
-	mix-blend-mode: normal;
-	opacity: 1;
-}
-:root.theme-wipe::view-transition-old(root) {
-	z-index: 2;
-	clip-path: var(--theme-wipe-old, inset(0));
-}
-:root.theme-wipe::view-transition-new(root) {
-	z-index: 1;
-}
-:root.theme-wipe::view-transition-group(theme-band) {
-	z-index: 3;
-}
-:root.theme-wipe::view-transition-old(theme-band) {
-	display: none;
-}
-/* The Clueso cursor stays live above the wipe, and the native one stays hidden where it was. */
-:root.theme-wipe [data-site-cursor] {
-	view-transition-name: site-cursor;
-}
-:root.theme-wipe::view-transition-group(site-cursor) {
-	z-index: 4;
-}
-:root.theme-wipe::view-transition-old(site-cursor) {
-	display: none;
-}
-/* Mid wipe the browser hit-tests the page root, so hide the native cursor there too. */
-:root.theme-wipe-cursorless,
-:root.theme-wipe-cursorless body,
-:root.theme-wipe-cursorless::view-transition {
-	cursor: none;
-}
-
-/* While the theme class changes (lib/theme.ts), nothing transitions. Otherwise every button fades from
-   the old theme's colours for 150ms after the wipe, which flickers when a wipe is turned around. The
-   toggle's sun and moon keep animating. */
-:root.theme-instant :not(.theme-icon, .theme-icon *),
+/* While the theme class changes (lib/theme.ts), nothing transitions: the whole page takes the new
+   theme in one frame. */
+:root.theme-instant *,
 :root.theme-instant ::before,
 :root.theme-instant ::after {
 	transition: none !important;
 }
 
-/* The theme toggle's shade comes from [data-hover], which the toggle sets from the pointer's position,
-   because mid wipe the browser hovers nothing. Pressing doesn't darken it: the press starts the sweep,
-   and a pressed shade caught in the wipe's snapshot would flicker as the band crosses the button. */
-.theme-toggle:not(:disabled) {
-	&:hover,
-	&:active {
-		background-color: transparent;
-	}
-	&[data-hover] {
-		background-color: var(--color-interaction-hover);
-	}
+/* The header's live visitor badge and theme toggle share one height: a line of type-text-s plus
+   the badge's padding and 1px border, so it follows the visitor's type scale. The toggle stays square. */
+.header-control {
+	--header-control: calc(var(--text-s-size) * var(--text-s-leading) + 2 * var(--gap-3xs) + 2px);
+	height: var(--header-control);
+}
+.header-control-square {
+	width: var(--header-control);
 }
 
-/* The theme toggle's sun and moon (components/site/theme-toggle.tsx). Both sit in one cell: the one
-   for the current theme turns and grows in while the other turns away and shrinks out. Transitions,
-   not keyframes, so a quick second click reverses them from wherever they are. Strokes stay 1px at
-   any icon size. */
+/* The theme toggle's sun and moon (components/site/theme-toggle.tsx). Both sit in one cell and only
+   the current theme's shows, with no animation between them. Strokes stay 1px at any icon size. */
 .theme-icon {
 	display: grid;
 }
@@ -95,37 +37,24 @@
 	grid-area: 1 / 1;
 	width: 100%;
 	height: 100%;
-	opacity: 0;
-	scale: 0.5;
-	filter: blur(2px);
-	transition-property: opacity, scale, rotate, filter;
-	transition-duration: 400ms;
-	transition-timing-function: var(--ease-out-strong);
+	visibility: hidden;
 }
 .theme-icon path {
 	stroke-width: 1px;
 	vector-effect: non-scaling-stroke;
 }
-/* Before it's in view, the sun has turned back a quarter and the moon has swung down. */
-.theme-icon > [data-icon="sun"] {
-	rotate: -90deg;
-}
-.theme-icon > [data-icon="moon"] {
-	rotate: 45deg;
-}
 .theme-icon[data-theme="dark"] > [data-icon="sun"],
 .theme-icon[data-theme="light"] > [data-icon="moon"] {
-	opacity: 1;
-	scale: 1;
-	rotate: 0deg;
-	filter: none;
+	visibility: visible;
 }
-@media (prefers-reduced-motion: reduce) {
-	.theme-icon > svg {
-		scale: 1;
-		rotate: 0deg;
-		filter: none;
-		transition-property: opacity;
-		transition-duration: 150ms;
-	}
+
+/* The homepage hero (components/site/hero-greeting.tsx) fills the screen under the 4rem header,
+   so the next section never shows half cut. */
+.hero-screen {
+	min-height: calc(100dvh - 4rem);
+}
+/* The hero's petals (components/site/hero-greeting.tsx) rise from the bottom. The mask leans to
+   166°, so they're clear behind the text at the top left and full strength at the bottom. */
+.hero-fill {
+	mask-image: linear-gradient(166deg, transparent 45%, black 87%);
 }

@@ -1,0 +1,102 @@
+// Who's on the site right now, for the header's live count and other visitors' cursors.
+// GET opens a server-sent event stream: one per open tab. POST updates that tab's cursor.
+// Everything lives in this server's memory, so nothing is stored and a restart starts from zero.
+// Production runs one ECS task (deploy/cloudformation.yml): with more, each task would only see
+// its own visitors, and this would need a shared channel.
+
+type Cursor = { id: string; who: string; page: string; name: string; color: string; tilt: number; x: number | null; y: number | null };
+type Conn = Cursor & { visitor: string; seq: number; send: (msg: object) => void };
+
+/** Enough for a busy day on a design team's site; bounds memory if something floods the route. */
+const MAX_CONNS = 500;
+/** Keeps the stream open through the ALB's and CloudFront's 60 second idle timeouts. */
+const PING_MS = 20_000;
+const VISITOR = /^[a-z0-9-]{8,64}$/i;
+const COLOR = /^(?:[a-z]{2,12}|#[0-9a-f]{6}|oklch\([\d.]+ [\d.]+ [\d.]+\))$/i;
+
+// On globalThis so dev reloads keep the list.
+const g = globalThis as { presenceConns?: Map<string, Conn> };
+const conns = (g.presenceConns ??= new Map());
+
+const pub = ({ id, who, page, name, color, tilt, x, y }: Conn): Cursor => ({ id, who, page, name, color, tilt, x, y });
+
+// Tabs of one person share a "who", so the visitor list shows people, not tabs. It's a salted hash
+// of their browser's id, never the id itself, and the salt changes with every server start.
+const SALT = crypto.randomUUID();
+async function whoFor(visitor: string) {
+	const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(SALT + visitor));
+	return [...new Uint8Array(hash).slice(0, 8)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+/** People, not tabs: one browser with three tabs open counts once. */
+const count = () => new Set([...conns.values()].map((c) => c.visitor)).size;
+const broadcast = (msg: object, except?: string) => conns.forEach((c) => c.id !== except && c.send(msg));
+
+const num = (v: unknown, min: number, max: number) => (typeof v === "number" && Number.isFinite(v) ? Math.min(max, Math.max(min, Math.round(v))) : null);
+const page = (v: unknown) => (typeof v === "string" && v.startsWith("/") ? v.slice(0, 200) : "/");
+
+export async function GET(req: Request) {
+	const visitor = new URL(req.url).searchParams.get("visitor") ?? "";
+	if (!VISITOR.test(visitor)) return new Response("Bad visitor id.", { status: 400 });
+	if (conns.size >= MAX_CONNS) return new Response("Too many visitors right now.", { status: 503 });
+
+	const id = crypto.randomUUID();
+	const who = await whoFor(visitor);
+	const encoder = new TextEncoder();
+	let ping: ReturnType<typeof setInterval> | undefined;
+
+	const close = () => {
+		clearInterval(ping);
+		if (!conns.delete(id)) return;
+		broadcast({ t: "gone", id });
+		broadcast({ t: "count", count: count() });
+	};
+
+	const stream = new ReadableStream({
+		start(controller) {
+			const write = (chunk: string) => {
+				try {
+					controller.enqueue(encoder.encode(chunk));
+				} catch {
+					close();
+				}
+			};
+			const conn: Conn = { id, who, visitor, seq: 0, page: page(new URL(req.url).searchParams.get("page")), name: "", color: "ink", tilt: 0, x: null, y: null, send: (msg) => write(`data: ${JSON.stringify(msg)}\n\n`) };
+			conns.set(id, conn);
+			conn.send({ t: "hello", you: id, me: who, count: count(), cursors: [...conns.values()].filter((c) => c.id !== id).map(pub) });
+			broadcast({ t: "count", count: count() }, id);
+			ping = setInterval(() => write(": ping\n\n"), PING_MS);
+			req.signal.addEventListener("abort", () => {
+				close();
+				try {
+					controller.close();
+				} catch {}
+			});
+		},
+		cancel: close,
+	});
+
+	return new Response(stream, {
+		headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache, no-transform", Connection: "keep-alive", "X-Accel-Buffering": "no" },
+	});
+}
+
+export async function POST(req: Request) {
+	const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
+	const conn = typeof body?.id === "string" ? conns.get(body.id) : undefined;
+	if (!body || !conn) return new Response(null, { status: 404 });
+	// Requests can overtake each other: a late one never moves the cursor back.
+	const seq = num(body.seq, 0, Number.MAX_SAFE_INTEGER) ?? 0;
+	if (seq <= conn.seq) return new Response(null, { status: 204 });
+	conn.seq = seq;
+
+	if ("page" in body) conn.page = page(body.page);
+	if (typeof body.name === "string") conn.name = body.name.trim().slice(0, 32);
+	if (typeof body.color === "string" && COLOR.test(body.color)) conn.color = body.color;
+	if ("tilt" in body) conn.tilt = num(body.tilt, -180, 180) ?? 0;
+	if ("x" in body) conn.x = num(body.x, -5000, 5000);
+	if ("y" in body) conn.y = num(body.y, 0, 500_000);
+	if (conn.x === null || conn.y === null) conn.x = conn.y = null;
+
+	broadcast({ t: "cursor", c: pub(conn) }, conn.id);
+	return new Response(null, { status: 204 });
+}

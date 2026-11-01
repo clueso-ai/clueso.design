@@ -3,7 +3,7 @@
 import { animate, useReducedMotion } from "framer-motion";
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { LOGO_PATHS, LOGO_VIEWBOX, WORDMARK_FILL } from "@/lib/clueso-logo";
+import { LOGO_PATHS, LOGO_VIEWBOX } from "@/lib/clueso-logo";
 import { markFillDoc } from "@/lib/mark-fill";
 import { useIsDark } from "@/lib/use-dark";
 import { useFinePointer } from "@/lib/use-fine-pointer";
@@ -15,8 +15,8 @@ const HeroCanvas = dynamic(() => import("./hero-canvas").then((m) => m.HeroCanva
 
 // The Clueso logo as vector paths with square handles on its key points. Pull one and the letter
 // stretches; let go and it springs back. The mark is filled with a live Brand Lab design that
-// re-rolls every few seconds, and every hover switches it to the next effect. Hovering a letter
-// fills it in.
+// re-rolls every few seconds, and every hover switches it to the next effect. The letters are
+// filled in the strongest text colour: white in dark mode, ink in light mode.
 //
 // Phones get the mark alone, across the whole footer: the full logo is too small there to grab
 // anything. On touch, handles get a target of at least 44px whatever the size.
@@ -181,7 +181,7 @@ export function FooterLogo() {
 						<path
 							d={id === "mark" ? markPath : writePath(shapes[id])}
 							fillRule={id === "mark" ? "evenodd" : "nonzero"}
-							fill={id === "mark" ? "transparent" : WORDMARK_FILL[dark ? "dark" : "light"][active === id ? "hover" : "rest"]}
+							fill={id === "mark" ? "transparent" : "var(--fg-neutral-strong)"}
 							// Stroke under the fill, so contours that overlap inside a letter don't show.
 							paintOrder="stroke"
 							stroke="var(--border-neutral-strong)"

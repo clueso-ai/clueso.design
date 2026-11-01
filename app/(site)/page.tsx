@@ -1,11 +1,10 @@
 import Link from "next/link";
 import { BrandLabPreview } from "@/components/site/brand-lab-preview";
 import { Band, SectionHeading } from "@/components/site/frame";
-import { HeroTitle } from "@/components/site/hero-title";
+import { HeroGreeting } from "@/components/site/hero-greeting";
 import { Illustration, type IllustrationKind } from "@/components/site/illustration";
 import { TeamGrid } from "@/components/site/team-grid";
 import { Timeline } from "@/components/site/timeline";
-import { TypeTuner } from "@/components/site/type-tuner";
 import { ButtonLink } from "@/lib/design-system";
 import { ArrowRightIcon, ExternalLinkIcon } from "@/lib/design-system/icons";
 import { changelog } from "@/lib/changelog";
@@ -34,7 +33,7 @@ function Playground() {
 								<span className="type-title-s text-neutral-strong">{item.title}</span>
 								<ArrowRightIcon aria-hidden className="size-4 text-neutral-strong transition-transform duration-200 ease-out-strong group-hover:translate-x-0.5" />
 							</span>
-							<span className="type-text-s text-neutral-normal">{item.description}</span>
+							<span className="type-text-s whitespace-pre-line text-neutral-normal">{item.description}</span>
 							<span className="type-text-s pt-gap-xs text-neutral-weak">By {item.owner}</span>
 						</span>
 					</Link>
@@ -63,23 +62,7 @@ export default function Home() {
 	return (
 		<>
 			<Band rule={false} flush>
-				<div className="flex flex-col items-start gap-gap-l pt-gap-3xl pb-gap-2xl">
-					<div className="flex w-full flex-col gap-gap-xs">
-						<HeroTitle>Designers who ship</HeroTitle>
-						<p className="type-text-l max-w-measure-wide px-gap-l text-balance text-neutral-normal">
-							We&apos;re the design team at Clueso. This is where we experiment with ideas, build tools we wish existed, and turn the good ones into real product experiences.
-						</p>
-					</div>
-					<div className="flex flex-wrap gap-gap-s px-gap-l">
-						<ButtonLink href="#tools" size="medium" icon={<ArrowRightIcon />}>
-							See what we&apos;ve made
-						</ButtonLink>
-						<ButtonLink href="#team" size="medium" variant="outlined" sentiment="neutral">
-							Meet the team
-						</ButtonLink>
-					</div>
-				</div>
-				<TypeTuner />
+				<HeroGreeting />
 			</Band>
 
 			<Band id="tools" labelledBy="tools-title" flush>
@@ -94,7 +77,8 @@ export default function Home() {
 				<div className="flex flex-col gap-gap-m border-t border-neutral-weak px-gap-l py-gap-l md:flex-row md:items-end md:justify-between">
 					<div className="flex max-w-measure flex-col gap-gap-2xs">
 						<span className="type-text-s font-code text-neutral-weak">Tool {brandLab.number}</span>
-						<h3 className="type-title-m text-neutral-strong">{brandLab.title}</h3>
+						{/* Sentence case and the text style here, unlike the registry's title for the tool. */}
+						<h3 className="type-text-l text-neutral-strong">Brand lab</h3>
 						<p className="type-text-m text-neutral-normal">
 							A playground for patterns, compositions and visual treatments made from Clueso&apos;s brand shapes. To see the thinking behind the shapes, read about the <a href={BRAND_BLOG} target="_blank" rel="noreferrer" className={TEXT_LINK}>Clueso brand</a>.
 						</p>
@@ -106,12 +90,12 @@ export default function Home() {
 			</Band>
 
 			<Band id="playground" labelledBy="playground-title" flush>
-				<SectionHeading id="playground-title" title="Ideas worth playing with" intro="Not everything makes it into the product. But every good idea deserves a chance to be tried." />
+				<SectionHeading id="playground-title" title="Ideas worth playing with" intro={"Not everything makes it into the product.\nBut every good idea deserves a chance to be tried."} />
 				<Playground />
 			</Band>
 
 			<Band id="team" labelledBy="team-title" flush>
-				<SectionHeading id="team-title" title="The people making it happen" intro="Different backgrounds, different interests, and a shared tendency to care a little too much about the details." />
+				<SectionHeading id="team-title" title="Designers who ship" intro={"Different backgrounds, different interests,\nand a shared tendency to care a little too much about the details."} />
 				<TeamGrid people={team} />
 			</Band>
 

@@ -52,10 +52,10 @@ export function setPrefsSmooth(patch: Partial<SitePrefs>) {
 	});
 }
 
-/** Back to the default look. The cursor keeps its colour and name. */
+/** Back to the default look. The cursor keeps its colour and name, and the visitor stays onboarded. */
 export function resetPrefs() {
 	load();
-	setPrefsSmooth({ ...DEFAULT_PREFS, cursorColor: current.cursorColor, cursorName: current.cursorName, cluesoCursor: current.cluesoCursor });
+	setPrefsSmooth({ ...DEFAULT_PREFS, cursorColor: current.cursorColor, cursorName: current.cursorName, cluesoCursor: current.cluesoCursor, onboarded: current.onboarded, hintDone: current.hintDone });
 }
 
 const subscribe = (l: () => void) => {
