@@ -4,6 +4,7 @@ import { ICON_NORMAL, IconButton } from "../components/icon-button";
 import { Thumb, ThumbActions, ThumbBadge, ThumbCard, ThumbGrid } from "../components/thumb";
 import { renderThumb } from "../export/thumb";
 import { Button } from "@/lib/design-system/jigsaw/components/ui/controls/button/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/lib/design-system/jigsaw/components/ui/overlays/tooltip/tooltip";
 import type { Doc } from "../state/doc";
 import { mulberry32 } from "../state/shuffle";
 import { styleSet } from "../state/styles";
@@ -108,9 +109,14 @@ export function Explore() {
 				<>
 					<span className="label-xsmall text-normal">Change what</span>
 					<Segmented size="button" label="Change what" value={mode} options={VARIATION_MODES} onChange={setMode} />
-					<Button iconClassName={ICON_NORMAL} variant="outlined" sentiment="neutral" size="small" iconBefore icon={<I.Refresh />} onClick={generate} title="New set (R)">
-						New set
-					</Button>
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<Button iconClassName={ICON_NORMAL} variant="outlined" sentiment="neutral" size="small" iconBefore icon={<I.Refresh />} onClick={generate}>
+								New set
+							</Button>
+						</TooltipTrigger>
+						<TooltipContent shortcut={["R"]}>New set</TooltipContent>
+					</Tooltip>
 				</>
 			}
 		>

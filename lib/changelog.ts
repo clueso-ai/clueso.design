@@ -1,5 +1,6 @@
-// What changed on clueso.design, newest first. Add an entry when something ships: a new tool, a
-// new section, or a change people will notice. Keep it short and plain.
+// What shipped on clueso.design, newest first. Add an entry when something ships: a new tool, a new
+// experiment, or a change people will notice. Write it like a note to a friend: what it is, why it
+// exists, one or two short sentences. Credit whoever shipped it.
 export interface ChangelogEntry {
 	/** ISO date. */
 	date: string;
@@ -8,33 +9,39 @@ export interface ChangelogEntry {
 	body: string;
 	/** What it touched, e.g. "Brand Lab", "Site". */
 	area: string;
+	/** Who shipped it: a team member's slug (lib/team.ts). */
+	by: string;
 }
 
 export const changelog: ChangelogEntry[] = [
 	{
 		date: "2026-11-01",
-		title: "Make the site yours",
-		body: "Put your name and favourite colour on a Clueso cursor in the hero. Fonts, weights and the type scale for the whole site live behind Customize website, bottom right.",
+		title: "Brand Lab and Cluego are live",
+		body: "Both now live on clueso.design. Open them, play with them, break them. That's what they're here for.",
 		area: "Site",
+		by: "ajinkya",
 	},
 	{
 		date: "2026-11-01",
-		title: "Meet the team, and our logo",
-		body: "Bring your cursor into the team section and everyone comes over to say hi. The footer has our logo drawn as points you can pull.",
-		area: "Site",
+		title: "One shell for every tool",
+		body: "Every tool now starts inside the same shell: canvas, panels, layers and export come ready. So you spend your time on what the tool does, not on building its UI. Brand Lab moved in first.",
+		area: "Tools",
+		by: "ajinkya",
 	},
 	{
 		date: "2026-11-01",
-		title: "Brand Lab moves in",
-		body: "Tool 001 now runs at clueso.design/tools/brand-lab. You can also play with it live on the homepage.",
+		title: "Turns out we own clueso.design",
+		body: "So we built Brand Lab on it, a place to explore visual directions for the Clueso brand. The bigger idea: designers making tools for each other, with AI doing the heavy lifting.",
 		area: "Brand Lab",
+		by: "ajinkya",
 	},
 	{
-		date: "2026-11-01",
-		title: "clueso.design is live",
-		body: "A home for what the Clueso design team makes: tools, experiments and the systems behind our product and brand.",
-		area: "Site",
+		date: "2026-10-31",
+		title: "Cluego, built on a Saturday",
+		body: "A game about Clueso's features. Hop across three islands, solve each screen and collect the stamps. A few are hidden.",
+		area: "Cluego",
+		by: "preshita",
 	},
 ];
 
-export const formatDate = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+export const formatDate = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });

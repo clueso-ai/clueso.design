@@ -11,8 +11,8 @@ import { CURSOR_TIP, CluesoCursor } from "./clueso-cursor";
 
 // Draws the visitor's Clueso cursor wherever the page hides the native one (a .site-cursor scope,
 // see styles/site.css). Until the visitor first opens Customize website, the tag says how, from
-// the first move on, and stays. After that it shows their name while the pointer rests. Same approach as Brand Lab's cursor: follows the pointer 1:1, presses down
-// on click, and sits above everything (menus included) on its own fixed layer. Mouse and pen only.
+// the first move on, and stays. After that it shows their name while the pointer rests. Same approach as Brand Lab's cursor: follows the pointer 1:1, the piece presses
+// down on click while its tag holds still, and it sits above everything (menus included) on its own fixed layer. Mouse and pen only.
 
 // Embeds that draw their own cursor (the Brand Lab preview) switch this one off while the pointer is inside them.
 let suspended = false;
@@ -150,9 +150,9 @@ export function SiteCursor() {
 		<div ref={layer} aria-hidden className="pointer-events-none fixed inset-0 z-[2147483646] overflow-hidden select-none">
 			<motion.div
 				className="absolute top-0 left-0"
-				style={{ x, y, scale, opacity: visible && !off ? 1 : 0, transformOrigin: `${CURSOR_TIP[0]}px ${CURSOR_TIP[1]}px` }}
+				style={{ x, y, opacity: visible && !off ? 1 : 0 }}
 			>
-				<CluesoCursor color={cursorById(prefs.cursorColor)} name={tag} tilt={prefs.cursorTilt} label={label} flip={flip} wide={hinting} />
+				<CluesoCursor color={cursorById(prefs.cursorColor)} name={tag} tilt={prefs.cursorTilt} label={label} flip={flip} wide={hinting} press={scale} />
 			</motion.div>
 		</div>,
 		document.body,

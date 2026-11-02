@@ -21,3 +21,9 @@ export const team: Person[] = [
 	{ slug: "sneha", name: "Sneha", title: "Brand designer", cursor: "pink", ...portrait("sneha") },
 	{ slug: "ajinkya", name: "Ajinkya", title: "Product designer", cursor: "pink", ...portrait("ajinkya") },
 ];
+
+/** A team member by slug, or by a name whose first word is theirs ("Ajinkya Gajbhiye" finds Ajinkya). */
+export function findPerson(nameOrSlug: string): Person | undefined {
+	const first = nameOrSlug.trim().split(/\s+/)[0]?.toLowerCase();
+	return team.find((p) => p.slug === first || p.name.toLowerCase() === first);
+}

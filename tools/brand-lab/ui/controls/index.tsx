@@ -3,6 +3,7 @@ import { type ColorValue, colorName, type Palette, resolveColor } from "../../br
 import { CustomColorPicker } from "../../components/color";
 import { Popover, PopoverContent, PopoverTrigger } from "../../components/popover";
 import { ColorBox } from "@/lib/design-system/jigsaw/components/ui/color/color-box/color-box";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/lib/design-system/jigsaw/components/ui/overlays/tooltip/tooltip";
 import { Button } from "@/lib/design-system/jigsaw/components/ui/controls/button/button";
 import { Field } from "../../components/field";
 import { WrappedSelect } from "@/lib/design-system/jigsaw/components/ui/controls/select/select";
@@ -42,9 +43,12 @@ export function Slider({ label, value, min, max, step = 0.01, unit, onChange, di
 	const k = display?.scale ?? 1;
 	return (
 		<div className="grid grid-cols-[minmax(0,88px)_1fr] items-center gap-md">
-			<span className="label-xsmall truncate text-normal" title={label}>
-				{label}
-			</span>
+			<Tooltip>
+				<TooltipTrigger asChild>
+					<span className="label-xsmall truncate text-normal">{label}</span>
+				</TooltipTrigger>
+				<TooltipContent>{label}</TooltipContent>
+			</Tooltip>
 			<JSlider
 				aria-label={label}
 				value={value * k}
@@ -201,22 +205,25 @@ export function ColorField({ label, value, palette, onChange }: { label: string;
 						</div>
 						<div className="flex flex-wrap gap-sm">
 							{palette.map((c) => (
-								<button
-									key={c.key}
-									type="button"
-									title={c.name}
-									aria-label={c.name}
-									aria-pressed={value === `$${c.key}`}
-									className={cn(
-										"size-[22px] shrink-0 rounded-2xs border-[0.5px] border-normal transition-transform hover:scale-110",
-										value === `$${c.key}` && "outline-1 outline-offset-2 outline-[var(--color-fg-stroke-strong)]",
-									)}
-									style={{ background: c.hex }}
-									onClick={() => {
-										onChange(`$${c.key}`);
-										setOpen(false);
-									}}
-								/>
+								<Tooltip key={c.key}>
+									<TooltipTrigger asChild>
+										<button
+											type="button"
+											aria-label={c.name}
+											aria-pressed={value === `$${c.key}`}
+											className={cn(
+												"size-[22px] shrink-0 rounded-2xs border-[0.5px] border-normal transition-transform hover:scale-110",
+												value === `$${c.key}` && "outline-1 outline-offset-2 outline-[var(--color-fg-stroke-strong)]",
+											)}
+											style={{ background: c.hex }}
+											onClick={() => {
+												onChange(`$${c.key}`);
+												setOpen(false);
+											}}
+										/>
+									</TooltipTrigger>
+									<TooltipContent>{c.name}</TooltipContent>
+								</Tooltip>
 							))}
 						</div>
 					</div>

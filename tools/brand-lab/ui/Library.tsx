@@ -8,6 +8,7 @@ import { PRESETS } from "../state/presets";
 import { ICON_NORMAL, IconButton } from "../components/icon-button";
 import { Thumb, ThumbActions, ThumbBadge, ThumbCard, ThumbGrid, ThumbMeta } from "../components/thumb";
 import { Button } from "@/lib/design-system/jigsaw/components/ui/controls/button/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/lib/design-system/jigsaw/components/ui/overlays/tooltip/tooltip";
 import { Field } from "../components/field";
 import { useStore } from "../state/store";
 import { Segmented } from "./controls";
@@ -71,21 +72,25 @@ export function Library() {
 						]}
 						onChange={setTab}
 					/>
-					<Button iconClassName={ICON_NORMAL}
-						variant="outlined"
-						sentiment="neutral"
-						size="small"
-						iconBefore
-						icon={<I.Bookmark />}
-						onClick={async () => {
-							await saveToLibrary({ asNew: true });
-							await refresh();
-							setTab("saved");
-						}}
-						title="Save the current frame as a new entry"
-					>
-						Save current
-					</Button>
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<Button iconClassName={ICON_NORMAL}
+								variant="outlined"
+								sentiment="neutral"
+								size="small"
+								iconBefore
+								icon={<I.Bookmark />}
+								onClick={async () => {
+									await saveToLibrary({ asNew: true });
+									await refresh();
+									setTab("saved");
+								}}
+							>
+								Save current
+							</Button>
+						</TooltipTrigger>
+						<TooltipContent>Save the current frame as a new entry</TooltipContent>
+					</Tooltip>
 				</>
 			}
 		>
@@ -147,9 +152,14 @@ function SavedCard({ entry, current, onOpen, onChange }: { entry: LibraryEntry; 
 						}}
 					/>
 				) : (
-					<span className="label-xsmall-strong truncate text-strong" onDoubleClick={() => setRenaming(true)} title="Double-click to rename">
-						{entry.name}
-					</span>
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<span className="label-xsmall-strong truncate text-strong" onDoubleClick={() => setRenaming(true)}>
+								{entry.name}
+							</span>
+						</TooltipTrigger>
+						<TooltipContent>Double-click to rename</TooltipContent>
+					</Tooltip>
 				)}
 			</ThumbMeta>
 			<ThumbActions>

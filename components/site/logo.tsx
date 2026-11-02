@@ -23,12 +23,16 @@ function Mark({ paths, className }: { paths: string[]; className: string }) {
 	);
 }
 
-export function Logo() {
+/** `className` styles the whole logo; the header's (.site-logo) shows the mark alone on phones. */
+export function Logo({ className = "" }: { className?: string }) {
 	return (
-		<span className="type-logo text-neutral-strong">
+		<span className={`type-logo text-neutral-strong ${className}`}>
 			<Mark paths={LIGHT_BG} className="dark:hidden" />
 			<Mark paths={DARK_BG} className="hidden dark:block" />
-			Design
+			{/* Two spans: the outer one is a still window cut at the mark's edge, the inner one moves inside it. */}
+			<span className="logo-word">
+				<span className="logo-word-text">Design</span>
+			</span>
 		</span>
 	);
 }

@@ -53,7 +53,7 @@ export const registry: RegistryItem[] = [
 		visibility: "public",
 		theme: "lab",
 		href: "/playground/cluego",
-		description: "A stamp trip across three islands of the Clueso app.\nSolve each screen, collect its stamp and find the secret ones.",
+		description: "A stamp trip across three islands of the Clueso app.",
 		tags: ["game", "onboarding", "illustration"],
 		updated: "2026-11-01",
 	},

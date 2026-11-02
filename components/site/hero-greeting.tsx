@@ -51,23 +51,24 @@ export function HeroGreeting() {
 		<div className="hero-screen relative flex flex-col overflow-hidden">
 			<Petals />
 			<div className="relative flex flex-1 flex-col items-start gap-gap-l pt-gap-3xl pb-gap-2xl">
-				<HeroTitle>{"Welcome to\nClueso design"}</HeroTitle>
-				<p className="type-text-l max-w-measure px-gap-l text-pretty text-neutral-normal">
-					This is where we experiment with ideas, build tools we wish existed,
-					<br />
-					and turn the good ones into real product experiences.
-				</p>
-				<div className="flex flex-wrap gap-gap-s px-gap-l pt-gap-xs">
-					<ButtonLink href="#tools" size="medium" icon={<ArrowRightIcon />}>
+				{/* Title and intro sit close; the buttons keep their distance below. */}
+				<div className="flex w-full flex-col gap-gap-xs">
+					<HeroTitle>{"Welcome to\nClueso design"}</HeroTitle>
+					<p className="type-text-l max-w-measure px-gap-l text-pretty text-neutral-normal">
+						This is where we experiment with ideas and build tools we wish existed.
+					</p>
+				</div>
+				<div className="flex w-full flex-col gap-gap-s px-gap-l pt-gap-xs sm:w-auto sm:flex-row sm:flex-wrap">
+					<ButtonLink href="#tools" size="large" icon={<ArrowRightIcon />} className="w-full sm:w-auto">
 						See what we&apos;ve made
 					</ButtonLink>
-					<ButtonLink href="#team" size="medium" variant="outlined" sentiment="neutral">
+					<ButtonLink href="#team" size="large" variant="outlined" sentiment="neutral" className="w-full sm:w-auto">
 						Meet the team
 					</ButtonLink>
 				</div>
 			</div>
 			<div className="relative flex px-gap-l py-gap-m">
-				<span className="type-text-s hidden items-center gap-gap-2xs text-neutral-weak md:flex">
+				<span className="scroll-cue type-text-s hidden items-center gap-gap-2xs md:flex">
 					Scroll to look around
 					{/* The icon set has no down arrow: the right one, turned. */}
 					<ArrowRightIcon aria-hidden className="size-4 rotate-90" />

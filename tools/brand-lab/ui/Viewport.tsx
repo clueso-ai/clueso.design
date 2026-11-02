@@ -6,6 +6,7 @@ import { useStore } from "../state/store";
 import { CanvasOverlay } from "./CanvasOverlay";
 import { Button } from "@/lib/design-system/jigsaw/components/ui/controls/button/button";
 import { ContextMenuPopover } from "@/lib/design-system/jigsaw/components/ui/overlays/context-menu/context-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/lib/design-system/jigsaw/components/ui/overlays/tooltip/tooltip";
 import { cn } from "@/lib/design-system/jigsaw/lib/utils";
 import type { Doc } from "../state/doc";
 import { renderThumb } from "../export/thumb";
@@ -482,69 +483,73 @@ function BoardLabel({
 					}}
 				/>
 			) : (
-				<span
-					data-dup
-					className={cn(
-						"label-xsmall absolute bottom-[calc(100%+6px)] left-0 max-w-full cursor-default truncate select-none",
-						selected ? "text-accent-normal" : active ? "text-strong" : "text-weak hover:text-normal",
-					)}
-					title="Click to select, double-click to rename, drag to move, ⌥-drag to duplicate"
-					onDoubleClick={() => setRenaming(true)}
-					onPointerDown={(e) => {
-						if (e.button !== 0) return;
-						e.stopPropagation();
-						onActivate();
-						useStore.getState().setCanvasSelected(true);
-						const x0 = e.clientX;
-						const y0 = e.clientY;
-						const start = { ...at };
-						let moved = false;
-						let copy = e.altKey;
-						let d = { dx: 0, dy: 0 };
-						const W = doc.scene.width;
-						const H = doc.scene.height;
-						const move = (ev: PointerEvent) => {
-							d = { dx: ev.clientX - x0, dy: ev.clientY - y0 };
-							if (!moved && Math.hypot(d.dx, d.dy) < 4) return;
-							moved = true;
-							copy = ev.altKey;
-							// Snap to the other canvases (⌘ skips), then express it back as a screen offset.
-							const raw = { x: start.x + d.dx / scale, y: start.y + d.dy / scale };
-							if (useStore.getState().snapping && !ev.metaKey && !ev.ctrlKey) {
-								const snap = snapCanvas(raw.x, raw.y, W, H, others, 6 / scale);
-								d = { dx: (snap.x - start.x) * scale, dy: (snap.y - start.y) * scale };
-								onGuides(snap.guides.x.length || snap.guides.y.length ? snap.guides : null);
-							} else onGuides(null);
-							const st = useStore.getState();
-							const i = st.canvases.indexOf(doc) >= 0 ? st.canvases.indexOf(doc) : index;
-							if (copy) {
-								// The original stays put; a ghost shows where the copy will land.
-								st.moveCanvasOnBoard(i, start);
-								setGhost(d);
-							} else {
-								setGhost(null);
-								st.moveCanvasOnBoard(index, { x: Math.round(start.x + d.dx / scale), y: Math.round(start.y + d.dy / scale) });
-							}
-						};
-						const up = () => {
-							window.removeEventListener("pointermove", move);
-							window.removeEventListener("pointerup", up);
-							setGhost(null);
-							onGuides(null);
-							if (moved && copy) {
-								const st = useStore.getState();
-								// The copy becomes active; hold the view so it stays where it was dropped.
-								onHoldView();
-								st.duplicateCanvas(index, st.canvases.length, { x: Math.round(start.x + d.dx / scale), y: Math.round(start.y + d.dy / scale) });
-								st.setCanvasSelected(true);
-							}
-						};
-						window.addEventListener("pointermove", move);
-						window.addEventListener("pointerup", up);
-					}}
-				>
-					{doc.name || "Untitled"}
-				</span>
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<span
+							data-dup
+							className={cn(
+								"label-xsmall absolute bottom-[calc(100%+6px)] left-0 max-w-full cursor-default truncate select-none",
+								selected ? "text-accent-normal" : active ? "text-strong" : "text-weak hover:text-normal",
+							)}
+							onDoubleClick={() => setRenaming(true)}
+							onPointerDown={(e) => {
+								if (e.button !== 0) return;
+								e.stopPropagation();
+								onActivate();
+								useStore.getState().setCanvasSelected(true);
+								const x0 = e.clientX;
+								const y0 = e.clientY;
+								const start = { ...at };
+								let moved = false;
+								let copy = e.altKey;
+								let d = { dx: 0, dy: 0 };
+								const W = doc.scene.width;
+								const H = doc.scene.height;
+								const move = (ev: PointerEvent) => {
+									d = { dx: ev.clientX - x0, dy: ev.clientY - y0 };
+									if (!moved && Math.hypot(d.dx, d.dy) < 4) return;
+									moved = true;
+									copy = ev.altKey;
+									// Snap to the other canvases (⌘ skips), then express it back as a screen offset.
+									const raw = { x: start.x + d.dx / scale, y: start.y + d.dy / scale };
+									if (useStore.getState().snapping && !ev.metaKey && !ev.ctrlKey) {
+										const snap = snapCanvas(raw.x, raw.y, W, H, others, 6 / scale);
+										d = { dx: (snap.x - start.x) * scale, dy: (snap.y - start.y) * scale };
+										onGuides(snap.guides.x.length || snap.guides.y.length ? snap.guides : null);
+									} else onGuides(null);
+									const st = useStore.getState();
+									const i = st.canvases.indexOf(doc) >= 0 ? st.canvases.indexOf(doc) : index;
+									if (copy) {
+										// The original stays put; a ghost shows where the copy will land.
+										st.moveCanvasOnBoard(i, start);
+										setGhost(d);
+									} else {
+										setGhost(null);
+										st.moveCanvasOnBoard(index, { x: Math.round(start.x + d.dx / scale), y: Math.round(start.y + d.dy / scale) });
+									}
+								};
+								const up = () => {
+									window.removeEventListener("pointermove", move);
+									window.removeEventListener("pointerup", up);
+									setGhost(null);
+									onGuides(null);
+									if (moved && copy) {
+										const st = useStore.getState();
+										// The copy becomes active; hold the view so it stays where it was dropped.
+										onHoldView();
+										st.duplicateCanvas(index, st.canvases.length, { x: Math.round(start.x + d.dx / scale), y: Math.round(start.y + d.dy / scale) });
+										st.setCanvasSelected(true);
+									}
+								};
+								window.addEventListener("pointermove", move);
+								window.addEventListener("pointerup", up);
+							}}
+						>
+							{doc.name || "Untitled"}
+						</span>
+					</TooltipTrigger>
+					<TooltipContent>Click to select, double-click to rename, drag to move, ⌥-drag to duplicate</TooltipContent>
+				</Tooltip>
 			)}
 			{ghost && (
 				// The copy itself, carried across the board; the original stays put underneath.

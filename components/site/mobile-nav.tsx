@@ -38,11 +38,12 @@ export function MobileNav({ items }: { items: { href: string; label: string }[] 
 	return (
 		<div className="md:hidden">
 			<Button
-				variant="transparent"
+				variant="outlined"
 				sentiment="neutral"
 				size="medium"
 				iconOnly
-				className="focus-ring"
+				// Same square as the badge and theme toggle beside it (styles/site.css).
+				className="header-control header-control-square focus-ring"
 				aria-label={open ? "Close menu" : "Open menu"}
 				aria-expanded={open}
 				aria-controls="mobile-nav"

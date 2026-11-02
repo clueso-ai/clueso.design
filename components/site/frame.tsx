@@ -53,7 +53,8 @@ export function SectionHeading({ id, title, intro, children }: { id: string; tit
 				{/* A "\n" in the intro breaks the line there. */}
 				{intro && <p className="type-text-l text-pretty whitespace-pre-line text-neutral-normal">{intro}</p>}
 			</div>
-			{children && <div className="flex shrink-0 flex-wrap gap-gap-s">{children}</div>}
+			{/* Phones: the heading's buttons span the full width. */}
+			{children && <div className="flex shrink-0 flex-col gap-gap-s *:w-full md:flex-row md:flex-wrap md:*:w-auto">{children}</div>}
 		</div>
 	);
 }
