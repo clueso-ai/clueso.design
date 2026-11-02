@@ -1,5 +1,5 @@
 import { I } from "./ci";
-import { ICON_NORMAL, IconButton } from "../components/icon-button";
+import { ICON_NORMAL, IconButton } from "@/tools/shell/components/icon-button";
 import { Button } from "@/lib/design-system/jigsaw/components/ui/controls/button/button";
 import { Field } from "../components/field";
 import { Tag } from "@/lib/design-system/jigsaw/components/ui/primitives/tag/tag";

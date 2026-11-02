@@ -1,7 +1,8 @@
 import { I } from "./ci";
 import { type ReactNode, useLayoutEffect, useState } from "react";
-import { IconButton } from "../components/icon-button";
-import { Panel, PanelHeader } from "../components/panel";
+import { IconButton } from "@/tools/shell/components/icon-button";
+import { PanelHeader } from "@/tools/shell/components/panel";
+import { LeftPanel } from "@/tools/shell/panels";
 import { MenuLabel, Popover, PopoverContent, PopoverTrigger } from "../components/popover";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/lib/design-system/jigsaw/components/ui/overlays/tooltip/tooltip";
 import { Separator } from "@/lib/design-system/jigsaw/components/ui/primitives/separator/separator";
@@ -12,7 +13,6 @@ import { useStore } from "../state/store";
 import { releaseFieldFocus } from "./CanvasOverlay";
 import { CanvasesSection } from "./CanvasesSection";
 import { LayerIcon } from "./icons";
-import { BAR, GAP, M, PANEL_TOP, usePanels } from "./layout";
 
 const ROW = 36;
 const PAD = 6;
@@ -30,7 +30,6 @@ export function LayersPanel() {
 	const hoverId = useStore((s) => s.hoverId);
 	const select = useStore((s) => s.select);
 	const moveLayer = useStore((s) => s.moveLayer);
-	const width = usePanels((s) => s.left);
 	const [drag, setDrag] = useState<Drag | null>(null);
 	// After a drop the dropped row eases from where the pointer left it into its slot.
 	const [settle, setSettle] = useState<{ id: string; offset: number } | null>(null);
@@ -83,7 +82,7 @@ export function LayersPanel() {
 	};
 
 	return (
-		<Panel className="max-[1099px]:hidden" style={{ top: PANEL_TOP, left: M, bottom: M + BAR + GAP, width }} aria-label="Layers">
+		<LeftPanel aria-label="Layers">
 			<CanvasesSection />
 			<PanelHeader title="Layers">
 				<AddLayerMenu>
@@ -123,7 +122,7 @@ export function LayersPanel() {
 					)}
 				</ul>
 			)}
-		</Panel>
+		</LeftPanel>
 	);
 }
 

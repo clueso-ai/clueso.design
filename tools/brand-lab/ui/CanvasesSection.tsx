@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { IconButton } from "../components/icon-button";
+import { IconButton } from "@/tools/shell/components/icon-button";
 import { renderThumb } from "../export/thumb";
 import { ContextMenuPopover } from "@/lib/design-system/jigsaw/components/ui/overlays/context-menu/context-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/lib/design-system/jigsaw/components/ui/overlays/tooltip/tooltip";

@@ -1,6 +1,6 @@
 import { I } from "./ci";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ICON_NORMAL, IconButton } from "../components/icon-button";
+import { ICON_NORMAL, IconButton } from "@/tools/shell/components/icon-button";
 import { Thumb, ThumbActions, ThumbBadge, ThumbCard, ThumbGrid } from "../components/thumb";
 import { renderThumb } from "../export/thumb";
 import { Button } from "@/lib/design-system/jigsaw/components/ui/controls/button/button";

@@ -1,5 +1,5 @@
 import EyeDropIcon from "@icons/icons/Editing Design/Eye-dropper.svg?react";
-import { IconButton } from "./icon-button";
+import { IconButton } from "@/tools/shell/components/icon-button";
 import { useRef, useState } from "react";
 import { HueSlider, SaturationPanel } from "@/lib/design-system/jigsaw/components/ui/color/gradient-color-picker/color-primitives";
 import { hexToHsv, hsvToHex } from "@/lib/design-system/jigsaw/components/ui/color/gradient-color-picker/color-utils";

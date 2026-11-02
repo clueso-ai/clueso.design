@@ -3,7 +3,6 @@ import { readJSON } from "./export";
 import { createLayer, getDef } from "./layers/registry";
 import type { Params } from "./layers/types";
 import { ALIGN_KEYS, alignSelection } from "./state/align";
-import { CustomCursor } from "./components/cursor";
 import { hasLayerClipboard, LAYER_CLIP_MARK, useStore } from "./state/store";
 import { TYPE_STYLES } from "./layers/sources/text";
 import { CommandMenu } from "./ui/CommandMenu";
@@ -13,10 +12,10 @@ import { LayersPanel } from "./ui/LayersPanel";
 import { Library } from "./ui/Library";
 import { Palettes } from "./ui/Palettes";
 import { PropertiesPanel, readImageFile } from "./ui/PropertiesPanel";
-import { ResizeHandle } from "./ui/ResizeHandle";
 import { Timeline } from "./ui/Timeline";
-import { Toolbar, ZoomChip } from "./ui/Toolbar";
+import { ToolbarEnd, ToolbarStart, ZoomChip } from "./ui/Toolbar";
 import { Viewport } from "./ui/Viewport";
+import { ToolShell } from "@/tools/shell/ToolShell";
 
 /** Arrow keys move the selection by 1 composition px (10 with Shift), as one undo step per burst. */
 function nudge(key: string, step: number) {
@@ -199,37 +198,42 @@ export function App() {
 		};
 	}, []);
 
-	// jigsaw themes with a .dark class; on <html> so portalled menus and modals pick it up too.
-	useEffect(() => {
-		document.documentElement.classList.toggle("dark", theme === "dark");
-	}, [theme]);
-
+	// clueso.design: the frame (top bar, panels, resize handles, cursor, toast, theme) comes from the
+	// tool shell. The root keeps its brand-lab-root class and the panel widths their old key.
 	return (
-		<div className="brand-lab-root font-body fixed inset-0 overflow-hidden bg-canvas text-strong select-none">
+		<ToolShell
+			id="brand-lab"
+			name="Brand Lab"
+			theme={theme}
+			toolbarStart={<ToolbarStart />}
+			toolbarEnd={<ToolbarEnd />}
+			toolbarLabels={{ start: "Project", end: "Create and export" }}
+			left={<LayersPanel />}
+			right={<PropertiesPanel errors={errors} />}
+			bottom={
+				<>
+					<ZoomChip fitScale={fitScale} />
+					<Timeline />
+				</>
+			}
+			resizeLabels={{ left: "Resize layers panel", right: "Resize properties panel" }}
+			toast={toast}
+			overlays={
+				<>
+					{overlay === "explore" && <Explore />}
+					{overlay === "library" && <Library />}
+					{overlay === "palettes" && <Palettes />}
+					<ContextMenu />
+					<CommandMenu />
+					{dragging && (
+						<div className="label-small-strong pointer-events-none absolute inset-xl z-overlay grid place-items-center rounded-xl border-2 border-dashed border-brand-normal bg-brand-weak/60 text-strong">
+							Drop an image to add it as a layer, or a .json to open it
+						</div>
+					)}
+				</>
+			}
+		>
 			<Viewport onFitScale={setFitScale} onErrors={onErrors} />
-			<Toolbar />
-			<ZoomChip fitScale={fitScale} />
-			<LayersPanel />
-			<PropertiesPanel errors={errors} />
-			<Timeline />
-			<ResizeHandle side="left" />
-			<ResizeHandle side="right" />
-			{overlay === "explore" && <Explore />}
-			{overlay === "library" && <Library />}
-			{overlay === "palettes" && <Palettes />}
-			<ContextMenu />
-			<CommandMenu />
-			<CustomCursor />
-			{toast && (
-				<div role="status" className="label-xsmall-strong animate-in fade-in-0 slide-in-from-bottom-2 absolute bottom-[84px] left-1/2 z-toast -translate-x-1/2 rounded-sm bg-inverted px-xl py-md text-inverted shadow-elevation-2">
-					{toast}
-				</div>
-			)}
-			{dragging && (
-				<div className="label-small-strong pointer-events-none absolute inset-xl z-overlay grid place-items-center rounded-xl border-2 border-dashed border-brand-normal bg-brand-weak/60 text-strong">
-					Drop an image to add it as a layer, or a .json to open it
-				</div>
-			)}
-		</div>
+		</ToolShell>
 	);
 }
