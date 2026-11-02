@@ -5,7 +5,7 @@ import { renderThumb } from "../export/thumb";
 import { newId } from "../layers/registry";
 import { deleteEntry, type LibraryEntry, listEntries, putEntry } from "../state/library";
 import { PRESETS } from "../state/presets";
-import { ICON_NORMAL, IconButton } from "../components/icon-button";
+import { ICON_NORMAL, IconButton } from "@/tools/shell/components/icon-button";
 import { Thumb, ThumbActions, ThumbBadge, ThumbCard, ThumbGrid, ThumbMeta } from "../components/thumb";
 import { Button } from "@/lib/design-system/jigsaw/components/ui/controls/button/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/lib/design-system/jigsaw/components/ui/overlays/tooltip/tooltip";

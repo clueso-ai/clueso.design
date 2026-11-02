@@ -101,20 +101,22 @@ Site code uses v1 utilities: `bg-neutral-weak`, `text-neutral-strong`, `border-n
 
 Tailwind's `max-w-sm…7xl` resolve against Jigsaw's spacing scale (for example `max-w-2xl` becomes 16px), so they are banned in site code. `scripts/check-styles.ts` enforces this and the other style rules.
 
-## Brand Lab port
+## Brand Lab
 
-Brand Lab comes from the standalone Vite app at `../brand-lab`, baseline commit `f3928e2`. Port-only changes:
+Brand Lab started as a port of the standalone Vite app at `../brand-lab`, baseline commit `f3928e2`. This repo is now its home: it's improved here like any other tool, and the standalone app is no longer the source. Changes made while porting:
 
 - Moved from `src/` to `tools/brand-lab/`, with Jigsaw imports pointed at `@/lib/design-system/jigsaw/`.
 - `import.meta.env.DEV` became `process.env.NODE_ENV`.
-- `app.scss` became plain CSS (`tools/brand-lab/styles/brand-lab.css`). Rules that used to target `html` and `body` (cursor, focus reset, overflow) are scoped with `:root:has(.brand-lab-root)`, so they apply only while Brand Lab is mounted.
+- `app.scss` became plain CSS (`tools/brand-lab/styles/brand-lab.css`). Rules that used to target `html` and `body` (cursor, focus reset, overflow) now live in the tool shell (`tools/shell/shell.css`), scoped with `:root:has(.tool-shell)`, so they apply only while a tool is mounted.
 - The toolbar mark links home.
 - It mounts client-only (`dynamic(..., { ssr: false })`) because its modules read localStorage when they load.
 - New React Compiler lint rules are warnings in `tools/brand-lab/**`. They get fixed during harness extraction.
 
-## Tool harness (next)
+## Tool shell
 
-Decided, not built yet:
+Built: `tools/shell/` holds the editor frame Brand Lab runs in, so a new tool can start from it. `ToolShell` gives a full-window canvas, the top bar with the mark and the tool's name (linking home), resizable side panels with widths saved per tool, a bottom bar, a toast and the Clueso cursor. The tool fills the slots. `tools/shell/README.md` shows how to start a tool. Brand Lab's look and behaviour didn't change when it moved onto the shell.
+
+Still to come, as decided:
 
 - **Settings schema.** Brand Lab's `ParamDef` and `ParamGroup` (`tools/brand-lab/layers/types.ts`) become the harness settings schema as they are. A simple tool is one group.
 - **Goes into the harness:** timeline and playback, zoom and pan, undo, command menu, right-click menu, resizable panels, saved-designs library, export.

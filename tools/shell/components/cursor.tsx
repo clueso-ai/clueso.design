@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 
 // The Clueso cursor as a DOM element, so a click can spring it down and back like a button press
 // (a CSS cursor image can't animate). Only where the stylesheet says `cursor: none` (the arrow and
-// hand states, see app.scss); grab, resize and text cursors stay native. Mouse and pen only.
+// hand states, see shell.css); grab, resize and text cursors stay native. Mouse and pen only.
 
 const W = 26;
 const H = 23;
@@ -108,6 +108,8 @@ export function CustomCursor() {
 			className="pointer-events-none fixed inset-auto top-0 left-0 z-[2147483647] m-0 overflow-visible border-0 bg-transparent p-0 select-none"
 			style={{ x, y, scale, opacity: visible ? 1 : 0, transformOrigin: `${TIP[0]}px ${TIP[1]}px`, width: W, height: H }}
 		>
+			{/* A tiny fixed SVG; next/image adds nothing here. */}
+			{/* eslint-disable-next-line @next/next/no-img-element */}
 			<img src="/cursor.svg" alt="" draggable={false} width={W} height={H} className="block" />
 			{dup && (
 				// The duplicate badge: a small plus beside the piece.

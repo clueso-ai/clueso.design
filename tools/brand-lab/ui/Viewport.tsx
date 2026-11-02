@@ -1,5 +1,5 @@
 import { I } from "./ci";
-import { ICON_NORMAL } from "../components/icon-button";
+import { ICON_NORMAL } from "@/tools/shell/components/icon-button";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Renderer } from "../engine/renderer";
 import { useStore } from "../state/store";

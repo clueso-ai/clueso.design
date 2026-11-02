@@ -10,7 +10,7 @@ Read docs/ARCHITECTURE.md before structural changes.
 
 ## Hard rules
 - Style with Tailwind classes backed by v1 tokens (styles/tokens.css). Never hardcode colors, spacing, radius or type sizes. No arbitrary values like bg-[#DA5CC7].
-- Site code uses v1 utilities only: text-neutral-strong, bg-raised-1, p-gap-m, type-title-l, type-text-m, max-w-page. Jigsaw names (text-strong, bg-canvas, label-*, para-*) are allowed only inside tools/brand-lab and the Jigsaw snapshot. `pnpm check` enforces this.
+- Site code uses v1 utilities only: text-neutral-strong, bg-raised-1, p-gap-m, type-title-l, type-text-m, max-w-page. Jigsaw names (text-strong, bg-canvas, label-*, para-*) are allowed only inside tools/brand-lab, the shared tool shell (tools/shell) and the Jigsaw snapshot. `pnpm check` enforces this.
 - Don't use Tailwind's max-w-sm…7xl. They collide with Jigsaw's spacing scale. Use max-w-page, max-w-measure-wide, max-w-measure.
 - No Sass, no CSS-in-JS.
 - Import components and icons only from lib/design-system. Never import lib/design-system/jigsaw or components/ui directly. Never copy more Jigsaw code here.
@@ -20,8 +20,10 @@ Read docs/ARCHITECTURE.md before structural changes.
 - Pin dependency versions exactly (.npmrc has save-exact).
 
 ## Brand Lab
-- tools/brand-lab is tool #001, ported from the standalone Vite app (baseline commit f3928e2 in ../brand-lab). Don't change how it looks or behaves. Port-only edits are marked with a `clueso.design:` comment.
-- It runs client-only. Its page-level CSS is scoped with :root:has(.brand-lab-root).
+- tools/brand-lab is tool #001. It started as a port of the standalone Vite app (baseline commit f3928e2 in ../brand-lab). This repo is now its home: improve it here like any other tool, one change per PR, with a changelog entry. The standalone app is no longer the source.
+- Keep its look and behaviour as they are unless changing them is the point of the PR. Existing `clueso.design:` comments mark where the port differs from the original; they can go as that code changes.
+- Its editor frame (top bar, side panels, resizing, bottom bar) lives in tools/shell so new tools can start from it. Change the shell with every tool that uses it in mind.
+- It runs client-only. Page-level CSS for tools (focus reset, cursor, overflow) is scoped with :root:has(.tool-shell) in tools/shell/shell.css; Brand Lab's own is scoped to .brand-lab-root.
 
 ## Writing
 - Sentence case for titles, headings and labels.

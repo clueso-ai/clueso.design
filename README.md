@@ -19,6 +19,8 @@ pnpm build
 - `lib/registry.ts`: every tool and experiment, with owner, status and visibility.
 - `styles/tokens.css`: token architecture v1.
 - `docs/ARCHITECTURE.md`: decisions and open items.
+- `CONTRIBUTING.md`: how to add a playground experiment or a tool, and ship it.
+- `public/playground/<slug>/`: playground experiments, as static exports.
 
 ## Branches
 

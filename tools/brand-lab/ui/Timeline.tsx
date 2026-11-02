@@ -1,14 +1,12 @@
 import { I } from "./ci";
 import { useRef } from "react";
-import { IconButton } from "../components/icon-button";
-import { Panel } from "../components/panel";
+import { IconButton } from "@/tools/shell/components/icon-button";
+import { BottomBar } from "@/tools/shell/panels";
 import { Field } from "../components/field";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/lib/design-system/jigsaw/components/ui/overlays/tooltip/tooltip";
 import { useStore } from "../state/store";
-import { BAR, M, timelineRight, usePanels } from "./layout";
 
 export function Timeline() {
-	const rightW = usePanels((s) => s.right);
 	const time = useStore((s) => s.time);
 	const playing = useStore((s) => s.playing);
 	const duration = useStore((s) => s.doc.scene.duration);
@@ -25,7 +23,7 @@ export function Timeline() {
 	};
 
 	return (
-		<Panel className="flex-row items-center gap-sm px-xs max-[1099px]:right-[12px]!" style={{ left: M, right: timelineRight(rightW), bottom: M, height: BAR }} aria-label="Timeline">
+		<BottomBar aria-label="Timeline">
 			<div className="flex items-center">
 				<IconButton label="Back to start" icon={<I.Previous />} onClick={() => setTime(0)} />
 				<IconButton label={playing ? "Pause" : "Play"} shortcut={["Space"]} iconClassName="stroke-strong text-strong" icon={playing ? <I.Pause /> : <I.PlayFilled />} onClick={() => setPlaying(!playing)} />
@@ -97,6 +95,6 @@ export function Timeline() {
 				<div className="absolute top-1/2 left-0 h-[2px] -translate-y-1/2 rounded-full bg-brand-normal" style={{ width: `${t * 100}%` }} />
 				<div className="absolute top-1/2 h-[12px] w-[2px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-normal transition-[height] group-hover/scrub:h-[16px]" style={{ left: `${t * 100}%` }} />
 			</div>
-		</Panel>
+		</BottomBar>
 	);
 }
