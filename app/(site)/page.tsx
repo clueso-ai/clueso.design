@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { BrandLabPreview } from "@/components/site/brand-lab-preview";
 import { Band, SectionHeading } from "@/components/site/frame";
+import { PlaygroundPreview } from "@/components/site/playground-preview";
 import { ShippedBy } from "@/components/site/shipped-by";
 import { HeroGreeting } from "@/components/site/hero-greeting";
 import { TeamGrid } from "@/components/site/team-grid";
 import { Timeline } from "@/components/site/timeline";
 import { ButtonLink } from "@/lib/design-system";
-import { ArrowRightIcon } from "@/lib/design-system/icons";
 import { changelog } from "@/lib/changelog";
 import { getItem, publicItems } from "@/lib/registry";
 import { team } from "@/lib/team";
@@ -24,10 +24,7 @@ function Playground() {
 			{experiments.map((item) => (
 				<li key={item.slug}>
 					<Link href={item.href} className="group focus-ring state-layer flex h-full flex-col">
-						{/* The experiment itself, scaled down (styles/site.css). Lazy, and out of the tab order. */}
-						<span className="playground-snippet relative block aspect-4/3 overflow-hidden border-b border-neutral-weak">
-							<iframe src={item.href} title={`${item.title} preview`} loading="lazy" tabIndex={-1} aria-hidden className="absolute top-0 left-0" />
-						</span>
+						<PlaygroundPreview item={item} />
 						<span className="flex flex-1 flex-col gap-gap-xs p-gap-l">
 							{/* The text style and a hover underline, like Brand lab's title above. */}
 							<span className="type-text-xl text-neutral-strong decoration-1 underline-offset-4 group-hover:underline">{item.title}</span>
@@ -58,7 +55,7 @@ export default function Home() {
 
 			<Band id="tools" labelledBy="tools-title" flush>
 				<SectionHeading id="tools-title" title="Tools we built to power our design workflows">
-					<ButtonLink href="/tools" variant="outlined" sentiment="neutral" icon={<ArrowRightIcon />}>
+					<ButtonLink href="/tools" size="large" variant="outlined" sentiment="neutral">
 						Explore all tools
 					</ButtonLink>
 				</SectionHeading>
@@ -68,10 +65,12 @@ export default function Home() {
 				<div className="border-t border-neutral-weak px-gap-l py-gap-l">
 					<div className="flex max-w-measure flex-col gap-gap-xs">
 						{/* Sentence case and the text style here, unlike the registry's title for the tool. The title opens the tool in a new tab. */}
+						{/* Brand Lab is built for a mouse and a big screen, so phones and tablets get the name without the link. */}
 						<h3 className="type-text-xl text-neutral-strong">
-							<a href={brandLab.href} target="_blank" rel="noreferrer" className="focus-ring rounded-tiny underline-offset-4 decoration-1 hover:underline">
+							<a href={brandLab.href} target="_blank" rel="noreferrer" className="focus-ring hidden rounded-tiny underline-offset-4 decoration-1 hover:underline pointer-fine:inline">
 								Brand lab
 							</a>
+							<span className="pointer-fine:hidden">Brand lab</span>
 						</h3>
 						<p className="type-text-m text-neutral-normal">
 							A playground for patterns, compositions and visual treatments made from Clueso&apos;s brand shapes.
@@ -99,7 +98,7 @@ export default function Home() {
 
 			<Band id="changelog" labelledBy="changelog-title" flush>
 				<SectionHeading id="changelog-title" title="New on this website">
-					<ButtonLink href="/changelog" variant="outlined" sentiment="neutral" icon={<ArrowRightIcon />}>
+					<ButtonLink href="/changelog" size="large" variant="outlined" sentiment="neutral">
 						See the changelog
 					</ButtonLink>
 				</SectionHeading>

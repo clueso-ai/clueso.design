@@ -5,8 +5,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { heroFillDoc } from "@/lib/hero-fill";
 import { ButtonLink } from "@/lib/design-system";
 import { ArrowRightIcon } from "@/lib/design-system/icons";
-import { cursorById, DEFAULT_PREFS, oklchToHex } from "@/lib/site-prefs";
-import { useSitePrefs } from "@/lib/site-prefs-store";
 import { useIsDark } from "@/lib/use-dark";
 import { HeroTitle } from "./hero-title";
 
@@ -32,13 +30,11 @@ function useAspect() {
 	return [ref, aspect] as const;
 }
 
-/** The petals, in the visitor's colour once they've picked one; before that, the team's pink. */
+/** The petals, always in the team's pink: the hero stays on brand whatever cursor colour a visitor picks. */
 function Petals() {
-	const p = useSitePrefs();
 	const dark = useIsDark();
 	const [ref, aspect] = useAspect();
-	const ink = p.cursorColor !== DEFAULT_PREFS.cursorColor ? oklchToHex(cursorById(p.cursorColor).oklch) : null;
-	const doc = useMemo(() => heroFillDoc(ink, dark, aspect), [ink, dark, aspect]);
+	const doc = useMemo(() => heroFillDoc(dark, aspect), [dark, aspect]);
 	return (
 		<div ref={ref} aria-hidden className="hero-fill pointer-events-none absolute inset-0">
 			<HeroCanvas doc={doc} />

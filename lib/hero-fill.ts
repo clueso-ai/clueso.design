@@ -1,6 +1,7 @@
 // The homepage hero's backdrop, built from Brand Lab layers: seven twisted petals rising from the
 // bottom edge and turning slowly, cut into fine -45° lines with the petals glowing through between
-// them. In the visitor's colour, or the team's pink before they pick one. Light mode is quieter.
+// them. Always the team's pink, so the hero stays on brand whatever cursor colour a visitor
+// picks. Light mode is quieter.
 
 import { createLayer } from "@/tools/brand-lab/layers/registry";
 import { type Doc, defaultScene } from "@/tools/brand-lab/state/doc";
@@ -11,12 +12,12 @@ const FRAME_H = 1200;
 const LOOP = 22;
 
 /**
- * `ink` is a hex colour, or null for the team's pink. `aspect` is the hero's width over its height.
+ * `aspect` is the hero's width over its height.
  * The petals are sized by the frame's shorter side, so on a hero taller than it is wide they're
  * scaled back up to stay the same size relative to the hero's height.
  */
-export function heroFillDoc(ink: string | null, dark: boolean, aspect: number): Doc {
-	const color = ink ?? "$pink";
+export function heroFillDoc(dark: boolean, aspect: number): Doc {
+	const color = "$pink";
 	const width = Math.round(FRAME_H * aspect);
 	const scale = 2.06 * Math.max(1, FRAME_H / width);
 	const strength = dark ? 1 : 0.7;

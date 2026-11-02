@@ -23,6 +23,8 @@ export interface RegistryItem {
 	tags: string[];
 	/** ISO date of the latest meaningful change. */
 	updated: string;
+	/** A still of it under public/, shown where running it live would be too heavy (phones). */
+	preview?: string;
 	jigsawComponent?: string;
 	pr?: string;
 	issue?: string;
@@ -53,6 +55,7 @@ export const registry: RegistryItem[] = [
 		visibility: "public",
 		theme: "lab",
 		href: "/playground/cluego",
+		preview: "/previews/cluego.jpg",
 		description: "A stamp trip across three islands of the Clueso app.",
 		tags: ["game", "onboarding", "illustration"],
 		updated: "2026-11-01",
