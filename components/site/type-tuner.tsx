@@ -1,14 +1,25 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion, useDragControls } from "framer-motion";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Button, InputGroup, InputGroupInput, Slider, Tooltip, TooltipContent, TooltipTrigger, WrappedSelect } from "@/lib/design-system";
-import { CURSOR_COLORS, type CursorColor, DEFAULT_PREFS, FONTS, cursorById, fontById, oklchCss, shuffleColor, shuffleSite, siteTypeRatio } from "@/lib/site-prefs";
+import { type CursorColor, DEFAULT_PREFS, FONTS, cursorById, fontById, oklchCss, shuffleColor, shuffleSite, siteTypeRatio } from "@/lib/site-prefs";
 import { ArrowRightIcon, CloseIcon, PlusIcon, ShuffleIcon, SwatchesIcon } from "@/lib/design-system/icons";
 import { resetPrefs, setPrefs, setPrefsSmooth, useSitePrefs } from "@/lib/site-prefs-store";
 import { setTunerOpen, useTunerOpen } from "@/lib/tuner-store";
 import { useFinePointer } from "@/lib/use-fine-pointer";
 import { CluesoCursor } from "./clueso-cursor";
+import { OklchArea } from "./oklch-area";
+
+// Phones get the panel as a bottom sheet under half the screen tall, so it always fits and the page
+// stays in view behind it as you customize. Its content scrolls.
+const PHONE = "(max-width: 767px)";
+const subscribePhone = (fn: () => void) => {
+	const m = matchMedia(PHONE);
+	m.addEventListener("change", fn);
+	return () => m.removeEventListener("change", fn);
+};
+const usePhone = () => useSyncExternalStore(subscribePhone, () => matchMedia(PHONE).matches, () => false);
 
 const FONT_OPTIONS = FONTS.map((f) => ({ value: f.id, label: f.label, style: { fontFamily: f.family } }));
 
@@ -60,19 +71,10 @@ function ScaleControl() {
 	);
 }
 
-/** Lightness, chroma and hue. OKLCH steps look even to the eye, so nudging one slider changes only that. */
+/** Your own colour, picked visually in OKLCH: steps look even to the eye, so nudging one axis changes only that. */
 function OklchPicker() {
 	const p = useSitePrefs();
-	const [l, c, h] = cursorById(p.cursorColor).oklch;
-	const set = (next: [number, number, number]) => setPrefs({ cursorColor: oklchCss(next) });
-	return (
-		<div className="flex flex-col gap-gap-xs">
-			<Slider label="Lightness" min={0.3} max={0.95} step={0.01} value={Number(l.toFixed(2))} onValueChange={(v) => set([v, c, h])} />
-			<Slider label="Chroma" min={0} max={0.3} step={0.005} value={Number(c.toFixed(3))} onValueChange={(v) => set([l, v, h])} />
-			<Slider label="Hue" unit="°" min={0} max={360} step={1} value={Math.round(h)} onValueChange={(v) => set([l, c, v])} />
-			<code className="type-text-s font-code text-neutral-weak">{oklchCss([l, c, h])}</code>
-		</div>
-	);
+	return <OklchArea value={cursorById(p.cursorColor).oklch} onChange={(next) => setPrefs({ cursorColor: oklchCss(next) })} />;
 }
 
 const SWATCH = "focus-ring size-6 shrink-0 rounded-small border transition-[scale,border-color] duration-150 ease-out-strong active:scale-95";
@@ -86,7 +88,8 @@ function Swatch({ c, on, onPick }: { c: CursorColor; on: boolean; onPick: (id: s
 			aria-checked={on}
 			aria-label={c.label}
 			onClick={() => onPick(c.id)}
-			className={`${SWATCH} ${on ? "border-neutral-strong" : "border-neutral-weak"}`}
+			// Colours near white or near black get a strong edge too, so they never vanish into the panel.
+			className={`${SWATCH} ${on || c.oklch[0] > 0.85 || c.oklch[0] < 0.3 ? "border-neutral-strong" : "border-neutral-weak"}`}
 			style={{ background: c.fill, boxShadow: on ? "inset 0 0 0 2px var(--surface-overlay)" : undefined }}
 		/>
 	);
@@ -96,23 +99,21 @@ function Swatch({ c, on, onPick }: { c: CursorColor; on: boolean; onPick: (id: s
 const MAIN_COLORS = ["ink", "pink", "blue", "green", "orange", "violet", "red"];
 
 /**
- * A short palette on one row, with More and Shuffle at its end. More opens the rest of the palette
- * and your own colour in OKLCH. A colour picked from there takes the last slot in the row, so the
- * choice always shows. `onPick` hears every choice, even the colour already set.
+ * A short palette on one row, with your own colour and Shuffle at its end. The plus opens a visual
+ * OKLCH picker, starting from the colour you have. Your own colour takes the last slot in the row,
+ * so the choice always shows. `onPick` hears every choice, even the colour already set.
  */
 export function ColorPicker({ onPick }: { onPick?: () => void }) {
 	const p = useSitePrefs();
 	const color = cursorById(p.cursorColor);
-	const custom = color.label === "Custom";
-	const [more, setMore] = useState(false);
+	const [own, setOwn] = useState(false);
 	const pick = (cursorColor: string) => {
 		setPrefs({ cursorColor });
 		onPick?.();
 	};
 	const main = MAIN_COLORS.map((id) => cursorById(id));
-	// A palette colour from under More, or your own, stands in for the last swatch in the row.
+	// Your own colour, or a palette colour not in the row, stands in for the last swatch.
 	if (!MAIN_COLORS.includes(color.id)) main[main.length - 1] = color;
-	const rest = CURSOR_COLORS.filter((c) => !main.some((m) => m.id === c.id));
 	return (
 		<div className="flex flex-col gap-gap-s">
 			<div className="flex items-center gap-1.5">
@@ -123,17 +124,21 @@ export function ColorPicker({ onPick }: { onPick?: () => void }) {
 				</div>
 				<button
 					type="button"
-					aria-expanded={more}
-					aria-label="More colours"
-					onClick={() => setMore((o) => !o)}
-					className={`${SWATCH} grid place-items-center border-dashed ${more ? "border-neutral-strong text-neutral-strong" : "border-neutral-normal text-neutral-weak hover:text-neutral-strong"}`}
+					aria-expanded={own}
+					aria-label="Pick your own colour"
+					onClick={() => {
+						// Opening starts from the colour you have, as your own.
+						if (!own && color.label !== "Custom") pick(oklchCss(color.oklch));
+						setOwn((o) => !o);
+					}}
+					className={`${SWATCH} grid place-items-center border-dashed ${own ? "border-neutral-strong text-neutral-strong" : "border-neutral-normal text-neutral-weak hover:text-neutral-strong"}`}
 				>
-					<PlusIcon aria-hidden className={`size-3.5 transition-transform duration-150 ease-out-strong ${more ? "rotate-45" : ""}`} />
+					<PlusIcon aria-hidden className={`size-3.5 transition-transform duration-150 ease-out-strong ${own ? "rotate-45" : ""}`} />
 				</button>
 				<Button variant="outlined" sentiment="neutral" size="xsmall" iconOnly icon={<ShuffleIcon />} aria-label="Shuffle colour" className="focus-ring ml-auto" onClick={() => pick(shuffleColor())} />
 			</div>
 			<AnimatePresence initial={false}>
-				{more && (
+				{own && (
 					<motion.div
 						initial={{ height: 0, opacity: 0 }}
 						animate={{ height: "auto", opacity: 1 }}
@@ -141,21 +146,8 @@ export function ColorPicker({ onPick }: { onPick?: () => void }) {
 						transition={{ duration: 0.18, ease: [0.23, 1, 0.32, 1] }}
 						className="overflow-hidden"
 					>
-						<div className="flex flex-col gap-gap-s pt-gap-3xs">
-							<div role="radiogroup" aria-label="More cursor colours" className="flex items-center gap-1.5">
-								{rest.map((c) => (
-									<Swatch key={c.id} c={c} on={c.id === color.id} onPick={pick} />
-								))}
-								<button
-									type="button"
-									onClick={() => !custom && pick(oklchCss(color.oklch))}
-									aria-pressed={custom}
-									className={`focus-ring type-text-s ml-gap-2xs rounded-small px-gap-2xs ${custom ? "text-neutral-strong" : "text-neutral-weak hover:text-neutral-strong"}`}
-								>
-									Your own
-								</button>
-							</div>
-							{custom && <OklchPicker />}
+						<div className="pt-gap-3xs">
+							<OklchPicker />
 						</div>
 					</motion.div>
 				)}
@@ -497,6 +489,8 @@ export function TypeTuner() {
 function FloatingTuner({ show, open, setOpen }: { show: boolean; open: boolean; setOpen: (fn: (o: boolean) => boolean) => void }) {
 	const p = useSitePrefs();
 	const wrap = useRef<HTMLDivElement>(null);
+	const phone = usePhone();
+	const drag = useDragControls();
 	// Kept here, not in the steps, so closing the panel mid way picks up where the visitor left off.
 	const [step, setStep] = useState(0);
 
@@ -535,14 +529,26 @@ function FloatingTuner({ show, open, setOpen }: { show: boolean; open: boolean; 
 								id="floating-tuner"
 								role="dialog"
 								aria-label="Customize website"
-								initial={{ opacity: 0, scale: 0.96, y: 8 }}
-								animate={{ opacity: 1, scale: 1, y: 0 }}
-								exit={{ opacity: 0, scale: 0.96, y: 8 }}
-								transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+								initial={phone ? { y: "100%" } : { opacity: 0, scale: 0.96, y: 8 }}
+								animate={phone ? { y: 0 } : { opacity: 1, scale: 1, y: 0 }}
+								exit={phone ? { y: "100%" } : { opacity: 0, scale: 0.96, y: 8 }}
+								transition={{ duration: phone ? 0.3 : 0.2, ease: [0.23, 1, 0.32, 1] }}
+								// Phones: drag the sheet down by its header to close it.
+								drag={phone ? "y" : false}
+								dragListener={false}
+								dragControls={drag}
+								dragConstraints={{ top: 0, bottom: 0 }}
+								dragElastic={{ top: 0, bottom: 1 }}
+								onDragEnd={(_, info) => (info.offset.y > 100 || info.velocity.y > 500) && setOpen(() => false)}
 								style={{ transformOrigin: "bottom right" }}
-								className={`flex ${p.onboarded ? "h-[min(40rem,calc(100dvh-6rem))]" : "h-[min(31rem,calc(100dvh-6rem))]"} w-80 flex-col overflow-hidden rounded-medium border border-neutral-weak bg-overlay text-left shadow-overlay`}
+								className={`flex ${p.onboarded ? "h-[min(40rem,calc(100dvh-6rem))]" : "h-[min(31rem,calc(100dvh-6rem))]"} w-80 flex-col overflow-hidden rounded-medium border border-neutral-weak bg-overlay text-left shadow-overlay max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:h-[45dvh] max-md:w-full max-md:rounded-none max-md:rounded-t-large max-md:border-x-0 max-md:border-b-0 max-md:pb-[env(safe-area-inset-bottom)]`}
 							>
-								<div className="flex shrink-0 items-center justify-between border-b border-neutral-weak py-gap-s pr-gap-xs pl-gap-m">
+								<div
+									className="relative flex shrink-0 touch-none items-center justify-between border-b border-neutral-weak py-gap-s pr-gap-xs pl-gap-m md:touch-auto"
+									onPointerDown={phone ? (e) => drag.start(e) : undefined}
+								>
+									{/* Phones: the sheet's grab handle. */}
+									<span aria-hidden className="absolute top-gap-2xs left-1/2 w-8 -translate-x-1/2 rounded-tiny border-t-4 border-neutral-normal md:hidden" />
 									<h2 className="type-text-m type-strong text-neutral-strong">Customize</h2>
 									<Button variant="transparent" sentiment="neutral" size="xsmall" iconOnly icon={<CloseIcon />} aria-label="Close" className="focus-ring" onClick={() => setOpen(() => false)} />
 								</div>

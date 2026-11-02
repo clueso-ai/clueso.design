@@ -5,6 +5,7 @@ import { effectiveWeight, fontFamily, selectionVars, typeScaleVars } from "@/lib
 import { useSitePrefs } from "@/lib/site-prefs-store";
 import { RemoteCursors } from "./remote-cursors";
 import { SiteCursor } from "./site-cursor";
+import { TypeInspector } from "./type-inspector";
 import { TypeTuner } from "./type-tuner";
 
 /** Applies a visitor's fonts, type scale, cursor and highlight colour to every site page. Tool pages sit outside it. */
@@ -26,6 +27,7 @@ export function SitePrefsRoot({ children }: { children: ReactNode }) {
 			{children}
 			<RemoteCursors />
 			<SiteCursor />
+			<TypeInspector />
 			<TypeTuner />
 		</div>
 	);

@@ -1,3 +1,4 @@
+import { type MotionValue, motion } from "framer-motion";
 import type { ReactNode } from "react";
 import type { CursorColor } from "@/lib/site-prefs";
 
@@ -27,6 +28,7 @@ export function CluesoCursor({
 	label = true,
 	flip = false,
 	wide = false,
+	press,
 	className,
 }: {
 	color: CursorColor;
@@ -37,6 +39,8 @@ export function CluesoCursor({
 	flip?: boolean;
 	/** A hint, not a name: room for a sentence, and a little more padding so it reads as a callout. */
 	wide?: boolean;
+	/** The press: scales the piece alone, so the tag stays put at full size. */
+	press?: MotionValue<number>;
 	className?: string;
 }) {
 	// Anchored on the corner nearest the piece: top left when the tag is on the right, top right when it's on the left.
@@ -46,16 +50,16 @@ export function CluesoCursor({
 	const hidden = flip ? "translate-x-1" : "-translate-x-1";
 	return (
 		<span aria-hidden className={`relative block ${className ?? ""}`} style={{ width: CURSOR_SIZE, height: CURSOR_SIZE }}>
-			<svg
+			<motion.svg
 				viewBox="8 8 25 25"
 				width={CURSOR_SIZE}
 				height={CURSOR_SIZE}
 				className="block overflow-visible"
 				// The design's shadow: 4px blur, black at 29%.
-				style={{ rotate: `${tilt}deg`, transformOrigin: `${CURSOR_TIP[0]}px ${CURSOR_TIP[1]}px`, filter: "drop-shadow(0 0 3px rgb(0 0 0 / 0.29))" }}
+				style={{ rotate: tilt, scale: press, transformOrigin: `${CURSOR_TIP[0]}px ${CURSOR_TIP[1]}px`, filter: "drop-shadow(0 0 3px rgb(0 0 0 / 0.29))" }}
 			>
 				<path d={PIECE} fill={color.fill} stroke="white" strokeWidth={1} vectorEffect="non-scaling-stroke" />
-			</svg>
+			</motion.svg>
 			{name && (
 				<span
 					data-cursor-tag

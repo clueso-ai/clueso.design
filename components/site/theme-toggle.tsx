@@ -41,7 +41,7 @@ export function ThemeToggle() {
 			className="theme-toggle header-control header-control-square focus-ring border border-neutral-weak"
 			aria-label={theme ? `Switch to ${next} mode` : "Switch theme"}
 			icon={
-				// No theme yet: neither icon shows.
+				// Both stay mounted so they can morph into each other (styles/site.css). No theme yet: neither shows.
 				<span className="theme-icon" data-theme={theme ?? undefined}>
 					<SunIcon data-icon="sun" aria-hidden />
 					<MoonIcon data-icon="moon" aria-hidden />

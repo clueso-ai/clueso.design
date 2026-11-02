@@ -3,6 +3,7 @@ import { useRef } from "react";
 import { IconButton } from "../components/icon-button";
 import { Panel } from "../components/panel";
 import { Field } from "../components/field";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/lib/design-system/jigsaw/components/ui/overlays/tooltip/tooltip";
 import { useStore } from "../state/store";
 import { BAR, M, timelineRight, usePanels } from "./layout";
 
@@ -33,29 +34,34 @@ export function Timeline() {
 				<span className="text-strong">{time.toFixed(2)}s</span> / {duration.toFixed(2)}s
 			</span>
 			<span className="h-[20px] w-px shrink-0 bg-[var(--color-fg-stroke-weak)]" aria-hidden />
-			<label className="label-xsmall flex shrink-0 items-center gap-xs text-normal" title="Loop length">
-				<I.Loop width={16} height={16} className="text-(color:--color-fg-icon-normal)" />
-				<Field
-					key={duration}
-					className="w-[60px]"
-					inputClassName="font-mono"
-					suffix="s"
-					type="number"
-					min={1}
-					max={30}
-					step={0.5}
-					defaultValue={duration}
-					aria-label="Loop length in seconds"
-					onBlur={(e) => {
-						const n = Number(e.target.value);
-						if (n >= 1 && n <= 30) setScene({ duration: n });
-						else e.target.value = String(duration);
-					}}
-					onKeyDown={(e) => {
-						if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-					}}
-				/>
-			</label>
+			<Tooltip>
+				<TooltipTrigger asChild>
+					<label className="label-xsmall flex shrink-0 items-center gap-xs text-normal">
+						<I.Loop width={16} height={16} className="text-(color:--color-fg-icon-normal)" />
+						<Field
+							key={duration}
+							className="w-[60px]"
+							inputClassName="font-mono"
+							suffix="s"
+							type="number"
+							min={1}
+							max={30}
+							step={0.5}
+							defaultValue={duration}
+							aria-label="Loop length in seconds"
+							onBlur={(e) => {
+								const n = Number(e.target.value);
+								if (n >= 1 && n <= 30) setScene({ duration: n });
+								else e.target.value = String(duration);
+							}}
+							onKeyDown={(e) => {
+								if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+							}}
+						/>
+					</label>
+				</TooltipTrigger>
+				<TooltipContent>Loop length</TooltipContent>
+			</Tooltip>
 			<div
 				ref={scrub}
 				className="group/scrub relative mx-md h-[24px] min-w-0 flex-1 cursor-pointer rounded-xs outline-none focus-visible:shadow-[0_0_0_1px_var(--color-fg-stroke-brand-normal)]"

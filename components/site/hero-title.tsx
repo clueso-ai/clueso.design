@@ -4,14 +4,16 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useSitePrefs } from "@/lib/site-prefs-store";
 
 // The hero title with its type guides drawn across the frame: cap height and x-height dashed, the
-// baseline solid. Measured from the live font, so they follow whatever font a visitor picks.
+// baseline solid, and the descender under the last line. Measured from the live font, so they
+// follow whatever font a visitor picks.
 
+type Metric = "cap" | "x" | "base" | "desc";
+type Line = Record<Metric, number>;
 interface Guides {
-	lines: { cap: number; x: number; base: number }[];
+	lines: Line[];
 }
 
-const LINES = ["cap", "x", "base"] as const;
-
+const METRICS: Metric[] = ["cap", "x", "base", "desc"];
 /** `className` goes on the heading, for alignment. A "\n" in `children` breaks the line there. */
 export function HeroTitle({ children, className = "" }: { children: string; className?: string }) {
 	const wrap = useRef<HTMLDivElement>(null);
@@ -29,16 +31,18 @@ export function HeroTitle({ children, className = "" }: { children: string; clas
 		const ascent = ctx.measureText("Hxg").fontBoundingBoxAscent;
 		const cap = ctx.measureText("H").actualBoundingBoxAscent;
 		const xh = ctx.measureText("x").actualBoundingBoxAscent;
+		const desc = ctx.measureText("gjpqy").actualBoundingBoxDescent;
 		const range = document.createRange();
 		range.selectNodeContents(h);
 		const top = box.getBoundingClientRect().top;
 		// One rect per line of text; the inline box's top is the font's ascent above the baseline.
+		const rects = [...range.getClientRects()].filter((r) => r.width > 0);
 		const seen = new Set<number>();
-		const lines = [...range.getClientRects()]
-			.filter((r) => r.width > 0 && !seen.has(Math.round(r.top)) && seen.add(Math.round(r.top)))
+		const lines = rects
+			.filter((r) => !seen.has(Math.round(r.top)) && seen.add(Math.round(r.top)))
 			.map((r) => {
 				const base = r.top - top + ascent;
-				return { base, cap: base - cap, x: base - xh };
+				return { base, cap: base - cap, x: base - xh, desc: base + desc };
 			});
 		setGuides({ lines });
 	};
@@ -55,22 +59,21 @@ export function HeroTitle({ children, className = "" }: { children: string; clas
 		};
 	}, []);
 
+
 	return (
 		<div ref={wrap} className="relative w-full">
 			<div aria-hidden className="pointer-events-none absolute inset-x-0 top-0">
 				{guides.lines.map((line, i) =>
-					LINES.map((key) => (
-						<div
-							key={`${i}-${key}`}
-							className={`absolute inset-x-0 border-t ${key === "base" ? "border-neutral-normal" : "border-dashed border-neutral-weak"}`}
-							style={{ top: line[key] }}
-						/>
+					// The descender only under the last line: under the others it would crowd the next line's capitals.
+					METRICS.filter((key) => key !== "desc" || i === guides.lines.length - 1).map((key) => (
+						<div key={`${i}-${key}`} className={`absolute inset-x-0 border-t ${key === "base" ? "border-neutral-normal" : "border-dashed border-neutral-weak"}`} style={{ top: line[key] }} />
 					)),
 				)}
 			</div>
-			<h1 ref={title} className={`type-title-xl relative px-gap-l text-balance whitespace-pre-line text-neutral-strong ${className}`}>
+			<h1 ref={title} className={`type-title-2xl relative px-gap-l text-balance whitespace-pre-line text-neutral-strong ${className}`}>
 				{children}
 			</h1>
 		</div>
 	);
 }
+

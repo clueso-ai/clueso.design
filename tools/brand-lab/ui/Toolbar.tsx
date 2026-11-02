@@ -37,11 +37,16 @@ export function Toolbar() {
 			<Panel className="flex-row items-center gap-2xs overflow-visible px-xs" style={{ top: M, left: M, height: BAR }} role="toolbar" aria-label="Project">
 				{/* clueso.design: the mark and name link back to the site home. A full page load on purpose,
 				    so nothing Brand Lab set on the page (theme, cursor, listeners) outlives it. */}
-				{/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-				<a href="/" aria-label="Brand Lab. Back to clueso.design" title="Back to clueso.design" className="flex shrink-0 items-center gap-sm rounded-xs px-sm">
-					<CluesoIcon className="size-[18px] text-strong [&_path]:[stroke-width:0.75]" aria-hidden />
-					<span className="label-small-strong font-body whitespace-nowrap text-strong">Brand Lab</span>
-				</a>
+				<Tooltip>
+					<TooltipTrigger asChild>
+						{/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+						<a href="/" aria-label="Brand Lab. Back to clueso.design" className="flex shrink-0 items-center gap-sm rounded-xs px-sm">
+							<CluesoIcon className="size-[18px] text-strong [&_path]:[stroke-width:0.75]" aria-hidden />
+							<span className="label-small-strong font-body whitespace-nowrap text-strong">Brand Lab</span>
+						</a>
+					</TooltipTrigger>
+					<TooltipContent>Back to clueso.design</TooltipContent>
+				</Tooltip>
 				<Divider />
 				<ProjectMenu />
 				<SaveButton />
@@ -430,9 +435,14 @@ function ExportMenu() {
 							{[...STILLS, ...LOOPS].find((f) => f.value === format)?.label}
 						</Button>
 						{kind === "still" && !all && (
-							<Button iconClassName={ICON_NORMAL} variant="outlined" sentiment="neutral" size="medium" iconBefore icon={copied ? <I.Check /> : <I.Copy />} onClick={() => run(true)} title="Copy the frame as PNG">
-								{copied ? "Copied" : "Copy"}
-							</Button>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<Button iconClassName={ICON_NORMAL} variant="outlined" sentiment="neutral" size="medium" iconBefore icon={copied ? <I.Check /> : <I.Copy />} onClick={() => run(true)}>
+										{copied ? "Copied" : "Copy"}
+									</Button>
+								</TooltipTrigger>
+								<TooltipContent>Copy the frame as PNG</TooltipContent>
+							</Tooltip>
 						)}
 					</div>
 				)}

@@ -3,6 +3,7 @@ import { type ReactNode, useLayoutEffect, useState } from "react";
 import { IconButton } from "../components/icon-button";
 import { Panel, PanelHeader } from "../components/panel";
 import { MenuLabel, Popover, PopoverContent, PopoverTrigger } from "../components/popover";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/lib/design-system/jigsaw/components/ui/overlays/tooltip/tooltip";
 import { Separator } from "@/lib/design-system/jigsaw/components/ui/primitives/separator/separator";
 import { cn } from "@/lib/design-system/jigsaw/lib/utils";
 import { EFFECTS, getDef, SOURCES } from "../layers/registry";
@@ -178,37 +179,53 @@ function LayerRow({
 			aria-selected={selected}
 		>
 			<Separator className="pointer-events-none absolute inset-x-sm -bottom-px w-auto transition-opacity group-last/row:hidden group-hover/row:opacity-0 group-aria-selected/row:opacity-0" />
-			<span
-				className="flex h-full w-[16px] shrink-0 cursor-grab items-center justify-center text-weak opacity-0 transition-opacity group-hover/row:opacity-100 active:cursor-grabbing"
-				aria-label="Drag to reorder"
-				title="Drag to reorder"
-			>
-				<I.Grip width={13} height={13} />
-			</span>
+			<Tooltip>
+				<TooltipTrigger asChild>
+					<span
+						className="flex h-full w-[16px] shrink-0 cursor-grab items-center justify-center text-weak opacity-0 transition-opacity group-hover/row:opacity-100 active:cursor-grabbing"
+						aria-label="Drag to reorder"
+					>
+						<I.Grip width={13} height={13} />
+					</span>
+				</TooltipTrigger>
+				<TooltipContent>Drag to reorder</TooltipContent>
+			</Tooltip>
 			<LayerTile className="layer-glyph">
 				<LayerIcon name={def.icon} size={14} />
 			</LayerTile>
-			<span className="layer-label label-xsmall min-w-0 flex-1 truncate text-strong" onDoubleClick={() => setRenaming(true)} title="Double-click to rename">
-				{renaming ? (
-					<input
-						autoFocus
-						className="label-xsmall h-[24px] w-full rounded-xs border border-brand-normal bg-depth-inset-1 px-xs text-strong outline-none"
-						defaultValue={layer.name}
-						onBlur={(e) => {
-							const name = e.target.value.trim();
-							if (name && name !== layer.name) updateLayer(layer.id, { name });
-							setRenaming(false);
-						}}
-						onKeyDown={(e) => {
-							if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-							if (e.key === "Escape") setRenaming(false);
-						}}
-					/>
-				) : (
-					layer.name
-				)}
-			</span>
-			{layer.palette && <span className="size-[8px] shrink-0 rounded-full shadow-[inset_0_0_0_1px_var(--color-fg-stroke-weak)]" title="Uses its own palette" style={{ background: layer.palette[2]?.hex ?? layer.palette[0]?.hex }} />}
+			<Tooltip>
+				<TooltipTrigger asChild>
+					<span className="layer-label label-xsmall min-w-0 flex-1 truncate text-strong" onDoubleClick={() => setRenaming(true)}>
+						{renaming ? (
+							<input
+								autoFocus
+								className="label-xsmall h-[24px] w-full rounded-xs border border-brand-normal bg-depth-inset-1 px-xs text-strong outline-none"
+								defaultValue={layer.name}
+								onBlur={(e) => {
+									const name = e.target.value.trim();
+									if (name && name !== layer.name) updateLayer(layer.id, { name });
+									setRenaming(false);
+								}}
+								onKeyDown={(e) => {
+									if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+									if (e.key === "Escape") setRenaming(false);
+								}}
+							/>
+						) : (
+							layer.name
+						)}
+					</span>
+				</TooltipTrigger>
+				<TooltipContent>Double-click to rename</TooltipContent>
+			</Tooltip>
+			{layer.palette && (
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<span role="img" className="size-[8px] shrink-0 rounded-full shadow-[inset_0_0_0_1px_var(--color-fg-stroke-weak)]" aria-label="Uses its own palette" style={{ background: layer.palette[2]?.hex ?? layer.palette[0]?.hex }} />
+					</TooltipTrigger>
+					<TooltipContent>Uses its own palette</TooltipContent>
+				</Tooltip>
+			)}
 			<span className="flex items-center" onPointerDown={(e) => e.stopPropagation()}>
 				<IconButton size="xsmall" className="hidden group-hover/row:inline-flex" label={`Delete ${layer.name}`} shortcut={["⌫"]} icon={<I.Bin />} onClick={() => removeLayer(layer.id)} />
 				<IconButton

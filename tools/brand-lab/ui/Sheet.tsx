@@ -3,6 +3,7 @@ import { ICON_NORMAL } from "../components/icon-button";
 import type { ReactNode } from "react";
 import { Button } from "@/lib/design-system/jigsaw/components/ui/controls/button/button";
 import { Modal, ModalClose, ModalContent, ModalDescription, ModalTitle } from "@/lib/design-system/jigsaw/components/ui/overlays/modal/modal";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/lib/design-system/jigsaw/components/ui/overlays/tooltip/tooltip";
 
 /** Large jigsaw modal over the editor: a header row (title, controls, close) and a scrolling body. Esc closes. */
 export function Sheet({ title, controls, onClose, children, label }: { title: ReactNode; controls?: ReactNode; onClose: () => void; children: ReactNode; label: string }) {
@@ -13,9 +14,14 @@ export function Sheet({ title, controls, onClose, children, label }: { title: Re
 					<ModalTitle className="flex-1">{title}</ModalTitle>
 					<ModalDescription className="sr-only">{label}</ModalDescription>
 					<div className="flex items-center gap-md">{controls}</div>
-					<ModalClose asChild>
-						<Button iconClassName={ICON_NORMAL} variant="transparent" sentiment="neutral" size="small" iconOnly icon={<XIcon />} aria-label="Close" title="Close (Esc)" />
-					</ModalClose>
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<ModalClose asChild>
+								<Button iconClassName={ICON_NORMAL} variant="transparent" sentiment="neutral" size="small" iconOnly icon={<XIcon />} aria-label="Close" />
+							</ModalClose>
+						</TooltipTrigger>
+						<TooltipContent shortcut={["Esc"]}>Close</TooltipContent>
+					</Tooltip>
 				</header>
 				<div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-2xl pt-xl pb-4xl">{children}</div>
 			</ModalContent>

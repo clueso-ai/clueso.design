@@ -1,11 +1,12 @@
 // Who's on the site right now, for the header's live count and other visitors' cursors.
 // GET opens a server-sent event stream: one per open tab. POST updates that tab's cursor.
 // Everything lives in this server's memory, so nothing is stored and a restart starts from zero.
+// The one exception is the hearts sent on connect, which lib/hearts-store.ts keeps.
 // Production runs one ECS task (deploy/cloudformation.yml): with more, each task would only see
 // its own visitors, and this would need a shared channel.
 
-type Cursor = { id: string; who: string; page: string; name: string; color: string; tilt: number; x: number | null; y: number | null };
-type Conn = Cursor & { visitor: string; seq: number; send: (msg: object) => void };
+import { heartsTotal, isHearted } from "@/lib/hearts-store";
+import { broadcast, type Conn, conns, count, type Cursor } from "@/lib/presence-server";
 
 /** Enough for a busy day on a design team's site; bounds memory if something floods the route. */
 const MAX_CONNS = 500;
@@ -13,10 +14,6 @@ const MAX_CONNS = 500;
 const PING_MS = 20_000;
 const VISITOR = /^[a-z0-9-]{8,64}$/i;
 const COLOR = /^(?:[a-z]{2,12}|#[0-9a-f]{6}|oklch\([\d.]+ [\d.]+ [\d.]+\))$/i;
-
-// On globalThis so dev reloads keep the list.
-const g = globalThis as { presenceConns?: Map<string, Conn> };
-const conns = (g.presenceConns ??= new Map());
 
 const pub = ({ id, who, page, name, color, tilt, x, y }: Conn): Cursor => ({ id, who, page, name, color, tilt, x, y });
 
@@ -27,9 +24,6 @@ async function whoFor(visitor: string) {
 	const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(SALT + visitor));
 	return [...new Uint8Array(hash).slice(0, 8)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
-/** People, not tabs: one browser with three tabs open counts once. */
-const count = () => new Set([...conns.values()].map((c) => c.visitor)).size;
-const broadcast = (msg: object, except?: string) => conns.forEach((c) => c.id !== except && c.send(msg));
 
 const num = (v: unknown, min: number, max: number) => (typeof v === "number" && Number.isFinite(v) ? Math.min(max, Math.max(min, Math.round(v))) : null);
 const page = (v: unknown) => (typeof v === "string" && v.startsWith("/") ? v.slice(0, 200) : "/");
@@ -40,7 +34,7 @@ export async function GET(req: Request) {
 	if (conns.size >= MAX_CONNS) return new Response("Too many visitors right now.", { status: 503 });
 
 	const id = crypto.randomUUID();
-	const who = await whoFor(visitor);
+	const [who, hearts, hearted] = await Promise.all([whoFor(visitor), heartsTotal(), isHearted(visitor)]);
 	const encoder = new TextEncoder();
 	let ping: ReturnType<typeof setInterval> | undefined;
 
@@ -62,7 +56,7 @@ export async function GET(req: Request) {
 			};
 			const conn: Conn = { id, who, visitor, seq: 0, page: page(new URL(req.url).searchParams.get("page")), name: "", color: "ink", tilt: 0, x: null, y: null, send: (msg) => write(`data: ${JSON.stringify(msg)}\n\n`) };
 			conns.set(id, conn);
-			conn.send({ t: "hello", you: id, me: who, count: count(), cursors: [...conns.values()].filter((c) => c.id !== id).map(pub) });
+			conn.send({ t: "hello", you: id, me: who, count: count(), hearts: hearts.total, heartsV: hearts.v, hearted, cursors: [...conns.values()].filter((c) => c.id !== id).map(pub) });
 			broadcast({ t: "count", count: count() }, id);
 			ping = setInterval(() => write(": ping\n\n"), PING_MS);
 			req.signal.addEventListener("abort", () => {

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { IconButton } from "../components/icon-button";
 import { renderThumb } from "../export/thumb";
 import { ContextMenuPopover } from "@/lib/design-system/jigsaw/components/ui/overlays/context-menu/context-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/lib/design-system/jigsaw/components/ui/overlays/tooltip/tooltip";
 import { Separator } from "@/lib/design-system/jigsaw/components/ui/primitives/separator/separator";
 import { cn } from "@/lib/design-system/jigsaw/lib/utils";
 import type { Doc } from "../state/doc";
@@ -152,9 +153,12 @@ function CanvasRow({
 					}}
 				/>
 			) : (
-				<span className="label-xsmall min-w-0 flex-1 truncate text-strong" title="Double-click to rename">
-					{doc.name || "Untitled"}
-				</span>
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<span className="label-xsmall min-w-0 flex-1 truncate text-strong">{doc.name || "Untitled"}</span>
+					</TooltipTrigger>
+					<TooltipContent>Double-click to rename</TooltipContent>
+				</Tooltip>
 			)}
 			{!renaming && (
 				<>
