@@ -15,6 +15,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
 	{
+		date: "2026-11-02",
+		title: "Icon Lab is tool #002",
+		body: "Every Clueso icon, website and platform, in one place, with the style directions to try and a dot-matrix pixel set for the web. See each icon on clueso.io with a before and after slider. Can't find one? Create it from the set's parts, or ask for it right there.",
+		area: "Icon Lab",
+		by: "sneha",
+	},
+	{
 		date: "2026-11-01",
 		title: "Brand Lab and Cluego are live",
 		body: "Both now live on clueso.design. Open them, play with them, break them. That's what they're here for.",
