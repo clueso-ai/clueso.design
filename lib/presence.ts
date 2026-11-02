@@ -1,7 +1,8 @@
 "use client";
 
 // The browser's side of /api/presence: one live connection per tab, shared by the header's
-// visitor count and other visitors' cursors. It opens with the first component that needs it.
+// visitor count, other visitors' cursors and the footer's hearts. It opens with the first
+// component that needs it.
 
 import { useSyncExternalStore } from "react";
 
@@ -25,13 +26,16 @@ interface Presence {
 	/** Your own "who", to tell your other tabs apart from other people. */
 	me: string | null;
 	cursors: RemoteCursor[];
+	/** How many people heart the site, you included the moment you do. Null until the server has answered. */
+	hearts: number | null;
+	/** Whether you heart it, from the moment you press. Null until the server has answered. */
+	hearted: boolean | null;
 }
 
 const KEY = "clueso-visitor-id";
 /** How often your cursor goes out, at most, in ms. The other side smooths between updates. */
 const SEND_MS = 66;
-
-let state: Presence = { count: null, me: null, cursors: [] };
+let state: Presence = { count: null, me: null, cursors: [], hearts: null, hearted: null };
 const listeners = new Set<() => void>();
 let source: EventSource | null = null;
 let you: string | null = null;
@@ -41,6 +45,10 @@ let pending: Partial<RemoteCursor> = {};
 /** Everything you've sent, so a reconnect can bring your cursor back as it was. */
 let sent: Partial<RemoteCursor> = {};
 let timer: ReturnType<typeof setTimeout> | undefined;
+/** Hearts as the server last told us, what you've asked for since (null once it agrees), and whether a request is out. */
+let server: { total: number; v: number; hearted: boolean } | null = null;
+let want: boolean | null = null;
+let heartBusy = false;
 
 function visitorId() {
 	try {
@@ -59,6 +67,18 @@ function set(next: Partial<Presence>) {
 	listeners.forEach((l) => l());
 }
 
+/** What the footer shows: the server's hearts, with your change applied before it confirms. */
+function showHearts() {
+	if (!server) return set({ hearts: null, hearted: null });
+	const hearted = want ?? server.hearted;
+	set({ hearts: server.total + (hearted === server.hearted ? 0 : hearted ? 1 : -1), hearted });
+}
+
+/** Totals carry a version, so one that arrives late never replaces a newer one. */
+function applyTotal(total: number, v: number) {
+	if (server && v > server.v) Object.assign(server, { total, v });
+}
+
 function connect() {
 	source = new EventSource(`/api/presence?visitor=${visitorId()}&page=${encodeURIComponent(page)}`);
 	source.onmessage = (e) => {
@@ -68,8 +88,17 @@ function connect() {
 			you = msg.you;
 			seq = 0;
 			set({ count: msg.count, me: msg.me, cursors: msg.cursors });
+			server = { total: msg.hearts, v: msg.heartsV, hearted: msg.hearted };
+			showHearts();
+			pushHeart();
 			send({ ...sent, page });
 		} else if (msg.t === "count") set({ count: msg.count });
+		else if (msg.t === "hearts") {
+			applyTotal(msg.total, msg.v);
+			// You, in another tab.
+			if (server && msg.who === state.me) server.hearted = msg.hearted;
+			showHearts();
+		}
 		else if (msg.t === "gone") set({ cursors: state.cursors.filter((c) => c.id !== msg.id) });
 		else if (msg.t === "cursor") set({ cursors: [...state.cursors.filter((c) => c.id !== msg.c.id), msg.c] });
 	};
@@ -91,6 +120,36 @@ export function send(patch: Partial<RemoteCursor>) {
 	if (!timer) timer = setTimeout(flush, SEND_MS);
 }
 
+/** Sends what you last asked for, one request at a time, until the server agrees. */
+function pushHeart() {
+	if (heartBusy || !you || !server || want === null) return;
+	if (want === server.hearted) {
+		want = null;
+		return showHearts();
+	}
+	heartBusy = true;
+	fetch("/api/hearts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: you, hearted: want }), keepalive: true })
+		.then((res) => (res.ok ? res.json() : Promise.reject(res.status)))
+		.then((res: { total: number; v: number; hearted: boolean }) => {
+			applyTotal(res.total, res.v);
+			if (server) server.hearted = res.hearted;
+		})
+		// 404 means the connection dropped: the next hello sends it again. Otherwise it's undone.
+		.catch((status) => status !== 404 && (want = null))
+		.finally(() => {
+			heartBusy = false;
+			showHearts();
+			pushHeart();
+		});
+}
+
+/** Hearts the site, or takes it back. The footer changes at once; the server catches up. */
+export function setHearted(hearted: boolean) {
+	want = hearted;
+	showHearts();
+	pushHeart();
+}
+
 function subscribe(listener: () => void) {
 	listeners.add(listener);
 	if (!source) connect();
@@ -100,11 +159,12 @@ function subscribe(listener: () => void) {
 		source?.close();
 		source = null;
 		you = null;
-		state = { count: null, me: null, cursors: [] };
+		server = null;
+		state = { count: null, me: null, cursors: [], hearts: null, hearted: null };
 	};
 }
 
-const empty: Presence = { count: null, me: null, cursors: [] };
+const empty: Presence = { count: null, me: null, cursors: [], hearts: null, hearted: null };
 export const usePresence = () =>
 	useSyncExternalStore(
 		subscribe,

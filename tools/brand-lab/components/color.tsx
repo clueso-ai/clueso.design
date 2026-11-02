@@ -1,7 +1,6 @@
 import EyeDropIcon from "@icons/icons/Editing Design/Eye-dropper.svg?react";
-import { ICON_NORMAL } from "./icon-button";
+import { IconButton } from "./icon-button";
 import { useRef, useState } from "react";
-import { Button } from "@/lib/design-system/jigsaw/components/ui/controls/button/button";
 import { HueSlider, SaturationPanel } from "@/lib/design-system/jigsaw/components/ui/color/gradient-color-picker/color-primitives";
 import { hexToHsv, hsvToHex } from "@/lib/design-system/jigsaw/components/ui/color/gradient-color-picker/color-utils";
 import { ColorSwatch } from "@/lib/design-system/jigsaw/components/ui/color/gradient-color-picker/color-swatch";
@@ -43,7 +42,7 @@ export function CustomColorPicker({ color, onChange }: { color: string; onChange
 			<SaturationPanel hue={hue.current} saturation={hsv.s} value={hsv.v} onChange={(s, v) => onChange(hsvToHex({ h: hue.current, s, v }).toUpperCase())} />
 			<div className="flex items-center gap-sm">
 				{canPickFromScreen && (
-					<Button iconClassName={ICON_NORMAL} variant="outlined" sentiment="neutral" iconOnly size="small" icon={<EyeDropIcon className="size-3.5" />} title="Pick colour from screen" onClick={() => pickFromScreen(onChange)} />
+					<IconButton variant="outlined" label="Pick colour from screen" icon={<EyeDropIcon className="size-3.5" />} onClick={() => pickFromScreen(onChange)} />
 				)}
 				<div className="min-w-0 flex-1 py-sm">
 					<HueSlider

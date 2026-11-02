@@ -3,6 +3,7 @@ import { ICON_NORMAL, IconButton } from "../components/icon-button";
 import { Button } from "@/lib/design-system/jigsaw/components/ui/controls/button/button";
 import { Field } from "../components/field";
 import { Tag } from "@/lib/design-system/jigsaw/components/ui/primitives/tag/tag";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/lib/design-system/jigsaw/components/ui/overlays/tooltip/tooltip";
 import { ColorPickerField } from "../components/color";
 import { cn } from "@/lib/design-system/jigsaw/lib/utils";
 import { useCallback, useState } from "react";
@@ -43,9 +44,14 @@ export function Palettes() {
 			title="Palettes"
 			onClose={close}
 			controls={
-				<Button iconClassName={ICON_NORMAL} variant="outlined" sentiment="neutral" size="small" iconBefore icon={<I.Plus />} onClick={() => create(null)} title="New palette from the colours in this design">
-					New palette
-				</Button>
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<Button iconClassName={ICON_NORMAL} variant="outlined" sentiment="neutral" size="small" iconBefore icon={<I.Plus />} onClick={() => create(null)}>
+							New palette
+						</Button>
+					</TooltipTrigger>
+					<TooltipContent>New palette from the colours in this design</TooltipContent>
+				</Tooltip>
 			}
 		>
 			<div className="grid min-h-0 flex-1 grid-cols-[260px_1fr] gap-4xl">
@@ -125,9 +131,12 @@ function PaletteEditor({ def, inUse, onUse, onDuplicate, onDeleted }: { def: Pal
 						<ColorPickerField color={c.hex} onChange={(hex) => setColor(i, { hex })} />
 						<span>
 							{CORE.has(c.key) && (
-								<Tag size="sm" title="Presets and Shuffle use this role">
-									Role
-								</Tag>
+								<Tooltip>
+									<TooltipTrigger asChild>
+										<Tag size="sm">Role</Tag>
+									</TooltipTrigger>
+									<TooltipContent>Presets and Shuffle use this role</TooltipContent>
+								</Tooltip>
 							)}
 						</span>
 						<IconButton
@@ -197,7 +206,12 @@ export function PaletteStrip({ colors, className }: { colors: PaletteDef["colors
 	return (
 		<span className={cn("flex w-full overflow-hidden rounded-xs shadow-[inset_0_0_0_1px_var(--color-fg-stroke-weak)]", className)} aria-hidden>
 			{colors.map((c) => (
-				<span key={c.key} className="h-full flex-1" style={{ background: c.hex }} title={`${c.name} ${c.hex.toUpperCase()}`} />
+				<Tooltip key={c.key}>
+					<TooltipTrigger asChild>
+						<span className="h-full flex-1" style={{ background: c.hex }} />
+					</TooltipTrigger>
+					<TooltipContent>{`${c.name} ${c.hex.toUpperCase()}`}</TooltipContent>
+				</Tooltip>
 			))}
 		</span>
 	);

@@ -3,6 +3,7 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/lib/design-system";
 import { people, usePresence } from "@/lib/presence";
 import { cursorById } from "@/lib/site-prefs";
 import { useSitePrefs } from "@/lib/site-prefs-store";
@@ -10,7 +11,7 @@ import { useSitePrefs } from "@/lib/site-prefs-store";
 // The header's live visitor count: a green dot and how many people have the site open right now,
 // you included. Tabs in one browser count once. See lib/presence.ts.
 // Pressing it lists who's here, with their cursor colour and the page they're on. It closes on
-// Escape, on a press outside, or on pressing it again.
+// Escape, on a press outside, or on pressing it again. In the footer the list opens upward.
 
 const EASE = [0.23, 1, 0.32, 1] as const;
 
@@ -20,7 +21,7 @@ function pageName(path: string) {
 	return first ? first[0].toUpperCase() + first.slice(1).replace(/-/g, " ") : "Home";
 }
 
-export function LiveVisitors() {
+export function LiveVisitors({ up = false }: { up?: boolean }) {
 	const presence = usePresence();
 	const prefs = useSitePrefs();
 	const reduce = useReducedMotion();
@@ -47,29 +48,34 @@ export function LiveVisitors() {
 
 	return (
 		<div ref={root} className="relative flex shrink-0">
-			<button
-				type="button"
-				aria-expanded={open}
-				aria-controls="live-visitors"
-				onClick={() => setOpen((o) => !o)}
-				title={count === 1 ? "Just you on clueso.design right now" : `${count} people on clueso.design right now`}
-				className="header-control state-layer focus-ring type-text-s flex items-center gap-gap-xs rounded-small border border-neutral-weak px-gap-xs text-neutral-normal"
-			>
-				<span aria-hidden className="relative flex size-1.5">
-					<span className="absolute inset-0 rounded-tiny bg-positive-normal opacity-60 motion-safe:animate-ping" />
-					<span className="relative size-1.5 rounded-tiny bg-positive-normal" />
-				</span>
-				{count} online
-			</button>
+			{/* The tooltip stays away while the list is open. */}
+			<Tooltip open={open ? false : undefined}>
+				<TooltipTrigger asChild>
+					<button
+						type="button"
+						aria-expanded={open}
+						aria-controls="live-visitors"
+						onClick={() => setOpen((o) => !o)}
+						className="header-control state-layer focus-ring type-text-s flex items-center gap-gap-xs rounded-small border border-neutral-weak px-gap-xs text-neutral-normal"
+					>
+						<span aria-hidden className="relative flex size-1.5">
+							<span className="absolute inset-0 rounded-tiny bg-positive-normal opacity-60 motion-safe:animate-ping" />
+							<span className="relative size-1.5 rounded-tiny bg-positive-normal" />
+						</span>
+						{count} online
+					</button>
+				</TooltipTrigger>
+				<TooltipContent side={up ? "top" : "bottom"}>{count === 1 ? "Just you on clueso.design right now" : `${count} people on clueso.design right now`}</TooltipContent>
+			</Tooltip>
 			<AnimatePresence>
 				{open && (
 					<motion.div
 						id="live-visitors"
-						initial={reduce ? { opacity: 0 } : { opacity: 0, y: -4, scale: 0.98 }}
+						initial={reduce ? { opacity: 0 } : { opacity: 0, y: up ? 4 : -4, scale: 0.98 }}
 						animate={{ opacity: 1, y: 0, scale: 1 }}
 						exit={{ opacity: 0, transition: { duration: 0.1 } }}
 						transition={{ duration: 0.2, ease: EASE }}
-						className="absolute top-full right-0 z-50 mt-gap-xs flex w-64 origin-top-right flex-col gap-gap-2xs rounded-medium border border-neutral-weak bg-raised-1 p-gap-xs shadow-raised"
+						className={`absolute z-50 flex w-64 flex-col ${up ? "bottom-full left-0 mb-gap-xs origin-bottom-left" : "top-full right-0 mt-gap-xs origin-top-right"} gap-gap-2xs rounded-medium border border-neutral-weak bg-raised-1 p-gap-xs shadow-raised`}
 					>
 						<p className="type-text-s px-gap-xs pt-gap-2xs text-neutral-weak">On the site now</p>
 						<ul className="flex max-h-72 flex-col overflow-y-auto">

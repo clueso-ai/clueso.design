@@ -69,8 +69,8 @@ export function hexToOklch(hex: string): [number, number, number] {
 }
 
 /** An OKLCH colour as CSS, rounded to what the eye can tell apart. */
-/** OKLCH back to sRGB hex, clamped into gamut. For places that only take hex (Brand Lab's renderer). */
-export function oklchToHex([l, c, h]: [number, number, number]): string {
+/** OKLCH to sRGB channels from 0 to 255, clamped into gamut. For drawing colour pickers pixel by pixel. */
+export function oklchToRgb([l, c, h]: [number, number, number]): [number, number, number] {
 	const a = c * Math.cos((h * Math.PI) / 180);
 	const b = c * Math.sin((h * Math.PI) / 180);
 	const l_ = (l + 0.3963377774 * a + 0.2158037573 * b) ** 3;
@@ -79,11 +79,16 @@ export function oklchToHex([l, c, h]: [number, number, number]): string {
 	const linear = [4.0767416621 * l_ - 3.3077115913 * m_ + 0.2309699292 * s_, -1.2684380046 * l_ + 2.6097574011 * m_ - 0.3413193965 * s_, -0.0041960863 * l_ - 0.7034186147 * m_ + 1.707614701 * s_];
 	const channel = (x: number) => {
 		const v = x <= 0.0031308 ? 12.92 * x : 1.055 * x ** (1 / 2.4) - 0.055;
-		return Math.round(Math.min(1, Math.max(0, v)) * 255)
-			.toString(16)
-			.padStart(2, "0");
+		return Math.round(Math.min(1, Math.max(0, v)) * 255);
 	};
-	return `#${linear.map(channel).join("")}`;
+	return [channel(linear[0]), channel(linear[1]), channel(linear[2])];
+}
+
+/** OKLCH back to sRGB hex, clamped into gamut. For places that only take hex (Brand Lab's renderer). */
+export function oklchToHex(lch: [number, number, number]): string {
+	return `#${oklchToRgb(lch)
+		.map((v) => v.toString(16).padStart(2, "0"))
+		.join("")}`;
 }
 
 export const oklchCss = ([l, c, h]: [number, number, number]) => `oklch(${l.toFixed(2)} ${c.toFixed(3)} ${Math.round(h)})`;

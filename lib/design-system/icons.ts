@@ -3,11 +3,16 @@ export { default as CluesoMark } from "./jigsaw/icons/icons/Brands/Clueso-icon.s
 export { default as MoonIcon } from "./jigsaw/icons/icons/Space/Moon.svg?react";
 export { default as SunIcon } from "./jigsaw/icons/icons/Space/Sun.svg?react";
 export { default as ArrowLeftIcon } from "./jigsaw/icons/icons/Arrows and Directions/Arrow-left.svg?react";
+export { default as ChevronRightIcon } from "./jigsaw/icons/icons/Arrows and Directions/Chevron-right.svg?react";
 export { default as ArrowRightIcon } from "./jigsaw/icons/icons/Arrows and Directions/Arrow-right.svg?react";
 export { default as ShuffleIcon } from "./jigsaw/icons/icons/Media/Shuffle.svg?react";
 export { default as SwatchesIcon } from "./jigsaw/icons/icons/Editing Design/Swatches.svg?react";
 export { default as SlidersIcon } from "./jigsaw/icons/icons/Technical Concepts/Sliding-knobs.svg?react";
 export { default as ExternalLinkIcon } from "./jigsaw/icons/icons/Technical Concepts/External-link.svg?react";
 export { default as PlusIcon } from "./jigsaw/icons/icons/Mathematics/Plus.svg?react";
+export { default as CopyIcon } from "./jigsaw/icons/icons/Technical Concepts/Copy.svg?react";
+export { default as FontSizeIcon } from "./jigsaw/icons/icons/Editing Design/Font-size.svg?react";
+export { default as CheckIcon } from "./jigsaw/icons/icons/Validation/Check.svg?react";
 export { default as CloseIcon } from "./jigsaw/icons/icons/Mathematics/Cross.svg?react";
 export { MenuIcon } from "./menu-icon";
+export { HeartIcon } from "./heart-icon";

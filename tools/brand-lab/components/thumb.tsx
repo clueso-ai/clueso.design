@@ -1,4 +1,5 @@
 import type * as React from "react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/lib/design-system/jigsaw/components/ui/overlays/tooltip/tooltip";
 import { cn } from "@/lib/design-system/jigsaw/lib/utils";
 
 // Thumbnail cards for the Library and Variations sheets.
@@ -17,8 +18,9 @@ function ThumbCard({ className, ...props }: React.ComponentProps<"div">) {
 	return <div className={cn("group/thumb relative flex min-w-0 flex-col gap-sm", className)} {...props} />;
 }
 
-function Thumb({ src, ratio, current, className, children, ...props }: React.ComponentProps<"button"> & { src?: string; ratio: string; current?: boolean }) {
-	return (
+/** `title` shows as a jigsaw tooltip instead of a native one, and names the button when it has no badge text. */
+function Thumb({ src, ratio, current, className, children, title, ...props }: React.ComponentProps<"button"> & { src?: string; ratio: string; current?: boolean }) {
+	const button = (
 		<button
 			type="button"
 			className={cn(
@@ -27,11 +29,19 @@ function Thumb({ src, ratio, current, className, children, ...props }: React.Com
 				className,
 			)}
 			style={{ aspectRatio: ratio }}
+			aria-label={children ? undefined : title}
 			{...props}
 		>
 			{src ? <img src={src} alt="" className="block size-full object-cover" /> : <span className="jigsaw-skeleton-shimmer absolute inset-0 bg-depth-inset-1" />}
 			{children}
 		</button>
+	);
+	if (!title) return button;
+	return (
+		<Tooltip>
+			<TooltipTrigger asChild>{button}</TooltipTrigger>
+			<TooltipContent>{title}</TooltipContent>
+		</Tooltip>
 	);
 }
 

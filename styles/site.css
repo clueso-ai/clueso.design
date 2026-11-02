@@ -11,8 +11,8 @@
 }
 
 /* While the theme class changes (lib/theme.ts), nothing transitions: the whole page takes the new
-   theme in one frame. */
-:root.theme-instant *,
+   theme in one frame. The toggle's sun and moon are the one exception: they morph. */
+:root.theme-instant :not(.theme-icon, .theme-icon *),
 :root.theme-instant ::before,
 :root.theme-instant ::after {
 	transition: none !important;
@@ -27,9 +27,75 @@
 .header-control-square {
 	width: var(--header-control);
 }
+/* Changelog timeline: one line of the entry title (type-text-l), so the date, its line out to the
+   rail and the square marker all centre on the title's first line at any type scale. */
+.timeline-line {
+	height: calc(var(--text-l-size) * var(--text-l-leading));
+}
+/* Phones: the header's three things (the mark, the visitor badge and the theme toggle, plus the
+   menu button) are one bigger, easy-to-tap height, and the logo is the mark alone at 24px. */
+@media (max-width: 767px) {
+	.header-control {
+		--header-control: 2.25rem;
+	}
+	.site-logo {
+		font-size: 1.5rem;
+	}
+	.site-logo .logo-mark {
+		width: 1em;
+		height: 1em;
+	}
+	.site-logo .logo-word {
+		display: none;
+	}
+}
 
-/* The theme toggle's sun and moon (components/site/theme-toggle.tsx). Both sit in one cell and only
-   the current theme's shows, with no animation between them. Strokes stay 1px at any icon size. */
+/* Scrolling down, the logo's "Design" slides left and disappears behind the mark; scrolling up
+   brings it back out (components/site/tucking-header.tsx). The outer span is a still window whose
+   left edge sits on the mark's right edge (the logo's 0.3em gap); the word moves inside it, so
+   whatever the word does, nothing of it shows past the mark. It slides left by its own width plus
+   the gap, shrinks to half size towards the middle of its letters (the g's descender would pull
+   the line box's centre down and the word would seem to drop), blurs and fades. The window
+   reaches 0.5em above and below so it never trims the descender or the blur. The nav stays.
+   Coming out it settles with the site's ease-out; going away it starts gently and speeds up into
+   the mark, a little quicker, with the fade and blur in its second half. */
+.site-logo .logo-word {
+	clip-path: inset(-0.5em -0.5em -0.5em -0.3em);
+}
+.site-logo .logo-word-text {
+	display: inline-block;
+	transform-origin: left 40%;
+	transition-property: translate, scale, opacity, filter;
+	transition-duration: 450ms, 450ms, 200ms, 250ms;
+	transition-timing-function: var(--ease-out-strong);
+}
+[data-tucked] .site-logo .logo-word-text {
+	translate: calc(-100% - 0.3em) 0;
+	scale: 0.5;
+	opacity: 0;
+	filter: blur(4px);
+	transition-duration: 300ms, 300ms, 180ms, 200ms;
+	transition-timing-function: var(--ease-in);
+	/* translate, scale, opacity, filter */
+	transition-delay: 0ms, 0ms, 120ms, 100ms;
+}
+@media (prefers-reduced-motion: reduce) {
+	.site-logo .logo-word-text {
+		transition-property: opacity;
+	}
+	[data-tucked] .site-logo .logo-word-text {
+		translate: 0 0;
+		scale: 1;
+		filter: none;
+		opacity: 0;
+	}
+}
+
+/* The theme toggle's sun and moon (components/site/theme-toggle.tsx). Both sit in one cell and
+   morph into each other: the outgoing one turns away, shrinks and blurs out while the incoming one
+   turns, grows and sharpens in, overlapping so there's never an empty frame. Transitions, not
+   keyframes, so a quick second click reverses from wherever they are. Before the theme is known
+   (server render) neither shows. Strokes stay 1px at any icon size. */
 .theme-icon {
 	display: grid;
 }
@@ -37,21 +103,66 @@
 	grid-area: 1 / 1;
 	width: 100%;
 	height: 100%;
-	visibility: hidden;
+	opacity: 0;
+	scale: 0.5;
+	filter: blur(2px);
+	transition-property: opacity, scale, rotate, filter;
+	transition-duration: 200ms, 400ms, 400ms, 300ms;
+	transition-timing-function: var(--ease-out-strong);
+	will-change: opacity, scale, rotate, filter;
 }
 .theme-icon path {
 	stroke-width: 1px;
 	vector-effect: non-scaling-stroke;
 }
+/* Out of view, the sun has turned back a quarter and the moon has swung down. */
+.theme-icon > [data-icon="sun"] {
+	rotate: -90deg;
+}
+.theme-icon > [data-icon="moon"] {
+	rotate: 45deg;
+}
 .theme-icon[data-theme="dark"] > [data-icon="sun"],
 .theme-icon[data-theme="light"] > [data-icon="moon"] {
-	visibility: visible;
+	opacity: 1;
+	scale: 1;
+	rotate: 0deg;
+	filter: none;
+	/* The incoming icon starts a beat after the outgoing one, so they cross mid-turn. */
+	transition-delay: 60ms;
+}
+@media (prefers-reduced-motion: reduce) {
+	.theme-icon > svg {
+		scale: 1;
+		rotate: 0deg;
+		filter: none;
+		transition-property: opacity;
+		transition-duration: 150ms;
+		transition-delay: 0ms;
+	}
 }
 
 /* The homepage hero (components/site/hero-greeting.tsx) fills the screen under the 4rem header,
-   so the next section never shows half cut. */
+   so the next section never shows half cut. The small viewport height (svh) stays put while a
+   phone's address bar slides in and out on scroll, so the hero and its petals don't resize. */
 .hero-screen {
-	min-height: calc(100dvh - 4rem);
+	min-height: calc(100svh - 4rem);
+}
+/* "Scroll to look around" stays readable over the petals: white, inverted against whatever is behind. */
+.scroll-cue {
+	color: var(--color-static-white);
+	mix-blend-mode: difference;
+}
+
+/* A playground card's live preview: the experiment itself in a frame, drawn at four times the
+   card's size and scaled down to fit, so it shows the whole screen. It can't be clicked into. */
+.playground-snippet iframe {
+	width: 400%;
+	height: 400%;
+	transform: scale(0.25);
+	transform-origin: 0 0;
+	border: 0;
+	pointer-events: none;
 }
 /* The hero's petals (components/site/hero-greeting.tsx) rise from the bottom. The mask leans to
    166°, so they're clear behind the text at the top left and full strength at the bottom. */

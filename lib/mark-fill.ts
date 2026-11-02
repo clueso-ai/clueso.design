@@ -9,16 +9,17 @@ import { pick, type Rng } from "@/tools/brand-lab/state/shuffle";
 
 export const MARK_EFFECTS = ["Rain", "Rays", "Spiral", "Rings", "Aurora", "Glyph swirl"] as const;
 
-/** Brand colours per theme: a deep ground with light ink on dark pages, the reverse on light ones. */
+/** Brand colours per theme. Both stay bright brand pink, never the deep plum: it reads as a dark hole in the mark. */
 interface Look {
 	ground: string;
 	inks: [string, string][];
 	light: [string, string, string];
 }
 const LOOKS: Record<"dark" | "light", Look> = {
-	dark: { ground: "$plum", inks: [["$light", "$magenta"], ["$paper", "$pink"], ["$blush", "$magenta"]], light: ["$paper", "$pink", "$plum"] },
+	// Dark mode: a magenta ground with light-pink inks and white highlights, so the mark glows on a dark page.
+	dark: { ground: "$magenta", inks: [["$light", "$paper"], ["$light", "$pink"], ["$paper", "$light"]], light: ["$light", "$paper", "$pink"] },
 	// Light mode: a saturated brand-pink mark with pale inks, so it stays bold on a light page.
-	light: { ground: "$magenta", inks: [["$paper", "$blush"], ["$blush", "$light"], ["$light", "$paper"]], light: ["$pink", "$magenta", "$plum"] },
+	light: { ground: "$magenta", inks: [["$paper", "$blush"], ["$blush", "$light"], ["$light", "$paper"]], light: ["$light", "$pink", "$magenta"] },
 };
 
 export function markFillDoc(rng: Rng, effect: number, dark: boolean): Doc {
