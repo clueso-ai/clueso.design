@@ -77,7 +77,7 @@ function OklchPicker() {
 	return <OklchArea value={cursorById(p.cursorColor).oklch} onChange={(next) => setPrefs({ cursorColor: oklchCss(next) })} />;
 }
 
-const SWATCH = "focus-ring size-6 shrink-0 rounded-small border transition-[scale,border-color] duration-150 ease-out-strong active:scale-95";
+const SWATCH = "focus-ring size-6 shrink-0 rounded-small border pointer-coarse:size-8 transition-[scale,border-color] duration-150 ease-out-strong active:scale-95";
 
 function Swatch({ c, on, onPick }: { c: CursorColor; on: boolean; onPick: (id: string) => void }) {
 	// Selected: a strong edge with a ring of the panel's own colour inside it. Same size as the others, so the row never shifts.
@@ -105,6 +105,7 @@ const MAIN_COLORS = ["ink", "pink", "blue", "green", "orange", "violet", "red"];
  */
 export function ColorPicker({ onPick }: { onPick?: () => void }) {
 	const p = useSitePrefs();
+	const fine = useFinePointer();
 	const color = cursorById(p.cursorColor);
 	const [own, setOwn] = useState(false);
 	const pick = (cursorColor: string) => {
@@ -135,7 +136,7 @@ export function ColorPicker({ onPick }: { onPick?: () => void }) {
 				>
 					<PlusIcon aria-hidden className={`size-3.5 transition-transform duration-150 ease-out-strong ${own ? "rotate-45" : ""}`} />
 				</button>
-				<Button variant="outlined" sentiment="neutral" size="xsmall" iconOnly icon={<ShuffleIcon />} aria-label="Shuffle colour" className="focus-ring ml-auto" onClick={() => pick(shuffleColor())} />
+				<Button variant="outlined" sentiment="neutral" size={fine ? "xsmall" : "medium"} iconOnly icon={<ShuffleIcon />} aria-label="Shuffle colour" className="focus-ring ml-auto" onClick={() => pick(shuffleColor())} />
 			</div>
 			<AnimatePresence initial={false}>
 				{own && (
@@ -163,7 +164,7 @@ function NameField({ autoFocus, onEnter }: { autoFocus?: boolean; onEnter?: () =
 			<InputGroupInput
 				autoFocus={autoFocus}
 				placeholder="Your name"
-				aria-label="Your name, shown on your cursor"
+				aria-label="Your name"
 				maxLength={24}
 				value={p.cursorName}
 				onChange={(e) => setPrefs({ cursorName: e.target.value })}
@@ -304,24 +305,29 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 /** Shuffle the whole look, and put it back. */
 function Actions() {
 	const changed = useChanged();
+	const size = useButtonSize();
 	return (
 		<div className="flex items-center justify-between gap-gap-2xs">
-			<Button variant="outlined" sentiment="neutral" size="small" iconBefore icon={<ShuffleIcon />} className="focus-ring" onClick={() => setPrefsSmooth(shuffleSite())}>
+			<Button variant="outlined" sentiment="neutral" size={size} iconBefore icon={<ShuffleIcon />} className="focus-ring" onClick={() => setPrefsSmooth(shuffleSite())}>
 				Shuffle
 			</Button>
-			<Button variant="outlined" sentiment="neutral" size="small" className="focus-ring" disabled={!changed} onClick={resetPrefs}>
+			<Button variant="outlined" sentiment="neutral" size={size} className="focus-ring" disabled={!changed} onClick={resetPrefs}>
 				Reset
 			</Button>
 		</div>
 	);
 }
 
+/** Each step's question. `touch` is its note for phones and tablets, where there's no cursor to carry a name or colour. */
 const STEPS = [
-	{ id: "name", label: "Name", title: "What should we call you?", note: "Your name rides along on your cursor, so people here can tell it's you." },
-	{ id: "cursor", label: "Cursor", title: "Pick your pointer", note: "Keep your own, or switch to the Clueso cursor and give it a tilt." },
-	{ id: "colour", label: "Colour", title: "Choose your colour", note: "It colours your cursor and the text you select." },
-	{ id: "type", label: "Type", title: "Set the type", note: "Fonts and sizes change every page. Try a few, or shuffle." },
+	{ id: "name", label: "Name", title: "What should we call you?", note: "Your name rides along on your cursor, so people here can tell it's you.", touch: "Your name shows in the list of who's on the site, so people here can tell it's you." },
+	{ id: "cursor", label: "Cursor", title: "Pick your pointer", note: "Keep your own, or switch to the Clueso cursor and give it a tilt.", touch: "" },
+	{ id: "colour", label: "Colour", title: "Choose your colour", note: "It colours your cursor and the text you select.", touch: "It colours the text you select, and your dot in the list of who's here." },
+	{ id: "type", label: "Type", title: "Set the type", note: "Fonts and sizes change every page. Try a few, or shuffle.", touch: "Fonts and sizes change every page. Try a few, or shuffle." },
 ] as const;
+
+/** Buttons in the panel: compact for a mouse, a size up on touch screens so they're easy to tap. */
+const useButtonSize = () => (useFinePointer() ? "small" : "medium");
 
 /**
  * The first time the panel opens it walks the visitor through, one question at a time: their name,
@@ -332,6 +338,7 @@ const STEPS = [
 function Onboarding({ step, setStep, onDone }: { step: number; setStep: (n: number) => void; onDone: () => void }) {
 	const p = useSitePrefs();
 	const fine = useFinePointer();
+	const size = useButtonSize();
 	// Touch screens have no cursor to pick.
 	const steps = fine ? STEPS : STEPS.filter((s) => s.id !== "cursor");
 	const at = Math.min(step, steps.length - 1);
@@ -387,7 +394,7 @@ function Onboarding({ step, setStep, onDone }: { step: number; setStep: (n: numb
 					>
 						<div className="flex flex-col gap-gap-3xs">
 							<h3 className="type-text-m type-strong text-neutral-strong">{current.title}</h3>
-							<p className="type-text-s text-neutral-normal">{current.note}</p>
+							<p className="type-text-s text-neutral-normal">{fine ? current.note : current.touch}</p>
 						</div>
 						{current.id === "name" && <NameField autoFocus onEnter={next} />}
 						{current.id === "cursor" && (
@@ -407,19 +414,19 @@ function Onboarding({ step, setStep, onDone }: { step: number; setStep: (n: numb
 			</div>
 			<div className="flex shrink-0 items-center justify-between gap-gap-xs border-t border-neutral-weak px-gap-m py-gap-s">
 				{at === 0 ? (
-					<Button variant="outlined" sentiment="neutral" size="small" className="focus-ring" onClick={finish}>
+					<Button variant="outlined" sentiment="neutral" size={size} className="focus-ring" onClick={finish}>
 						Skip setup
 					</Button>
 				) : (
-					<Button variant="outlined" sentiment="neutral" size="small" className="focus-ring" onClick={() => go(at - 1)}>
+					<Button variant="outlined" sentiment="neutral" size={size} className="focus-ring" onClick={() => go(at - 1)}>
 						Back
 					</Button>
 				)}
 				<div className="flex items-center gap-gap-2xs">
 					{current.id === "type" && (
-						<Button variant="outlined" sentiment="neutral" size="small" iconOnly icon={<ShuffleIcon />} aria-label="Shuffle the look" className="focus-ring" onClick={() => setPrefsSmooth(shuffleSite())} />
+						<Button variant="outlined" sentiment="neutral" size={size} iconOnly icon={<ShuffleIcon />} aria-label="Shuffle the look" className="focus-ring" onClick={() => setPrefsSmooth(shuffleSite())} />
 					)}
-					<Button size="small" icon={last ? undefined : <ArrowRightIcon />} className="focus-ring" onClick={next}>
+					<Button size={size} icon={last ? undefined : <ArrowRightIcon />} className="focus-ring" onClick={next}>
 						{last ? "Done" : "Continue"}
 					</Button>
 				</div>
@@ -428,12 +435,13 @@ function Onboarding({ step, setStep, onDone }: { step: number; setStep: (n: numb
 	);
 }
 
-/** Every control, in two parts: the visitor's cursor, then the site's type. */
+/** Every control, in two parts: the visitor's cursor (just "You" on touch screens, which have none), then the site's type. */
 function FullPanel() {
+	const fine = useFinePointer();
 	return (
 		<>
 			<div className="min-h-0 flex-1 overflow-y-auto">
-				<Section title="Your cursor">
+				<Section title={fine ? "Your cursor" : "You"}>
 					<CursorControl />
 				</Section>
 				<Section title="Type">
