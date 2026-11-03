@@ -23,8 +23,8 @@ export const changelog: ChangelogEntry[] = [
 	},
 	{
 		date: "2026-11-02",
-		title: "Icon Lab",
-		body: "Every Clueso icon in one place. Find one, build a missing one from the set's parts or draw it on a grid, check it on clueso.io, then export it.",
+		title: "Icon Lab is tool #002",
+		body: "Every Clueso icon, website and platform, in one place, with the style directions to try and a dot-matrix pixel set for the web. See each icon on clueso.io with a before and after slider. Can't find one? Create it from the set's parts, or ask for it right there.",
 		area: "Icon Lab",
 		by: "sneha",
 	},
