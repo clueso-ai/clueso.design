@@ -42,6 +42,7 @@ export const registry: RegistryItem[] = [
 		visibility: "public",
 		theme: "lab",
 		href: "/tools/brand-lab",
+		preview: "/previews/brand-lab.jpg",
 		description: "Make posters, patterns and illustrations from Clueso's brand blocks. Layer shaders, shuffle the palette and export stills, video or GIFs.",
 		tags: ["brand", "generative", "webgl", "export"],
 		updated: "2026-11-01",
@@ -79,6 +80,11 @@ export const registry: RegistryItem[] = [
 /** Items a signed-out visitor may see. There is no sign-in yet, so internal items are never listed. */
 export function publicItems(type?: ItemType) {
 	return registry.filter((item) => item.visibility === "public" && (!type || item.type === type));
+}
+
+/** A name in sentence case for display, like the site's titles: "Brand Lab" reads "Brand lab". */
+export function displayTitle(title: string) {
+	return title.charAt(0) + title.slice(1).toLowerCase();
 }
 
 export function getItem(slug: string) {
