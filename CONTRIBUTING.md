@@ -115,8 +115,9 @@ two short sentences. Sentence case title, no full stop at the end of it. `by` is
 2. `pnpm build` to be sure it builds the way production will.
 3. Push your branch and open a pull request into `staging`:
    `gh pr create --base staging`. Always pass the base: `main` is still GitHub's default.
-4. Once it's merged, release by opening a pull request from `staging` into `main`. Merging into
-   `main` deploys clueso.design through GitHub Actions in about five minutes.
+   Merging it deploys https://staging.clueso.design in about five minutes. Check your change there.
+4. Release by opening a pull request from `staging` into `main`. Merging into `main` deploys
+   clueso.design through GitHub Actions in about five minutes.
 
 `main` and `staging` only change through pull requests. No force pushes.
 

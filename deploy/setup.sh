@@ -6,7 +6,7 @@
 #   - Route 53 zone clueso.design (GoDaddy is the registrar; its nameservers point at this zone)
 #   - ACM certs for clueso.design + *.clueso.design in us-east-1 (CloudFront) and ap-south-1 (ALB)
 #   - ECR repo clueso-design/web
-#   - clueso-design-deploy: the role GitHub Actions assumes, on `main` only
+#   - clueso-design-deploy: the role GitHub Actions assumes, on `main` (prod) and `staging` only
 #   - clueso-design-cfn: the role CloudFormation uses to build the stack
 set -euo pipefail
 export AWS_PAGER=""
@@ -16,11 +16,14 @@ REGION=ap-south-1
 ACCOUNT=131105490139
 DOMAIN=clueso.design
 REPO=clueso-design/web
-STACK=clueso-design-prod
+STACKS="clueso-design-prod clueso-design-staging"
 # The repo has use_immutable_subject on, so GitHub sends the ID-qualified subject. Check with:
 #   gh api repos/clueso-ai/clueso.design/actions/oidc/customization/sub
-SUB_IMMUTABLE="repo:clueso-ai@84061563/clueso.design@1440904041:ref:refs/heads/main"
-SUB_CLASSIC="repo:clueso-ai/clueso.design:ref:refs/heads/main"
+SUB_IMMUTABLE="repo:clueso-ai@84061563/clueso.design@1440904041:ref:refs/heads"
+SUB_CLASSIC="repo:clueso-ai/clueso.design:ref:refs/heads"
+SUBS="\"$SUB_IMMUTABLE/main\",\"$SUB_IMMUTABLE/staging\",\"$SUB_CLASSIC/main\",\"$SUB_CLASSIC/staging\""
+STACK_ROLES=$(for s in $STACKS; do printf '"arn:aws:iam::%s:role/%s-*",' "$ACCOUNT" "$s"; done | sed 's/,$//')
+STACK_ARNS=$(for s in $STACKS; do printf '"arn:aws:cloudformation:%s:%s:stack/%s/*",' "$REGION" "$ACCOUNT" "$s"; done | sed 's/,$//')
 
 aws() { command aws --profile "$PROFILE" "$@"; }
 [ "$(aws sts get-caller-identity --query Account --output text)" = "$ACCOUNT" ] || { echo "Wrong account for $PROFILE" >&2; exit 1; }
@@ -65,7 +68,7 @@ cat > "$TMP/cfn-policy.json" <<JSON
 {"Version":"2012-10-17","Statement":[
   {"Effect":"Allow","Action":["ecs:*","elasticloadbalancing:*","cloudfront:*","logs:*"],"Resource":"*"},
   {"Effect":"Allow","Action":["ec2:Describe*","ec2:CreateSecurityGroup","ec2:DeleteSecurityGroup","ec2:AuthorizeSecurityGroupIngress","ec2:RevokeSecurityGroupIngress","ec2:AuthorizeSecurityGroupEgress","ec2:RevokeSecurityGroupEgress","ec2:CreateTags","ec2:DeleteTags","ec2:GetManagedPrefixListEntries"],"Resource":"*"},
-  {"Effect":"Allow","Action":["iam:CreateRole","iam:DeleteRole","iam:GetRole","iam:PassRole","iam:TagRole","iam:UntagRole","iam:UpdateAssumeRolePolicy","iam:AttachRolePolicy","iam:DetachRolePolicy","iam:PutRolePolicy","iam:DeleteRolePolicy","iam:GetRolePolicy","iam:ListRolePolicies","iam:ListAttachedRolePolicies"],"Resource":"arn:aws:iam::$ACCOUNT:role/$STACK-*"},
+  {"Effect":"Allow","Action":["iam:CreateRole","iam:DeleteRole","iam:GetRole","iam:PassRole","iam:TagRole","iam:UntagRole","iam:UpdateAssumeRolePolicy","iam:AttachRolePolicy","iam:DetachRolePolicy","iam:PutRolePolicy","iam:DeleteRolePolicy","iam:GetRolePolicy","iam:ListRolePolicies","iam:ListAttachedRolePolicies"],"Resource":[$STACK_ROLES]},
   {"Effect":"Allow","Action":["route53:ChangeResourceRecordSets","route53:ListResourceRecordSets","route53:GetHostedZone"],"Resource":"arn:aws:route53:::hostedzone/$ZONE_ID"},
   {"Effect":"Allow","Action":["route53:GetChange","route53:ListHostedZones"],"Resource":"*"},
   {"Effect":"Allow","Action":["acm:DescribeCertificate","acm:ListCertificates"],"Resource":"*"},
@@ -82,13 +85,13 @@ cat > "$TMP/gh-trust.json" <<JSON
   "Principal":{"Federated":"arn:aws:iam::$ACCOUNT:oidc-provider/token.actions.githubusercontent.com"},
   "Action":"sts:AssumeRoleWithWebIdentity",
   "Condition":{"StringEquals":{"token.actions.githubusercontent.com:aud":"sts.amazonaws.com"},
-               "StringLike":{"token.actions.githubusercontent.com:sub":["$SUB_IMMUTABLE","$SUB_CLASSIC"]}}}]}
+               "StringLike":{"token.actions.githubusercontent.com:sub":[$SUBS]}}}]}
 JSON
 cat > "$TMP/gh-policy.json" <<JSON
 {"Version":"2012-10-17","Statement":[
   {"Effect":"Allow","Action":"ecr:GetAuthorizationToken","Resource":"*"},
   {"Effect":"Allow","Action":["ecr:BatchCheckLayerAvailability","ecr:BatchGetImage","ecr:CompleteLayerUpload","ecr:DescribeImages","ecr:GetDownloadUrlForLayer","ecr:InitiateLayerUpload","ecr:PutImage","ecr:UploadLayerPart"],"Resource":"arn:aws:ecr:$REGION:$ACCOUNT:repository/$REPO"},
-  {"Effect":"Allow","Action":["cloudformation:CreateChangeSet","cloudformation:DescribeChangeSet","cloudformation:ExecuteChangeSet","cloudformation:DeleteChangeSet","cloudformation:DescribeStacks","cloudformation:DescribeStackEvents","cloudformation:GetTemplateSummary","cloudformation:ListChangeSets"],"Resource":"arn:aws:cloudformation:$REGION:$ACCOUNT:stack/$STACK/*"},
+  {"Effect":"Allow","Action":["cloudformation:CreateChangeSet","cloudformation:DescribeChangeSet","cloudformation:ExecuteChangeSet","cloudformation:DeleteChangeSet","cloudformation:DescribeStacks","cloudformation:DescribeStackEvents","cloudformation:GetTemplateSummary","cloudformation:ListChangeSets"],"Resource":[$STACK_ARNS]},
   {"Effect":"Allow","Action":"cloudformation:ValidateTemplate","Resource":"*"},
   {"Effect":"Allow","Action":"iam:PassRole","Resource":"arn:aws:iam::$ACCOUNT:role/clueso-design-cfn"},
   {"Effect":"Allow","Action":["cloudfront:CreateInvalidation","cloudfront:GetInvalidation"],"Resource":"*"}
