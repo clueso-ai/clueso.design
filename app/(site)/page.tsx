@@ -2,7 +2,7 @@ import Link from "next/link";
 import { BrandLabPreview } from "@/components/site/brand-lab-preview";
 import { type FeaturedTool, FeaturedTools } from "@/components/site/featured-tools";
 import { Band, SectionHeading } from "@/components/site/frame";
-import { PlaygroundPreview } from "@/components/site/playground-preview";
+import { LiveToolPreview } from "@/components/site/live-tool-preview";
 import { ShippedBy } from "@/components/site/shipped-by";
 import { ToolSnapshot } from "@/components/site/tool-snapshot";
 import { HeroGreeting } from "@/components/site/hero-greeting";
@@ -16,7 +16,7 @@ import { team } from "@/lib/team";
 /** Inline links: quiet underline that firms up, and the text steps up to strong, on hover. */
 const TEXT_LINK = "focus-ring rounded-tiny text-neutral-strong underline decoration-neutral-weak underline-offset-4 transition-[color,text-decoration-color] duration-200 ease-out-strong hover:text-brand-normal hover:decoration-current";
 const BRAND_BLOG = "https://www.clueso.io/blog/the-clueso-brand";
-/** The playground: experiments so far, each showing a live glimpse of itself, then empty slots that fill out the row on wider screens. */
+/** The playground: experiments so far, each showing its still, then empty slots that fill out the row on wider screens. */
 function Playground() {
 	const experiments = publicItems("experiment");
 	const total = Math.max(3, Math.ceil((experiments.length + 1) / 3) * 3);
@@ -26,7 +26,7 @@ function Playground() {
 			{experiments.map((item) => (
 				<li key={item.slug}>
 					<Link href={item.href} className="group focus-ring state-layer flex h-full flex-col">
-						<PlaygroundPreview item={item} />
+						<ToolSnapshot item={item} aspect="aspect-4/3" sizes="(min-width: 768px) 33vw, 100vw" className="border-b border-neutral-weak" />
 						<span className="flex flex-1 flex-col gap-gap-xs p-gap-l">
 							{/* The text style and a hover underline, like Brand lab's title above. */}
 							<span className="type-text-xl text-neutral-strong decoration-1 underline-offset-4 group-hover:underline">{item.title}</span>
@@ -67,13 +67,13 @@ function ToolDetails({ item, blurb }: { item: RegistryItem; blurb?: React.ReactN
 	);
 }
 
-/** Each featured tool's tab: Brand Lab runs live; any other tool shows its still. */
+/** Each featured tool's tab, with the tool running live. Brand Lab opens on its posters. */
 function featuredTool(item: RegistryItem): FeaturedTool {
 	if (item.slug === "brand-lab")
 		return {
 			slug: item.slug,
 			title: displayTitle(item.title),
-			preview: <BrandLabPreview href={item.href} />,
+			preview: <BrandLabPreview item={item} />,
 			details: (
 				<ToolDetails
 					item={item}
@@ -94,7 +94,7 @@ function featuredTool(item: RegistryItem): FeaturedTool {
 	return {
 		slug: item.slug,
 		title: displayTitle(item.title),
-		preview: <ToolSnapshot item={item} />,
+		preview: <LiveToolPreview item={item} />,
 		details: <ToolDetails item={item} />,
 	};
 }
@@ -121,7 +121,11 @@ export default function Home() {
 			</Band>
 
 			<Band id="playground" labelledBy="playground-title" flush>
-				<SectionHeading id="playground-title" title="Fun experiments" />
+				<SectionHeading id="playground-title" title="Fun experiments">
+					<ButtonLink href="/playground" size="large" variant="outlined" sentiment="neutral">
+						Explore the playground
+					</ButtonLink>
+				</SectionHeading>
 				<Playground />
 			</Band>
 

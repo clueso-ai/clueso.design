@@ -154,16 +154,6 @@
 	mix-blend-mode: difference;
 }
 
-/* A playground card's live preview: the experiment itself in a frame, drawn at four times the
-   card's size and scaled down to fit, so it shows the whole screen. It can't be clicked into. */
-.playground-snippet iframe {
-	width: 400%;
-	height: 400%;
-	transform: scale(0.25);
-	transform-origin: 0 0;
-	border: 0;
-	pointer-events: none;
-}
 /* The hero's petals (components/site/hero-greeting.tsx) rise from the bottom. The mask leans to
    166°, so they're clear behind the text at the top left and full strength at the bottom. */
 .hero-fill {

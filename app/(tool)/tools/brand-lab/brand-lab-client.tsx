@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-import { EMBED_READY, EMBED_THEME, takeBrandLabHandoff } from "@/lib/brand-lab-handoff";
+import { takeBrandLabHandoff } from "@/lib/brand-lab-handoff";
+import { EMBED_READY, EMBED_THEME, isEmbed } from "@/lib/tool-embed";
 import { App } from "@/tools/brand-lab/App";
 import { presetDoc } from "@/tools/brand-lab/state/presets";
 import { useStore } from "@/tools/brand-lab/state/store";
@@ -14,7 +15,7 @@ export function BrandLabClient() {
 	useEffect(() => {
 		const s = useStore.getState();
 		// The homepage embed starts on a few posters each time and keeps nothing.
-		if (new URLSearchParams(location.search).has("embed")) {
+		if (isEmbed()) {
 			s.loadProject({ name: "Posters", canvases: EMBED_POSTERS.map(presetDoc), active: 0 });
 			s.setZoom("fit");
 			// The homepage sets the theme: the opposite of its own, so the preview stands out.

@@ -4,11 +4,11 @@ import { MobileNav } from "./mobile-nav";
 import { ThemeToggle } from "./theme-toggle";
 import { TuckingHeader } from "./tucking-header";
 
-// Sections of the homepage for now, plus the changelog. Sections become pages when there's enough to fill them.
+// Pages, plus the team section of the homepage. Sections become pages when there's enough to fill them.
 const NAV = [
-	// Tools has its own page; the homepage only features a few.
+	// Tools and the playground have their own pages; the homepage only features some of each.
 	{ href: "/tools", label: "Tools" },
-	{ href: "/#playground", label: "Playground" },
+	{ href: "/playground", label: "Playground" },
 	{ href: "/#team", label: "Team" },
 	{ href: "/changelog", label: "Changelog" },
 ];

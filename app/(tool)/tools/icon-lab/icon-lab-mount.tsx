@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { applySiteTheme, THEME_KEY } from "@/lib/theme";
+import { applySiteTheme, resolvedTheme, THEME_KEY } from "@/lib/theme";
+import { EMBED_READY, EMBED_THEME, isEmbed, memoryStorage } from "@/lib/tool-embed";
 
 // Icon Lab is the second tool. Its engine and UI are the standalone app (~/Downloads/icon-tool), served
 // from public/tools/icon-lab and synced by its tools/sync-clueso-design.sh. This mount loads that app
@@ -9,7 +10,13 @@ import { applySiteTheme, THEME_KEY } from "@/lib/theme";
 // scripts define globals, so they can't run twice). It shares the site's theme (THEME_KEY) and its
 // mark links home with a full page load, like Brand Lab's. Porting it onto the tool harness comes
 // with the harness extraction (docs/ARCHITECTURE.md, "Tool harness").
+//
+// The homepage embed (?embed, lib/tool-embed.ts) keeps nothing: the app's localStorage is swapped
+// for memory before it loads, so edits and its theme toggle never reach the visitor's own Icon Lab
+// or the site. Its theme comes from the homepage instead.
 const BASE = "/tools/icon-lab/";
+/** The embed's theme lives in memory only, under its own key. */
+const EMBED_THEME_KEY = "icon-lab:embed-theme";
 let started = false;
 
 function loadScript(src: string) {
@@ -27,6 +34,13 @@ async function start() {
 	const w = window as unknown as Record<string, unknown>;
 	w.ICON_LAB_BASE = BASE;
 	w.ICON_LAB_THEME_KEY = THEME_KEY;
+	if (isEmbed()) {
+		// Read the site's theme before the swap: the embed starts opposite it, like the homepage asks.
+		const storage = memoryStorage();
+		storage.setItem(EMBED_THEME_KEY, resolvedTheme() === "dark" ? "light" : "dark");
+		Object.defineProperty(window, "localStorage", { value: storage, configurable: true });
+		w.ICON_LAB_THEME_KEY = EMBED_THEME_KEY;
+	}
 	const html = await (await fetch(`${BASE}index.html`)).text();
 	const doc = new DOMParser().parseFromString(html, "text/html");
 	const scripts = [...doc.body.querySelectorAll("script[src]")]
@@ -59,6 +73,17 @@ async function start() {
 	}
 	document.body.classList.add("lab");
 	for (const src of scripts) await loadScript(BASE + src);
+	if (isEmbed()) followHomepageTheme();
+}
+
+/** The homepage sets the embed's theme. The app only switches through its own button, so press it. */
+function followHomepageTheme() {
+	window.addEventListener("message", (e) => {
+		if (e.origin !== location.origin || e.data?.type !== EMBED_THEME) return;
+		const dark = document.documentElement.classList.contains("dark");
+		if (dark !== (e.data.theme === "dark")) document.getElementById("theme-btn")?.click();
+	});
+	window.parent.postMessage({ type: EMBED_READY }, location.origin);
 }
 
 export function IconLabMount() {
