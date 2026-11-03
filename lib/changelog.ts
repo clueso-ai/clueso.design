@@ -16,6 +16,13 @@ export interface ChangelogEntry {
 export const changelog: ChangelogEntry[] = [
 	{
 		date: "2026-11-03",
+		title: "Try every tool right from the homepage",
+		body: "Each featured tool now runs live on the homepage, so you can click in and play with Icon Lab too. The playground has its own page, laid out like the tools page, and the homepage shows a still of each experiment.",
+		area: "Site",
+		by: "ajinkya",
+	},
+	{
+		date: "2026-11-03",
 		title: "A proper home for our tools",
 		body: "Tools on the homepage now sit in tabs, newest first, so each one gets its own preview. The Tools link takes you to the full list, where every tool shows how it looks open.",
 		area: "Site",

@@ -13,7 +13,7 @@ const STATUS_LABEL: Record<RegistryItem["status"], string> = {
 	archived: "Archived",
 };
 
-/** A tool on the tools page: a snapshot of it open, then what it is and who shipped it. */
+/** A tool or experiment on the tools and playground pages: a snapshot of it open, then what it is and who shipped it. */
 export function ToolCard({ item }: { item: RegistryItem }) {
 	return (
 		<Link href={item.href} className="state-layer focus-ring group flex flex-col overflow-hidden rounded-large border border-neutral-weak bg-raised-1">
