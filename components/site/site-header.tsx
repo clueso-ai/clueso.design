@@ -6,7 +6,8 @@ import { TuckingHeader } from "./tucking-header";
 
 // Sections of the homepage for now, plus the changelog. Sections become pages when there's enough to fill them.
 const NAV = [
-	{ href: "/#tools", label: "Tools" },
+	// Tools has its own page; the homepage only features a few.
+	{ href: "/tools", label: "Tools" },
 	{ href: "/#playground", label: "Playground" },
 	{ href: "/#team", label: "Team" },
 	{ href: "/changelog", label: "Changelog" },
