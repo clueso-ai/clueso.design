@@ -25,6 +25,10 @@ Read docs/ARCHITECTURE.md before structural changes.
 - Its editor frame (top bar, side panels, resizing, bottom bar) lives in tools/shell so new tools can start from it. Change the shell with every tool that uses it in mind.
 - It runs client-only. Page-level CSS for tools (focus reset, cursor, overflow) is scoped with :root:has(.tool-shell) in tools/shell/shell.css; Brand Lab's own is scoped to .brand-lab-root.
 
+## Changelog
+- Every PR that ships gets an entry at the top of lib/changelog.ts, however small the change. Add it in the same PR.
+- Write what the change means for people using the site, in plain words. No "Fix:" or "Feature:" labels. See CONTRIBUTING.md.
+
 ## Writing
 - Sentence case for titles, headings and labels.
 - Short, plain, direct sentences. No em dashes.
