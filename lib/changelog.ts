@@ -1,6 +1,6 @@
-// What shipped on clueso.design, newest first. Add an entry when something ships: a new tool, a new
-// experiment, or a change people will notice. Write it like a note to a friend: what it is, why it
-// exists, one or two short sentences. Credit whoever shipped it.
+// What shipped on clueso.design, newest first. Every change that ships gets an entry, however small:
+// a new tool, a fix, a bit of polish. Write what it means for the people using the site, like a note
+// to a friend, in one or two short sentences. No "Fix:" or "Feature:" labels. Credit whoever shipped it.
 export interface ChangelogEntry {
 	/** ISO date. */
 	date: string;
@@ -15,11 +15,46 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
 	{
+		date: "2026-11-03",
+		title: "Your hearts stay counted",
+		body: "The heart count in the footer used to reset every time we shipped something. Now it's saved, so every heart you leave sticks.",
+		area: "Site",
+		by: "ajinkya",
+	},
+	{
 		date: "2026-11-02",
 		title: "Icon Lab is tool #002",
 		body: "Every Clueso icon, website and platform, in one place, with the style directions to try and a dot-matrix pixel set for the web. See each icon on clueso.io with a before and after slider. Can't find one? Create it from the set's parts, or ask for it right there.",
 		area: "Icon Lab",
 		by: "sneha",
+	},
+	{
+		date: "2026-11-02",
+		title: "The playground works on phones",
+		body: "Playground cards used to crash phones. They now show a still on touch screens, and Customize has bigger buttons that are easier to tap.",
+		area: "Site",
+		by: "ajinkya",
+	},
+	{
+		date: "2026-11-02",
+		title: "Leave us a heart",
+		body: "Like the site? Press the heart in the footer. Everyone sees the count change live, and you can take it back.",
+		area: "Site",
+		by: "ajinkya",
+	},
+	{
+		date: "2026-11-02",
+		title: "Inspect any text",
+		body: "Select text anywhere on the site and press Inspect to see its font, size, line height and tracking.",
+		area: "Site",
+		by: "ajinkya",
+	},
+	{
+		date: "2026-11-01",
+		title: "You're not alone here",
+		body: "Give your cursor a name and colour when you arrive. The header shows who else is on the site, and you can see their cursors move.",
+		area: "Site",
+		by: "ajinkya",
 	},
 	{
 		date: "2026-11-01",

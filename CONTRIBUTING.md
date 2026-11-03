@@ -90,9 +90,14 @@ every tool that uses the shell still works.
 
 ## Write the changelog entry
 
-Add it to the top of `lib/changelog.ts`. Write it like a note to a friend: what it is, why it
-exists, one or two short sentences. Sentence case title, no full stop at the end of it. `by` is
-your slug from `lib/team.ts`.
+Every pull request that ships something gets an entry, however small: a new tool, a fix, a bit of
+polish. If people will see it or feel it, it goes in.
+
+Add it to the top of `lib/changelog.ts`. Write what it means for the people using the site, not
+what you changed in the code: "Playground cards used to crash phones. They now show a still" rather
+than "Fix: iframe crash on mobile". No "Fix:" or "Feature:" labels. Like a note to a friend, one or
+two short sentences. Sentence case title, no full stop at the end of it. `by` is your slug from
+`lib/team.ts`.
 
 ```ts
 {
