@@ -42,6 +42,7 @@ export const registry: RegistryItem[] = [
 		visibility: "public",
 		theme: "lab",
 		href: "/tools/brand-lab",
+		preview: "/previews/brand-lab.jpg",
 		description: "Make posters, patterns and illustrations from Clueso's brand blocks. Layer shaders, shuffle the palette and export stills, video or GIFs.",
 		tags: ["brand", "generative", "webgl", "export"],
 		updated: "2026-11-01",

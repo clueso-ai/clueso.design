@@ -12,6 +12,7 @@ export { Button, buttonVariants, type ButtonProps } from "./jigsaw/components/ui
 export { Tag } from "./jigsaw/components/ui/primitives/tag/tag";
 export { Kbd, KbdGroup } from "./jigsaw/components/ui/primitives/kbd/kbd";
 export { Separator } from "./jigsaw/components/ui/primitives/separator/separator";
+export { Tabs, TabsContent, TabsList, TabsTrigger } from "./tabs";
 export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./jigsaw/components/ui/overlays/tooltip/tooltip";
 export { ButtonLink, type ButtonLinkProps } from "./button-link";
 export { Input, InputGroup, InputGroupInput, Slider, type SliderProps, Textarea, ToggleSwitch, WrappedSelect, type WrappedSelectOption } from "./controls";

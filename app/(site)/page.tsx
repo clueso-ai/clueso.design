@@ -1,14 +1,16 @@
 import Link from "next/link";
 import { BrandLabPreview } from "@/components/site/brand-lab-preview";
+import { type FeaturedTool, FeaturedTools } from "@/components/site/featured-tools";
 import { Band, SectionHeading } from "@/components/site/frame";
 import { PlaygroundPreview } from "@/components/site/playground-preview";
 import { ShippedBy } from "@/components/site/shipped-by";
+import { ToolSnapshot } from "@/components/site/tool-snapshot";
 import { HeroGreeting } from "@/components/site/hero-greeting";
 import { TeamGrid } from "@/components/site/team-grid";
 import { Timeline } from "@/components/site/timeline";
 import { ButtonLink } from "@/lib/design-system";
 import { changelog } from "@/lib/changelog";
-import { getItem, publicItems } from "@/lib/registry";
+import { publicItems, type RegistryItem } from "@/lib/registry";
 import { team } from "@/lib/team";
 
 /** Inline links: quiet underline that firms up, and the text steps up to strong, on hover. */
@@ -44,8 +46,65 @@ function Playground() {
 	);
 }
 
+/** How many tools the homepage features. The rest are on the tools page. */
+const FEATURED = 3;
+
+/** A tool's title, link and credit under its preview. `blurb` replaces the registry description. */
+function ToolDetails({ item, title, blurb }: { item: RegistryItem; title: string; blurb?: React.ReactNode }) {
+	return (
+		<div className="flex max-w-measure flex-col gap-gap-xs">
+			{/* The title opens the tool in a new tab. Tools are built for a mouse and a big screen, so phones and tablets get the name without the link. */}
+			<h3 className="type-text-xl text-neutral-strong">
+				<a href={item.href} target="_blank" rel="noreferrer" className="focus-ring hidden rounded-tiny underline-offset-4 decoration-1 hover:underline pointer-fine:inline">
+					{title}
+				</a>
+				<span className="pointer-fine:hidden">{title}</span>
+			</h3>
+			<p className="type-text-m whitespace-pre-line text-neutral-normal">{blurb ?? item.description}</p>
+			<ShippedBy who={item.owner} className="pt-gap-m" />
+		</div>
+	);
+}
+
+/** Each featured tool's tab: Brand Lab runs live; any other tool shows its still. */
+function featuredTool(item: RegistryItem): FeaturedTool {
+	if (item.slug === "brand-lab")
+		return {
+			slug: item.slug,
+			// Sentence case here, unlike the registry's title for the tool.
+			title: "Brand lab",
+			preview: <BrandLabPreview href={item.href} />,
+			details: (
+				<ToolDetails
+					item={item}
+					title="Brand lab"
+					blurb={
+						<>
+							A playground for patterns, compositions and visual treatments made from Clueso&apos;s brand shapes.
+							<br />
+							To see the thinking behind them, read about the{" "}
+							<a href={BRAND_BLOG} target="_blank" rel="noreferrer" className={TEXT_LINK}>
+								Clueso brand
+							</a>
+							.
+						</>
+					}
+				/>
+			),
+		};
+	return {
+		slug: item.slug,
+		title: item.title,
+		preview: <ToolSnapshot item={item} />,
+		details: <ToolDetails item={item} title={item.title} />,
+	};
+}
+
 export default function Home() {
-	const brandLab = getItem("brand-lab")!;
+	const featured = publicItems("tool")
+		.toSorted((a, b) => b.updated.localeCompare(a.updated))
+		.slice(0, FEATURED)
+		.map(featuredTool);
 
 	return (
 		<>
@@ -59,31 +118,7 @@ export default function Home() {
 						Explore all tools
 					</ButtonLink>
 				</SectionHeading>
-				<div className="border-t border-neutral-weak">
-					<BrandLabPreview href={brandLab.href} />
-				</div>
-				<div className="border-t border-neutral-weak px-gap-l py-gap-l">
-					<div className="flex max-w-measure flex-col gap-gap-xs">
-						{/* Sentence case and the text style here, unlike the registry's title for the tool. The title opens the tool in a new tab. */}
-						{/* Brand Lab is built for a mouse and a big screen, so phones and tablets get the name without the link. */}
-						<h3 className="type-text-xl text-neutral-strong">
-							<a href={brandLab.href} target="_blank" rel="noreferrer" className="focus-ring hidden rounded-tiny underline-offset-4 decoration-1 hover:underline pointer-fine:inline">
-								Brand lab
-							</a>
-							<span className="pointer-fine:hidden">Brand lab</span>
-						</h3>
-						<p className="type-text-m text-neutral-normal">
-							A playground for patterns, compositions and visual treatments made from Clueso&apos;s brand shapes.
-							<br />
-							To see the thinking behind them, read about the{" "}
-							<a href={BRAND_BLOG} target="_blank" rel="noreferrer" className={TEXT_LINK}>
-								Clueso brand
-							</a>
-							.
-						</p>
-						<ShippedBy who={brandLab.owner} className="pt-gap-m" />
-					</div>
-				</div>
+				<FeaturedTools tools={featured} />
 			</Band>
 
 			<Band id="playground" labelledBy="playground-title" flush>

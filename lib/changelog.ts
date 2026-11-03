@@ -16,6 +16,13 @@ export interface ChangelogEntry {
 export const changelog: ChangelogEntry[] = [
 	{
 		date: "2026-11-03",
+		title: "A proper home for our tools",
+		body: "Tools on the homepage now sit in tabs, newest first, so each one gets its own preview. The Tools link takes you to the full list, where every tool shows how it looks open.",
+		area: "Site",
+		by: "ajinkya",
+	},
+	{
+		date: "2026-11-03",
 		title: "Your hearts stay counted",
 		body: "The heart count in the footer used to reset every time we shipped something. Now it's saved, so every heart you leave sticks.",
 		area: "Site",
