@@ -4,6 +4,11 @@ Description: >-
   Deployed by .github/workflows/deploy.yml. One-time setup (zone, certs, ECR, deploy role) is deploy/setup.sh.
 
 Parameters:
+  Environment:
+    Type: String
+    Default: prod
+    AllowedValues: [prod, staging]
+    Description: prod serves the apex + www. staging serves only DomainName and is noindex.
   ImageUrl:
     Type: String
   DomainName:
@@ -49,6 +54,8 @@ Parameters:
 
 Conditions:
   HasHelloWebhook: !Not [!Equals [!Ref HelloWebhookSecretArn, ""]]
+  IsProd: !Equals [!Ref Environment, prod]
+  IsStaging: !Not [!Condition IsProd]
 
 Mappings:
   Static:
@@ -235,6 +242,7 @@ Resources:
 
   WwwRedirectFunction:
     Type: AWS::CloudFront::Function
+    Condition: IsProd
     Properties:
       Name: !Sub ${AWS::StackName}-www-redirect
       AutoPublish: true
@@ -277,6 +285,18 @@ Resources:
           CookiesConfig: { CookieBehavior: none }
           QueryStringsConfig: { QueryStringBehavior: none }
 
+  # Keeps staging out of search results.
+  NoIndexHeadersPolicy:
+    Type: AWS::CloudFront::ResponseHeadersPolicy
+    Condition: IsStaging
+    Properties:
+      ResponseHeadersPolicyConfig:
+        Name: !Sub ${AWS::StackName}-noindex
+        Comment: X-Robots-Tag noindex on every response
+        CustomHeadersConfig:
+          Items:
+            - { Header: X-Robots-Tag, Value: "noindex, nofollow", Override: true }
+
   # Every behaviour forwards the viewer Host. CloudFront then uses it as the origin TLS name,
   # which the ALB's apex + wildcard cert covers.
   HostOnlyOriginRequestPolicy:
@@ -297,7 +317,10 @@ Resources:
       DistributionConfig:
         Enabled: true
         Comment: !Ref DomainName
-        Aliases: [!Ref DomainName, !Sub "www.${DomainName}"]
+        Aliases: !If
+          - IsProd
+          - [!Ref DomainName, !Sub "www.${DomainName}"]
+          - [!Ref DomainName]
         HttpVersion: http2and3
         IPV6Enabled: true
         PriceClass: PriceClass_All
@@ -324,9 +347,12 @@ Resources:
           Compress: true
           CachePolicyId: !FindInMap [Static, Ids, CachingDisabled]
           OriginRequestPolicyId: !FindInMap [Static, Ids, AllViewer]
-          FunctionAssociations:
-            - EventType: viewer-request
-              FunctionARN: !GetAtt WwwRedirectFunction.FunctionMetadata.FunctionARN
+          ResponseHeadersPolicyId: !If [IsStaging, !Ref NoIndexHeadersPolicy, !Ref AWS::NoValue]
+          FunctionAssociations: !If
+            - IsProd
+            - - EventType: viewer-request
+                FunctionARN: !GetAtt WwwRedirectFunction.FunctionMetadata.FunctionARN
+            - !Ref AWS::NoValue
         CacheBehaviors:
           # Fingerprinted build output, safe to cache forever.
           - PathPattern: /_next/static/*
@@ -337,6 +363,7 @@ Resources:
             Compress: true
             CachePolicyId: !Ref StaticCachePolicy
             OriginRequestPolicyId: !Ref HostOnlyOriginRequestPolicy
+            ResponseHeadersPolicyId: !If [IsStaging, !Ref NoIndexHeadersPolicy, !Ref AWS::NoValue]
         # Never cache errors. CloudFront's default holds them for 10s, so one bad moment during
         # a rollout would be served to everyone at that edge.
         CustomErrorResponses:
@@ -366,6 +393,7 @@ Resources:
         HostedZoneId: !FindInMap [Static, Ids, CloudFrontZone]
   WwwRecordA:
     Type: AWS::Route53::RecordSet
+    Condition: IsProd
     Properties:
       HostedZoneId: !Ref HostedZoneId
       Name: !Sub www.${DomainName}
@@ -375,6 +403,7 @@ Resources:
         HostedZoneId: !FindInMap [Static, Ids, CloudFrontZone]
   WwwRecordAAAA:
     Type: AWS::Route53::RecordSet
+    Condition: IsProd
     Properties:
       HostedZoneId: !Ref HostedZoneId
       Name: !Sub www.${DomainName}

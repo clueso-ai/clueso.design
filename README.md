@@ -28,11 +28,11 @@ Work on a branch from `staging` and open PRs into `staging`. `main` is productio
 
 ## Deploy
 
-A merge to `main` deploys https://clueso.design through GitHub Actions (`.github/workflows/deploy.yml`).
+A merge to `main` deploys https://clueso.design and a merge to `staging` deploys https://staging.clueso.design, both through GitHub Actions (`.github/workflows/deploy.yml`).
 
 - Runs on AWS (CluesoProduction, ap-south-1): Docker image in ECR, ECS Fargate behind a load balancer, CloudFront in front.
 - `deploy/Dockerfile` builds the image. `deploy/cloudformation.yml` is the whole stack.
 - `deploy/setup.sh` is the one-time AWS setup: DNS zone, certificates, image repo and deploy roles.
 - DNS lives in Route 53. GoDaddy is only the registrar, with its nameservers pointed at Route 53.
-- `staging` doesn't deploy yet.
+- Staging is its own stack (`clueso-design-staging`) in the same account. It tells search engines not to index it, keeps hearts in memory (they reset on each deploy) and doesn't send "Say hi" messages.
 - The "Say hi" form needs a Slack webhook. Store it in Secrets Manager and put the secret ARN in the repo variable `HELLO_WEBHOOK_SECRET_ARN`. Until then the form answers "We can't take messages right now".
