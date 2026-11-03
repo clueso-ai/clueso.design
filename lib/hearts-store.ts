@@ -1,56 +1,79 @@
-import { ConditionalCheckFailedException, DynamoDBClient, GetItemCommand, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
-
 // The footer's hearts: how many people like the site. Each browser can heart it once, and take it
-// back. In production they live in the DynamoDB table named by HEARTS_TABLE
-// (deploy/cloudformation.yml): one item holds the total and a version that goes up with every change,
-// and one per browser holds whether it hearts the site, the cursor name it had set, the page it was
-// on and when. Browsers are keyed by a hash of their visitor id, never the id itself. Without
-// HEARTS_TABLE (local dev) it's all kept in memory and a restart starts from zero.
+// back. In production they live in an Upstash Redis database, reached over its REST API with
+// UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN (GitHub secrets, passed in by
+// deploy/cloudformation.yml). Keys:
+//   hearts:total, hearts:v     the count, and a version that goes up with every change
+//   hearts:browser:<hash>      a hash per browser: hearted (1/0), the cursor name it had set, the page
+//                              it was on, firstAt and lastAt
+// Browsers are keyed by a hash of their visitor id, never the id itself. Without the two variables
+// (local dev) it's all kept in memory and a restart starts from zero.
 
-const TABLE = process.env.HEARTS_TABLE;
-const db = TABLE ? new DynamoDBClient({}) : null;
-const TOTAL = { pk: { S: "total" } };
+const URL = process.env.UPSTASH_REDIS_REST_URL;
+const TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
+const remote = Boolean(URL && TOKEN);
+const TOTAL = "hearts:total";
+const VERSION = "hearts:v";
 
 /** The total, and its version: clients use v to ignore updates that arrive out of order. */
 export type Hearts = { total: number; v: number };
 
-// On globalThis so dev reloads keep them.
-const g = globalThis as { heartsLatest?: Hearts; heartsLoading?: Promise<Hearts>; heartedBrowsers?: Map<string, boolean> };
-const hearted = (g.heartedBrowsers ??= new Map());
-
-/** Keeps the newest total. Replies to concurrent writes can arrive in any order. */
-const keep = (h: Hearts) => (g.heartsLatest = !g.heartsLatest || h.v > g.heartsLatest.v ? h : g.heartsLatest);
-
-async function load(): Promise<Hearts> {
-	if (!db) return { total: 0, v: 0 };
-	const { Item } = await db.send(new GetItemCommand({ TableName: TABLE, Key: TOTAL, ProjectionExpression: "hearts, v" }));
-	return { total: Number(Item?.hearts?.N ?? 0), v: Number(Item?.v?.N ?? 0) };
+/** Runs one Redis command. */
+async function redis<T>(...command: (string | number)[]): Promise<T> {
+	const res = await fetch(URL!, { method: "POST", headers: { Authorization: `Bearer ${TOKEN}` }, body: JSON.stringify(command), cache: "no-store" });
+	const body = (await res.json()) as { result?: T; error?: string };
+	if (!res.ok || body.error) throw new Error(`Upstash: ${body.error ?? res.status}`);
+	return body.result as T;
 }
 
-/** The total, read from the table once per server start and kept up to date in memory after that. */
+// Checks the browser's state and changes it in one step, so a repeat, or a second tab, can't count
+// twice. Returns [changed, total, version].
+const TOGGLE = `
+local cur = redis.call("HGET", KEYS[1], "hearted")
+if (cur == "1") == (ARGV[1] == "1") then
+	return {0, tonumber(redis.call("GET", KEYS[2]) or "0"), tonumber(redis.call("GET", KEYS[3]) or "0")}
+end
+redis.call("HSET", KEYS[1], "hearted", ARGV[1], "name", ARGV[2], "page", ARGV[3], "lastAt", ARGV[4])
+redis.call("HSETNX", KEYS[1], "firstAt", ARGV[4])
+local total = redis.call("INCRBY", KEYS[2], ARGV[1] == "1" and 1 or -1)
+return {1, total, redis.call("INCR", KEYS[3])}
+`;
+
+// On globalThis so dev reloads keep them.
+const g = globalThis as { heartsCurrent?: Hearts; heartsReading?: Promise<Hearts>; heartsByBrowser?: Map<string, boolean> };
+const hearted = (g.heartsByBrowser ??= new Map());
+
+/** Keeps the newest total. Replies to concurrent writes can arrive in any order. */
+const keep = (h: Hearts) => (g.heartsCurrent = !g.heartsCurrent || h.v > g.heartsCurrent.v ? h : g.heartsCurrent);
+
+async function load(): Promise<Hearts> {
+	if (!remote) return { total: 0, v: 0 };
+	const [total, v] = await redis<(string | null)[]>("MGET", TOTAL, VERSION);
+	return { total: Number(total ?? 0), v: Number(v ?? 0) };
+}
+
+/** The total, read once per server start and kept up to date in memory after that. */
 export function heartsTotal(): Promise<Hearts> {
-	if (g.heartsLatest) return Promise.resolve(g.heartsLatest);
-	g.heartsLoading ??= load().then(keep, (err) => {
+	if (g.heartsCurrent) return Promise.resolve(g.heartsCurrent);
+	g.heartsReading ??= load().then(keep, (err) => {
 		console.error("hearts: couldn't read the total", err);
-		g.heartsLoading = undefined;
+		g.heartsReading = undefined;
 		return { total: 0, v: 0 };
 	});
-	return g.heartsLoading;
+	return g.heartsReading;
 }
 
 async function browserKey(visitor: string) {
 	const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(visitor));
-	return `browser#${[...new Uint8Array(hash).slice(0, 16)].map((b) => b.toString(16).padStart(2, "0")).join("")}`;
+	return `hearts:browser:${[...new Uint8Array(hash).slice(0, 16)].map((b) => b.toString(16).padStart(2, "0")).join("")}`;
 }
 
 /** Whether this browser hearts the site. */
 export async function isHearted(visitor: string): Promise<boolean> {
 	const key = await browserKey(visitor);
 	const known = hearted.get(key);
-	if (known !== undefined || !db) return known ?? false;
+	if (known !== undefined || !remote) return known ?? false;
 	try {
-		const { Item } = await db.send(new GetItemCommand({ TableName: TABLE, Key: { pk: { S: key } }, ProjectionExpression: "hearted" }));
-		const value = Item?.hearted?.BOOL ?? false;
+		const value = (await redis<string | null>("HGET", key, "hearted")) === "1";
 		hearted.set(key, value);
 		return value;
 	} catch (err) {
@@ -62,37 +85,15 @@ export async function isHearted(visitor: string): Promise<boolean> {
 /** Hearts the site from one browser, or takes it back. Doing what's already done changes nothing. */
 export async function setHearted(visitor: string, value: boolean, from: { name: string; page: string }): Promise<Hearts & { changed: boolean }> {
 	const key = await browserKey(visitor);
-	const delta = value ? 1 : -1;
 
-	if (!db) {
+	if (!remote) {
 		const now = await heartsTotal();
 		if ((hearted.get(key) ?? false) === value) return { ...now, changed: false };
 		hearted.set(key, value);
-		return { ...keep({ total: Math.max(0, now.total + delta), v: now.v + 1 }), changed: true };
+		return { ...keep({ total: Math.max(0, now.total + (value ? 1 : -1)), v: now.v + 1 }), changed: true };
 	}
 
-	// The browser's item first, and only if it changes: a repeat, or a second tab, can't count twice.
-	const now = new Date().toISOString();
-	try {
-		await db.send(
-			new UpdateItemCommand({
-				TableName: TABLE,
-				Key: { pk: { S: key } },
-				UpdateExpression: "SET hearted = :v, #name = :name, #page = :page, lastAt = :now, firstAt = if_not_exists(firstAt, :now)",
-				ConditionExpression: value ? "attribute_not_exists(hearted) OR hearted = :off" : "hearted = :on",
-				ExpressionAttributeNames: { "#name": "name", "#page": "page" },
-				ExpressionAttributeValues: { ":v": { BOOL: value }, ":on": { BOOL: true }, ":off": { BOOL: false }, ":name": { S: from.name }, ":page": { S: from.page }, ":now": { S: now } },
-			}),
-		);
-	} catch (err) {
-		if (!(err instanceof ConditionalCheckFailedException)) throw err;
-		hearted.set(key, value);
-		return { ...(await heartsTotal()), changed: false };
-	}
+	const [changed, total, v] = await redis<number[]>("EVAL", TOGGLE, 3, key, TOTAL, VERSION, value ? "1" : "0", from.name, from.page, new Date().toISOString());
 	hearted.set(key, value);
-
-	const { Attributes } = await db.send(
-		new UpdateItemCommand({ TableName: TABLE, Key: TOTAL, UpdateExpression: "ADD hearts :d, v :one", ExpressionAttributeValues: { ":d": { N: String(delta) }, ":one": { N: "1" } }, ReturnValues: "UPDATED_NEW" }),
-	);
-	return { ...keep({ total: Number(Attributes?.hearts?.N ?? 0), v: Number(Attributes?.v?.N ?? 0) }), changed: true };
+	return { ...keep({ total, v }), changed: changed === 1 };
 }
