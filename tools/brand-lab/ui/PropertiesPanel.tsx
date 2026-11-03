@@ -5,13 +5,13 @@ import { EFFECTS, getDef, SOURCES } from "../layers/registry";
 import { type Appearance, BLEND_MODES, type Layer, type ParamDef } from "../layers/types";
 import { SIZE_PRESETS } from "../state/doc";
 import { selectedLayer, useStore } from "../state/store";
-import { ICON_NORMAL, IconButton } from "../components/icon-button";
-import { Panel, Section } from "../components/panel";
+import { ICON_NORMAL, IconButton } from "@/tools/shell/components/icon-button";
+import { Section } from "@/tools/shell/components/panel";
+import { RightPanel } from "@/tools/shell/panels";
 import { Button } from "@/lib/design-system/jigsaw/components/ui/controls/button/button";
 import { Textarea } from "@/lib/design-system/jigsaw/components/ui/controls/textarea/textarea";
 import { Tag } from "@/lib/design-system/jigsaw/components/ui/primitives/tag/tag";
 import { ColorField, NumberField, Row, Segmented, Select, Slider, Switch } from "./controls";
-import { M, PANEL_TOP, usePanels } from "./layout";
 import { LayerIcon } from "./icons";
 import { PaletteStrip } from "./Palettes";
 import { MenuItem, MenuLabel, Popover, PopoverContent, PopoverTrigger } from "../components/popover";
@@ -22,12 +22,11 @@ import { useState } from "react";
 export function PropertiesPanel({ errors }: { errors: Map<string, string> }) {
 	const layer = useStore(selectedLayer);
 	const count = useStore((s) => s.selectedIds.length);
-	const width = usePanels((s) => s.right);
 
 	return (
-		<Panel className="max-[1099px]:hidden" style={{ top: PANEL_TOP, right: M, bottom: M, width }} aria-label="Properties">
+		<RightPanel aria-label="Properties">
 			<div className="min-h-0 flex-1 overflow-y-auto">{layer ? <LayerProps layer={layer} count={count} error={errors.get(layer.type)} /> : <SceneProps />}</div>
-		</Panel>
+		</RightPanel>
 	);
 }
 

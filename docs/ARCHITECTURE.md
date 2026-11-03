@@ -51,7 +51,7 @@ Tool pages get the full viewport and no site nav. Brand Lab's mark and name in i
 - **Changelog.** Add an entry to `lib/changelog.ts` when something ships.
 - The theme toggle switches light and dark in one frame, with no animation (`applySiteTheme` in `lib/theme.ts`).
 - Brand Lab embeds at `/tools/brand-lab?embed`: it opens on posters and never reads or writes the visitor's autosave (`EMBED` in its store).
-- **Footer hearts.** How many people like the site, live (`footer-hearts.tsx`). Each browser hearts it once and can take it back; pressing slides a +1 or −1 in after the count, then the digits roll to the new number. `/api/hearts` saves the change and broadcasts the new total, with a version so late updates are ignored, over the presence stream (`lib/presence-server.ts`). The total and one item per browser (hashed id, hearted, cursor name, page, times) live in the DynamoDB table in `HEARTS_TABLE` (`lib/hearts-store.ts`); without it, dev keeps them in memory.
+- **Footer hearts.** How many people like the site, live (`footer-hearts.tsx`). Each browser hearts it once and can take it back; pressing slides a +1 or −1 in after the count, then the digits roll to the new number. `/api/hearts` saves the change and broadcasts the new total, with a version so late updates are ignored, over the presence stream (`lib/presence-server.ts`). The total and one item per browser (hashed id, hearted, cursor name, page, times) live in Upstash Redis, reached with `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` (GitHub secrets the deploy passes in; `lib/hearts-store.ts`). Without them, dev keeps them in memory and a restart starts from zero.
 - Say hi (`components/site/say-hi.tsx`) is parked: built but not on any page yet. It posts to `/api/hello`, which forwards to a Slack incoming webhook in `HELLO_WEBHOOK_URL`. Without it, production answers 503 and dev logs to the console.
 - Geist Pixel and Geist Serif are OFL (`public/fonts/GEIST-OFL.txt`).
 
@@ -102,20 +102,22 @@ Site code uses v1 utilities: `bg-neutral-weak`, `text-neutral-strong`, `border-n
 
 Tailwind's `max-w-sm…7xl` resolve against Jigsaw's spacing scale (for example `max-w-2xl` becomes 16px), so they are banned in site code. `scripts/check-styles.ts` enforces this and the other style rules.
 
-## Brand Lab port
+## Brand Lab
 
-Brand Lab comes from the standalone Vite app at `../brand-lab`, baseline commit `f3928e2`. Port-only changes:
+Brand Lab started as a port of the standalone Vite app at `../brand-lab`, baseline commit `f3928e2`. This repo is now its home: it's improved here like any other tool, and the standalone app is no longer the source. Changes made while porting:
 
 - Moved from `src/` to `tools/brand-lab/`, with Jigsaw imports pointed at `@/lib/design-system/jigsaw/`.
 - `import.meta.env.DEV` became `process.env.NODE_ENV`.
-- `app.scss` became plain CSS (`tools/brand-lab/styles/brand-lab.css`). Rules that used to target `html` and `body` (cursor, focus reset, overflow) are scoped with `:root:has(.brand-lab-root)`, so they apply only while Brand Lab is mounted.
+- `app.scss` became plain CSS (`tools/brand-lab/styles/brand-lab.css`). Rules that used to target `html` and `body` (cursor, focus reset, overflow) now live in the tool shell (`tools/shell/shell.css`), scoped with `:root:has(.tool-shell)`, so they apply only while a tool is mounted.
 - The toolbar mark links home.
 - It mounts client-only (`dynamic(..., { ssr: false })`) because its modules read localStorage when they load.
 - New React Compiler lint rules are warnings in `tools/brand-lab/**`. They get fixed during harness extraction.
 
-## Tool harness (next)
+## Tool shell
 
-Decided, not built yet:
+Built: `tools/shell/` holds the editor frame Brand Lab runs in, so a new tool can start from it. `ToolShell` gives a full-window canvas, the top bar with the mark and the tool's name (linking home), resizable side panels with widths saved per tool, a bottom bar, a toast and the Clueso cursor. The tool fills the slots. `tools/shell/README.md` shows how to start a tool. Brand Lab's look and behaviour didn't change when it moved onto the shell.
+
+Still to come, as decided:
 
 - **Settings schema.** Brand Lab's `ParamDef` and `ParamGroup` (`tools/brand-lab/layers/types.ts`) become the harness settings schema as they are. A simple tool is one group.
 - **Goes into the harness:** timeline and playback, zoom and pan, undo, command menu, right-click menu, resizable panels, saved-designs library, export.

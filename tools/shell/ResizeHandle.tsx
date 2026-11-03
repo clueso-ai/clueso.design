@@ -1,16 +1,18 @@
 import { useRef, useState } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/lib/design-system/jigsaw/components/ui/overlays/tooltip/tooltip";
 import { cn } from "@/lib/design-system/jigsaw/lib/utils";
-import { BAR, GAP, M, PANEL_TOP, usePanels } from "./layout";
+import { usePanelWidths, useShell } from "./context";
+import { BAR, GAP, M, PANEL_TOP } from "./geometry";
 
 /**
  * Drag handle on a side panel's inner edge: a hairline hit area with a pill that shows on hover,
  * like the Clueso editor. Drag to resize, double-click to reset. Widths persist.
  */
-export function ResizeHandle({ side }: { side: "left" | "right" }) {
-	const width = usePanels((s) => s[side]);
-	const setWidth = usePanels((s) => s.setWidth);
-	const reset = usePanels((s) => s.reset);
+export function ResizeHandle({ side, label }: { side: "left" | "right"; label: string }) {
+	const { hasBottom } = useShell();
+	const width = usePanelWidths((s) => s[side]);
+	const setWidth = usePanelWidths((s) => s.setWidth);
+	const reset = usePanelWidths((s) => s.reset);
 	const start = useRef<{ x: number; w: number } | null>(null);
 	const [active, setActive] = useState(false);
 	// Centre on the panel border's midline (the 1px border sits half a pixel inside the panel edge).
@@ -23,10 +25,10 @@ export function ResizeHandle({ side }: { side: "left" | "right" }) {
 				<div
 					role="separator"
 					aria-orientation="vertical"
-					aria-label={side === "left" ? "Resize layers panel" : "Resize properties panel"}
+					aria-label={label}
 					aria-valuenow={width}
 					className="group/resize absolute z-10 flex w-[10px] cursor-ew-resize items-center justify-center max-[1099px]:hidden"
-					style={{ top: PANEL_TOP, bottom: side === "left" ? M + BAR + GAP : M, ...(side === "left" ? { left: edge } : { right: edge }) }}
+					style={{ top: PANEL_TOP, bottom: side === "left" && hasBottom ? M + BAR + GAP : M, ...(side === "left" ? { left: edge } : { right: edge }) }}
 					onPointerDown={(e) => {
 						if (e.button !== 0) return;
 						e.currentTarget.setPointerCapture(e.pointerId);

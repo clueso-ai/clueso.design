@@ -1,0 +1,48 @@
+/* The tool shell's page CSS: the focus reset, the Clueso cursor and a page that doesn't scroll.
+   Moved from Brand Lab's stylesheet. Every rule is scoped with :root:has(.tool-shell), so it applies
+   (including to portalled menus) only while a tool is mounted and never leaks into the rest of
+   clueso.design. */
+
+/* Jigsaw's focus reset (from its index.css), only inside a tool. The site keeps visible focus. */
+:root:has(.tool-shell) {
+	:is(button, a, [role="button"]):is(:focus, :focus-visible) {
+		outline: none;
+	}
+	*:is(:focus, :focus-visible) {
+		outline: 2px solid transparent;
+		outline-offset: 2px;
+		-webkit-tap-highlight-color: transparent;
+	}
+	button:is(:focus, :focus-visible) svg {
+		outline: none !important;
+		box-shadow: none !important;
+	}
+}
+
+/* The Clueso puzzle-piece cursor wherever the arrow or hand would show. With a mouse, <CustomCursor>
+   draws it as an element and these states become `cursor: none`; elsewhere the static SVG (26×23,
+   tip at 5,8) is the fallback. */
+:root:has(.tool-shell) {
+	&,
+	body,
+	.cursor-default {
+		cursor: url("/cursor.svg") 5 8, default;
+	}
+	:is(.cursor-pointer, button:not(:disabled), a[href], [role="button"], [role="menuitem"], [role="option"], [role="radio"], [role="switch"], [role="slider"], label) {
+		cursor: url("/cursor.svg") 5 8, pointer;
+	}
+	&.custom-cursor {
+		&,
+		body,
+		:is(.cursor-pointer, button:not(:disabled), a[href], [role="button"], [role="menuitem"], [role="option"], [role="radio"], [role="switch"], [role="slider"], label) {
+			cursor: none;
+		}
+		&.dup-cursor [data-dup],
+		&.dup-cursor [data-dup] * {
+			cursor: none !important;
+		}
+	}
+	body {
+		overflow: hidden;
+	}
+}

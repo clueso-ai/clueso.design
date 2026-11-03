@@ -1,66 +1,56 @@
 import { I } from "./ci";
 import { useRef, useState } from "react";
-import { ICON_NORMAL, IconButton } from "../components/icon-button";
-import { Panel } from "../components/panel";
+import { ICON_NORMAL, IconButton } from "@/tools/shell/components/icon-button";
 import { MenuItem, MenuLabel, MenuSeparator, Popover, PopoverContent, PopoverTrigger } from "../components/popover";
 import { Button } from "@/lib/design-system/jigsaw/components/ui/controls/button/button";
 import { Field } from "../components/field";
 import { Kbd } from "@/lib/design-system/jigsaw/components/ui/primitives/kbd/kbd";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/lib/design-system/jigsaw/components/ui/overlays/tooltip/tooltip";
-import { Separator } from "@/lib/design-system/jigsaw/components/ui/primitives/separator/separator";
 import { cn } from "@/lib/design-system/jigsaw/lib/utils";
 import { canExportVideo, copyImage, exportBundle, exportFrames, exportGIF, exportImage, exportJSON, exportMP4, readJSON } from "../export";
 import { defaultScene } from "../state/doc";
 import { useStore } from "../state/store";
 import { VARIATION_MODES } from "../state/variations";
-import CluesoIcon from "@icons/icons/Brands/Clueso-icon.svg?react";
+import { ToolbarDivider } from "@/tools/shell/panels";
 import { Row, Segmented } from "./controls";
 import { BAR, GAP, M, timelineRight, usePanels } from "./layout";
 
 const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
 const mod = isMac ? "⌘" : "Ctrl";
 
-function Divider() {
-	return <Separator orientation="vertical" className="mx-2xs h-[20px]" />;
-}
+// clueso.design: the top bar's two groups, the mark and the name now come from the tool shell
+// (tools/shell). Brand Lab fills them with ToolbarStart and ToolbarEnd.
 
-export function Toolbar() {
+/** Top left, after the mark and name: project menu, save, undo and redo. */
+export function ToolbarStart() {
 	const canUndo = useStore((s) => s.past.length > 0);
 	const canRedo = useStore((s) => s.future.length > 0);
 	const undo = useStore((s) => s.undo);
 	const redo = useStore((s) => s.redo);
+
+	return (
+		<>
+			<ProjectMenu />
+			<SaveButton />
+			<ToolbarDivider />
+			<IconButton label="Undo" shortcut={[mod, "Z"]} icon={<I.Undo />} disabled={!canUndo} onClick={undo} />
+			<IconButton label="Redo" shortcut={[mod, "⇧", "Z"]} icon={<I.Redo />} disabled={!canRedo} onClick={redo} />
+		</>
+	);
+}
+
+/** Top right: theme, library, variations, shuffle and export. */
+export function ToolbarEnd() {
 	const theme = useStore((s) => s.theme);
 	const setTheme = useStore((s) => s.setTheme);
 
 	return (
 		<>
-			<Panel className="flex-row items-center gap-2xs overflow-visible px-xs" style={{ top: M, left: M, height: BAR }} role="toolbar" aria-label="Project">
-				{/* clueso.design: the mark and name link back to the site home. A full page load on purpose,
-				    so nothing Brand Lab set on the page (theme, cursor, listeners) outlives it. */}
-				<Tooltip>
-					<TooltipTrigger asChild>
-						{/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-						<a href="/" aria-label="Brand Lab. Back to clueso.design" className="flex shrink-0 items-center gap-sm rounded-xs px-sm">
-							<CluesoIcon className="size-[18px] text-strong [&_path]:[stroke-width:0.75]" aria-hidden />
-							<span className="label-small-strong font-body whitespace-nowrap text-strong">Brand Lab</span>
-						</a>
-					</TooltipTrigger>
-					<TooltipContent>Back to clueso.design</TooltipContent>
-				</Tooltip>
-				<Divider />
-				<ProjectMenu />
-				<SaveButton />
-				<Divider />
-				<IconButton label="Undo" shortcut={[mod, "Z"]} icon={<I.Undo />} disabled={!canUndo} onClick={undo} />
-				<IconButton label="Redo" shortcut={[mod, "⇧", "Z"]} icon={<I.Redo />} disabled={!canRedo} onClick={redo} />
-			</Panel>
-			<div className="absolute flex items-center gap-xs" style={{ top: M, right: M, height: BAR }} role="toolbar" aria-label="Create and export">
-				<IconButton variant="outlined" label={theme === "light" ? "Dark interface" : "Light interface"} icon={theme === "light" ? <I.Moon /> : <I.Sun />} onClick={() => setTheme(theme === "light" ? "dark" : "light")} />
-				<LibraryButton />
-				<VariationsButton />
-				<ShuffleButton />
-				<ExportMenu />
-			</div>
+			<IconButton variant="outlined" label={theme === "light" ? "Dark interface" : "Light interface"} icon={theme === "light" ? <I.Moon /> : <I.Sun />} onClick={() => setTheme(theme === "light" ? "dark" : "light")} />
+			<LibraryButton />
+			<VariationsButton />
+			<ShuffleButton />
+			<ExportMenu />
 		</>
 	);
 }

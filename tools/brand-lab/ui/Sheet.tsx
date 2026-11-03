@@ -1,5 +1,5 @@
 import { XIcon } from "@icons/icons";
-import { ICON_NORMAL } from "../components/icon-button";
+import { ICON_NORMAL } from "@/tools/shell/components/icon-button";
 import type { ReactNode } from "react";
 import { Button } from "@/lib/design-system/jigsaw/components/ui/controls/button/button";
 import { Modal, ModalClose, ModalContent, ModalDescription, ModalTitle } from "@/lib/design-system/jigsaw/components/ui/overlays/modal/modal";
