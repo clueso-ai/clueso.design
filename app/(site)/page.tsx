@@ -10,7 +10,7 @@ import { TeamGrid } from "@/components/site/team-grid";
 import { Timeline } from "@/components/site/timeline";
 import { ButtonLink } from "@/lib/design-system";
 import { changelog } from "@/lib/changelog";
-import { publicItems, type RegistryItem } from "@/lib/registry";
+import { displayTitle, publicItems, type RegistryItem } from "@/lib/registry";
 import { team } from "@/lib/team";
 
 /** Inline links: quiet underline that firms up, and the text steps up to strong, on hover. */
@@ -50,7 +50,8 @@ function Playground() {
 const FEATURED = 3;
 
 /** A tool's title, link and credit under its preview. `blurb` replaces the registry description. */
-function ToolDetails({ item, title, blurb }: { item: RegistryItem; title: string; blurb?: React.ReactNode }) {
+function ToolDetails({ item, blurb }: { item: RegistryItem; blurb?: React.ReactNode }) {
+	const title = displayTitle(item.title);
 	return (
 		<div className="flex max-w-measure flex-col gap-gap-xs">
 			{/* The title opens the tool in a new tab. Tools are built for a mouse and a big screen, so phones and tablets get the name without the link. */}
@@ -71,13 +72,11 @@ function featuredTool(item: RegistryItem): FeaturedTool {
 	if (item.slug === "brand-lab")
 		return {
 			slug: item.slug,
-			// Sentence case here, unlike the registry's title for the tool.
-			title: "Brand lab",
+			title: displayTitle(item.title),
 			preview: <BrandLabPreview href={item.href} />,
 			details: (
 				<ToolDetails
 					item={item}
-					title="Brand lab"
 					blurb={
 						<>
 							A playground for patterns, compositions and visual treatments made from Clueso&apos;s brand shapes.
@@ -94,9 +93,9 @@ function featuredTool(item: RegistryItem): FeaturedTool {
 		};
 	return {
 		slug: item.slug,
-		title: item.title,
+		title: displayTitle(item.title),
 		preview: <ToolSnapshot item={item} />,
-		details: <ToolDetails item={item} title={item.title} />,
+		details: <ToolDetails item={item} />,
 	};
 }
 

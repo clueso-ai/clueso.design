@@ -82,6 +82,11 @@ export function publicItems(type?: ItemType) {
 	return registry.filter((item) => item.visibility === "public" && (!type || item.type === type));
 }
 
+/** A name in sentence case for display, like the site's titles: "Brand Lab" reads "Brand lab". */
+export function displayTitle(title: string) {
+	return title.charAt(0) + title.slice(1).toLowerCase();
+}
+
 export function getItem(slug: string) {
 	return registry.find((item) => item.slug === slug);
 }
