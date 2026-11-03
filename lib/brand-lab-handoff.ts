@@ -19,6 +19,3 @@ export function takeBrandLabHandoff(): Doc | null {
 	}
 }
 
-/** Messages between the homepage and its Brand Lab embed. */
-export const EMBED_READY = "clueso-design:brand-lab-ready";
-export const EMBED_THEME = "clueso-design:brand-lab-theme";

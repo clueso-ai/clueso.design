@@ -1,16 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef } from "react";
-import { EMBED_READY, EMBED_THEME } from "@/lib/brand-lab-handoff";
 import type { RegistryItem } from "@/lib/registry";
-import { useIsDark } from "@/lib/use-dark";
 import { LiveToolPreview } from "./live-tool-preview";
 
-// Brand Lab running live on the homepage (live-tool-preview.tsx), opened on a few posters. The embed
-// keeps nothing: the visitor's own Brand Lab project is untouched (see EMBED in
-// tools/brand-lab/state/store.ts). It runs in the opposite theme to the page, so it reads as its
-// own thing. Touch screens get posters made with it instead of its still.
+// Brand Lab running live on the homepage (live-tool-preview.tsx), opened on a few posters (see EMBED
+// in tools/brand-lab/state/store.ts). Touch screens get posters made with it instead of its still.
 
 /** Brand Lab's poster presets, exported at 1050×1400. */
 const POSTERS = [
@@ -25,19 +20,7 @@ const POSTERS = [
 ];
 
 export function BrandLabPreview({ item }: { item: RegistryItem }) {
-	const frame = useRef<HTMLIFrameElement>(null);
-	const dark = useIsDark();
-
-	useEffect(() => {
-		const send = () => frame.current?.contentWindow?.postMessage({ type: EMBED_THEME, theme: dark ? "light" : "dark" }, location.origin);
-		send();
-		// The embed asks once it has loaded.
-		const ready = (e: MessageEvent) => e.origin === location.origin && e.data?.type === EMBED_READY && send();
-		window.addEventListener("message", ready);
-		return () => window.removeEventListener("message", ready);
-	}, [dark]);
-
-	return <LiveToolPreview item={item} src={`${item.href}?embed`} frameRef={frame} fallback={<Posters />} />;
+	return <LiveToolPreview item={item} fallback={<Posters />} />;
 }
 
 function Posters() {
