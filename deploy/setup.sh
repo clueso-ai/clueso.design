@@ -64,7 +64,6 @@ JSON
 cat > "$TMP/cfn-policy.json" <<JSON
 {"Version":"2012-10-17","Statement":[
   {"Effect":"Allow","Action":["ecs:*","elasticloadbalancing:*","cloudfront:*","logs:*"],"Resource":"*"},
-  {"Effect":"Allow","Action":["dynamodb:CreateTable","dynamodb:DeleteTable","dynamodb:UpdateTable","dynamodb:Describe*","dynamodb:List*","dynamodb:GetResourcePolicy","dynamodb:UpdateContinuousBackups","dynamodb:UpdateTimeToLive","dynamodb:TagResource","dynamodb:UntagResource"],"Resource":"arn:aws:dynamodb:$REGION:$ACCOUNT:table/$STACK-*"},
   {"Effect":"Allow","Action":["ec2:Describe*","ec2:CreateSecurityGroup","ec2:DeleteSecurityGroup","ec2:AuthorizeSecurityGroupIngress","ec2:RevokeSecurityGroupIngress","ec2:AuthorizeSecurityGroupEgress","ec2:RevokeSecurityGroupEgress","ec2:CreateTags","ec2:DeleteTags","ec2:GetManagedPrefixListEntries"],"Resource":"*"},
   {"Effect":"Allow","Action":["iam:CreateRole","iam:DeleteRole","iam:GetRole","iam:PassRole","iam:TagRole","iam:UntagRole","iam:UpdateAssumeRolePolicy","iam:AttachRolePolicy","iam:DetachRolePolicy","iam:PutRolePolicy","iam:DeleteRolePolicy","iam:GetRolePolicy","iam:ListRolePolicies","iam:ListAttachedRolePolicies"],"Resource":"arn:aws:iam::$ACCOUNT:role/$STACK-*"},
   {"Effect":"Allow","Action":["route53:ChangeResourceRecordSets","route53:ListResourceRecordSets","route53:GetHostedZone"],"Resource":"arn:aws:route53:::hostedzone/$ZONE_ID"},

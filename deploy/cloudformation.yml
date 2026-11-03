@@ -37,6 +37,16 @@ Parameters:
     Default: ""
     Description: Optional Secrets Manager secret holding the Slack webhook for /api/hello. Empty means the form answers 503.
 
+  UpstashRedisUrl:
+    Type: String
+    Default: ""
+    Description: Upstash Redis REST URL for the footer's hearts (GitHub secret). Empty means hearts are kept in memory and reset on deploy.
+  UpstashRedisToken:
+    Type: String
+    Default: ""
+    NoEcho: true
+    Description: Upstash Redis REST token for the footer's hearts (GitHub secret).
+
 Conditions:
   HasHelloWebhook: !Not [!Equals [!Ref HelloWebhookSecretArn, ""]]
 
@@ -184,6 +194,10 @@ Resources:
           Image: !Ref ImageUrl
           Essential: true
           PortMappings: [{ ContainerPort: 3000, Protocol: tcp }]
+          # The footer's hearts (lib/hearts-store.ts).
+          Environment:
+            - { Name: UPSTASH_REDIS_REST_URL, Value: !Ref UpstashRedisUrl }
+            - { Name: UPSTASH_REDIS_REST_TOKEN, Value: !Ref UpstashRedisToken }
           Secrets: !If
             - HasHelloWebhook
             - [{ Name: HELLO_WEBHOOK_URL, ValueFrom: !Ref HelloWebhookSecretArn }]
