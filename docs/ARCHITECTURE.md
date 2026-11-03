@@ -31,6 +31,7 @@ app/(site)/page.tsx        /
 app/(site)/tools/page.tsx  /tools
 app/(site)/changelog       /changelog, from lib/changelog.ts
 app/(tool)/tools/brand-lab /tools/brand-lab, full screen, client-only
+app/(tool)/tools/icon-lab  /tools/icon-lab, full screen, client-only (mounts public/tools/icon-lab)
 ```
 
 Playground pieces are static exports, not React. Each lives in `public/playground/<slug>/` with its files unchanged, and `next.config.ts` rewrites `/playground/<slug>` to its `index.html`. Port-only edits are marked with a `clueso.design:` comment. Cluego (Preshita) came from a claude.ai artifact this way. Its page needs a `<base>` tag because the URL has no trailing slash. Its own colours and fonts stay as made, so the token rules don't apply inside `public/`.
