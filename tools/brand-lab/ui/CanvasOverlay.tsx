@@ -1,8 +1,8 @@
 import { type PointerEvent as ReactPointerEvent, useEffect, useMemo, useRef, useState } from "react";
 import { aabb, corners, cropParams, hits, type Frame, HANDLES, type Handle, handlesFor, imageGeom, intersects, layerFrame, radiusLimit, type Rect, resizeParams, toLocal, toWorld, union } from "../layers/bounds";
-import { getDef } from "../layers/registry";
-import { FONTS } from "../layers/sources/text";
-import { allParams, type Layer, type Params } from "../layers/types";
+import { getDef, positionKeys, radiusKey } from "../layers/registry";
+import { FONTS, TYPE_STYLES } from "../layers/sources/text";
+import { allParams, kindOf, type Layer, type Params } from "../layers/types";
 import { useStore } from "../state/store";
 
 type Pt = [number, number];
@@ -12,6 +12,7 @@ type Drag =
 	| { kind: "resize"; id: string; handle: Handle; frame: Frame; start: Params }
 	| { kind: "crop"; id: string; handle: Handle; frame: Frame; start: Params }
 	| { kind: "radius"; id: string; corner: Pt; frame: Frame; max: number }
+	| { kind: "draw"; tool: "rect" | "ellipse" | "text"; origin: Pt; to: Pt; square: boolean; centred: boolean }
 	| { kind: "marquee"; origin: Pt; moved: boolean; additive: boolean; base: string[] }
 	| { kind: "rotate"; id: string; centre: Pt; pivot: Pt; startAngle: number; startRot: number; keys: [string, string] };
 
@@ -42,6 +43,9 @@ export function CanvasOverlay({ scale }: { scale: number }) {
 	const selectedIds = useStore((s) => s.selectedIds);
 	const hoverId = useStore((s) => s.hoverId);
 	const editingTextId = useStore((s) => s.editingTextId);
+	const tool = useStore((s) => s.tool);
+	const drawing = tool === "rect" || tool === "ellipse" || tool === "text";
+	const [drawBox, setDrawBox] = useState<Rect | null>(null);
 	const { width: W, height: H } = doc.scene;
 	const svg = useRef<SVGSVGElement>(null);
 	const drag = useRef<Drag | null>(null);
@@ -86,12 +90,21 @@ export function CanvasOverlay({ scale }: { scale: number }) {
 	const onCanvas = ([x, y]: Pt) => x >= 0 && y >= 0 && x <= W && y <= H;
 
 	/** Topmost visible, unlocked object under the point. Fill layers never win a click. */
-	const hitTest = (pt: Pt) => doc.layers.find((l) => !l.locked && frames.has(l.id) && hits(l, frames.get(l.id)!, pt)) ?? null;
-	const topFill = () => doc.layers.find((l) => l.visible && !l.locked && !frames.has(l.id) && getDef(l.type)?.kind === "source") ?? null;
+	// Off the canvas, only what's already selected answers (to keep its handles usable). Content that
+	// spills past the edge is clipped, so it never catches hovers or clicks meant for the board.
+	// A framed Look sits over what it restyles, so it only wins where nothing else is under the point
+	// (or once it's selected): the objects inside its box stay clickable.
+	const hitTest = (pt: Pt) => {
+		const off = !onCanvas(pt);
+		const sel = useStore.getState().selectedIds;
+		const under = doc.layers.filter((l) => !l.locked && frames.has(l.id) && (!off || sel.includes(l.id)) && hits(l, frames.get(l.id)!, pt));
+		const look = (l: Layer) => getDef(l.type) && kindOf(getDef(l.type)!) === "look" && !sel.includes(l.id);
+		return under.find((l) => !look(l)) ?? under[0] ?? null;
+	};
 
 	const startMove = (origin: Pt, ids: string[]) => {
 		const st = useStore.getState();
-		const movable = st.doc.layers.filter((l) => ids.includes(l.id) && !l.locked && getDef(l.type)?.position);
+		const movable = st.doc.layers.filter((l) => ids.includes(l.id) && !l.locked && positionKeys(l));
 		const box = union(movable.filter((l) => frames.has(l.id)).map((l) => aabb(frames.get(l.id)!)));
 		const others = [...frames.entries()].filter(([id]) => !ids.includes(id)).map(([, f]) => aabb(f));
 		drag.current = {
@@ -111,6 +124,12 @@ export function CanvasOverlay({ scale }: { scale: number }) {
 		svg.current!.setPointerCapture(e.pointerId);
 		const st = useStore.getState();
 		const pt = toComp(e);
+		// R, O or T: drag out a rectangle, ellipse or text box (a click places a default one).
+		if (st.tool === "rect" || st.tool === "ellipse" || st.tool === "text") {
+			drag.current = { kind: "draw", tool: st.tool, origin: pt, to: pt, square: e.shiftKey, centred: e.altKey };
+			setDragging(true);
+			return;
+		}
 		const hit = hitTest(pt);
 		if (hit) {
 			let ids = st.selectedIds;
@@ -170,6 +189,13 @@ export function CanvasOverlay({ scale }: { scale: number }) {
 			setRotation(Math.round(next));
 			return;
 		}
+		if (d.kind === "draw") {
+			d.to = pt;
+			d.square = e.shiftKey;
+			d.centred = e.altKey;
+			setDrawBox(drawnBox(d));
+			return;
+		}
 		if (d.kind === "crop") {
 			const patch = cropParams(d.start, d.frame, d.handle, toLocal(d.frame, pt), st.doc);
 			if (patch) st.patchLayers({ [d.id]: patch }, `crop:${d.id}`);
@@ -182,7 +208,8 @@ export function CanvasOverlay({ scale }: { scale: number }) {
 			const [lx, ly] = toLocal(f, pt);
 			const inward = ((lx - (f.left + cu * f.w)) * (cu ? -1 : 1) + (ly - (f.top + cv * f.h)) * (cv ? -1 : 1)) / 2;
 			const radius = Math.round(Math.min(d.max, Math.max(0, inward)));
-			st.patchLayers({ [d.id]: { radius } }, `radius:${d.id}`);
+			const layer = st.doc.layers.find((l) => l.id === d.id);
+			if (layer) st.patchLayers({ [d.id]: { [radiusKey(layer)]: radius } }, `radius:${d.id}`);
 			setRadiusPill({ value: radius, at: pt });
 			return;
 		}
@@ -234,8 +261,7 @@ export function CanvasOverlay({ scale }: { scale: number }) {
 		setGuides({ x: gx, y: gy });
 		const patches: Record<string, Params> = {};
 		for (const id of d.ids) {
-			const def = getDef(st.doc.layers.find((l) => l.id === id)!.type)!;
-			const [kx, ky] = def.position!;
+			const [kx, ky] = positionKeys(st.doc.layers.find((l) => l.id === id)!)!;
 			const start = d.starts[id];
 			patches[id] = {
 				[kx]: Math.round((Number(start[kx]) + dx / W) * 10000) / 10000,
@@ -250,16 +276,15 @@ export function CanvasOverlay({ scale }: { scale: number }) {
 		drag.current = null;
 		setRotation(null);
 		setCropping(false);
+		setDrawBox(null);
+		if (d?.kind === "draw") placeDrawn(d);
 		setRadiusPill(null);
 		setDragging(false);
 		setMarquee(null);
 		setGuides({ x: [], y: [] });
-		if (d?.kind === "marquee" && !d.moved && !d.additive) {
-			// A plain click on empty space selects the pattern underneath, like clicking a frame's fill.
-			// Off the canvas there's nothing underneath.
-			const fill = onCanvas(d.origin) ? topFill() : null;
-			useStore.getState().select(fill?.id ?? null);
-		}
+		// A plain click on empty space clears the selection. Backgrounds that fill the canvas and Looks
+		// are picked in the Layers panel, never by clicking the canvas, so a click always means an object.
+		if (d?.kind === "marquee" && !d.moved && !d.additive) useStore.getState().select(null);
 	};
 
 	const onHandleDown = (e: ReactPointerEvent, layer: Layer, handle: Handle) => {
@@ -272,6 +297,32 @@ export function CanvasOverlay({ scale }: { scale: number }) {
 		drag.current = { kind: crop ? "crop" : "resize", id: layer.id, handle, frame, start: { ...layer.params } };
 		setCropping(crop);
 		setDragging(true);
+	};
+
+	/** Add the shape or text box just drawn, select it, and go back to the move tool. */
+	const placeDrawn = (d: Extract<Drag, { kind: "draw" }>) => {
+		const st = useStore.getState();
+		const b = drawnBox(d);
+		const clicked = (b.r - b.l) * scale < 4 && (b.b - b.t) * scale < 4;
+		const round = (v: number) => Math.round(v * 10000) / 10000;
+		if (d.tool === "text") {
+			const style = TYPE_STYLES[0].params;
+			// A click hugs the words; a drag sets the wrap width. The text starts empty and ready to type.
+			st.addLayer("text", { name: "Text", params: { ...style, text: "", x: round(b.l / W), y: round(1 - b.t / H), anchor: 0, align: 0, width: clicked ? 0 : round((b.r - b.l) / W) } });
+			st.setEditingText(useStore.getState().selectedId);
+		} else {
+			const size = Math.min(W, H) * 0.2;
+			const [cx, cy, w, h] = clicked ? [d.origin[0], d.origin[1], size, size] : [(b.l + b.r) / 2, (b.t + b.b) / 2, b.r - b.l, b.b - b.t];
+			st.addLayer("shape", { name: d.tool === "rect" ? "Rectangle" : "Ellipse", params: { shape: d.tool === "rect" ? 0 : 1, w: round(w / W), h: round(h / H), x: round(cx / W), y: round(1 - cy / H) } });
+		}
+		st.setTool("move");
+	};
+
+	/** Double-click a text box's side handle: back to Hug, like Figma's auto width. */
+	const hugText = (e: React.MouseEvent, layer: Layer, handle: Handle) => {
+		if (layer.type !== "text" || (handle !== "e" && handle !== "w")) return;
+		e.stopPropagation();
+		useStore.getState().setParam(layer.id, "width", 0);
 	};
 
 	const onRadiusDown = (e: ReactPointerEvent, layer: Layer, corner: Pt, max: number) => {
@@ -295,7 +346,7 @@ export function CanvasOverlay({ scale }: { scale: number }) {
 			pivot: [f.px, f.py],
 			startAngle: (Math.atan2(pt[1] - centre[1], pt[0] - centre[0]) * 180) / Math.PI,
 			startRot: Number(layer.params.rotation ?? 0),
-			keys: getDef(layer.type)!.position!,
+			keys: positionKeys(layer)!,
 		};
 		setDragging(true);
 	};
@@ -325,7 +376,7 @@ export function CanvasOverlay({ scale }: { scale: number }) {
 		<svg
 			ref={svg}
 			data-dup
-			className={`canvas-overlay${dragging ? " dragging" : ""}`}
+			className={`canvas-overlay${dragging ? " dragging" : ""}${drawing ? " drawing" : ""}`}
 			style={{ inset: -REACH, width: `calc(100% + ${REACH * 2}px)`, height: `calc(100% + ${REACH * 2}px)` }}
 			viewBox={`${-m} ${-m} ${W + m * 2} ${H + m * 2}`}
 			preserveAspectRatio="none"
@@ -333,6 +384,8 @@ export function CanvasOverlay({ scale }: { scale: number }) {
 			onPointerMove={onPointerMove}
 			onPointerUp={onPointerUp}
 			onPointerCancel={onPointerUp}
+			// If the browser drops the drag (window lost focus mid-drag), end it so the next click selects.
+			onLostPointerCapture={() => drag.current && onPointerUp()}
 			onPointerLeave={() => !drag.current && useStore.getState().setHover(null)}
 			onDoubleClick={(e) => {
 				const hit = hitTest(toComp(e));
@@ -352,9 +405,9 @@ export function CanvasOverlay({ scale }: { scale: number }) {
 				st.openMenu(e.clientX, e.clientY);
 			}}
 		>
-			{/* Pointer targets: the artboard, then every object's frame, which may reach past it. */}
+			{/* Pointer targets: the artboard, plus the selected objects' frames, which may reach past it. */}
 			<rect className="hit" x={0} y={0} width={W} height={H} />
-			{doc.layers.map((l) => !l.locked && frames.has(l.id) && <polygon key={l.id} className="hit" points={poly(frames.get(l.id)!)} />)}
+			{selected.map((l) => !l.locked && frames.has(l.id) && <polygon key={l.id} className="hit" points={poly(frames.get(l.id)!)} />)}
 			{fillSelected && <rect className="sel-fill" x={0} y={0} width={W} height={H} />}
 			{hover && <polygon className="hover-outline" points={poly(hover)} />}
 			{/* Hovering a full-bleed layer (pattern, fill, effect) in the Layers panel: it covers the whole canvas. */}
@@ -363,12 +416,12 @@ export function CanvasOverlay({ scale }: { scale: number }) {
 			{selected.length > 1 && selBox && <rect className="sel-group" x={selBox.l} y={selBox.t} width={selBox.r - selBox.l} height={selBox.b - selBox.t} />}
 
 			{/* Just outside each corner: hover there to turn the object, as in Figma. */}
-			{single && singleFrame && !single.locked && !dragging && rotatable(single) && <RotateZones f={singleFrame} px={px} onDown={(e) => onRotateDown(e, single, singleFrame)} />}
+			{single && singleFrame && !single.locked && !dragging && !drawing && rotatable(single) && <RotateZones f={singleFrame} px={px} onDown={(e) => onRotateDown(e, single, singleFrame)} />}
 			{/* While turning, the rotate cursor holds wherever the pointer goes. */}
 			{rotation !== null && singleFrame && <rect className="hit" x={-m} y={-m} width={W + m * 2} height={H + m * 2} style={{ cursor: rotateCursor(0) }} />}
 			{cropping && single && singleFrame && <CropOutline layer={single} f={singleFrame} W={W} H={H} />}
 			{rotation !== null && singleFrame && <Pill x={toWorld(singleFrame, [singleFrame.left + singleFrame.w / 2, singleFrame.top])[0]} y={toWorld(singleFrame, [singleFrame.left + singleFrame.w / 2, singleFrame.top])[1] - px(52)} text={`${rotation}°`} px={px} />}
-			{single && singleFrame && !single.locked && !dragging && !editing && (
+			{single && singleFrame && !single.locked && !dragging && !editing && !drawing && (
 				<g>
 					{/* The whole edge resizes, not just its middle handle. */}
 					{edgesFor(single).map((id) => {
@@ -385,6 +438,7 @@ export function CanvasOverlay({ scale }: { scale: number }) {
 								y2={p2[1]}
 								style={{ cursor: cursorFor(id, singleFrame.rot) }}
 								onPointerDown={(e) => onHandleDown(e, single, id)}
+								onDoubleClick={(e) => hugText(e, single, id)}
 							/>
 						);
 					})}
@@ -402,13 +456,14 @@ export function CanvasOverlay({ scale }: { scale: number }) {
 								height={s}
 								style={{ cursor: cursorFor(id, singleFrame.rot) }}
 								onPointerDown={(e) => onHandleDown(e, single, id)}
+								onDoubleClick={(e) => hugText(e, single, id)}
 							/>
 						);
 					})}
 				</g>
 			)}
 
-			{single && singleFrame && !single.locked && !dragging && !editing && <RadiusDots layer={single} f={singleFrame} px={px} scale={scale} onDown={(e, corner, max) => onRadiusDown(e, single, corner, max)} />}
+			{single && singleFrame && !single.locked && !dragging && !editing && !drawing && <RadiusDots layer={single} f={singleFrame} px={px} scale={scale} onDown={(e, corner, max) => onRadiusDown(e, single, corner, max)} />}
 			{radiusPill && <Pill x={radiusPill.at[0]} y={radiusPill.at[1] + px(24)} text={`Radius ${radiusPill.value}`} px={px} />}
 
 			{selBox && !alt && <SizeLabel box={selBox} px={px} />}
@@ -420,6 +475,8 @@ export function CanvasOverlay({ scale }: { scale: number }) {
 				<line key={`gy${y}`} className="guide" x1={0} x2={W} y1={y} y2={y} />
 			))}
 
+			{drawBox && <rect className="draw-box" x={drawBox.l} y={drawBox.t} width={drawBox.r - drawBox.l} height={drawBox.b - drawBox.t} rx={tool === "ellipse" ? (drawBox.r - drawBox.l) / 2 : 0} ry={tool === "ellipse" ? (drawBox.b - drawBox.t) / 2 : 0} />}
+			{drawBox && <SizeLabel box={drawBox} px={px} />}
 			{marquee && <rect className="marquee" x={marquee.l} y={marquee.t} width={marquee.r - marquee.l} height={marquee.b - marquee.t} />}
 
 			{alt && selBox && !dragging && <Measure from={selBox} to={hoverId && !selectedIds.includes(hoverId) && frames.has(hoverId) ? aabb(frames.get(hoverId)!) : null} W={W} H={H} px={px} />}
@@ -512,6 +569,20 @@ function edgesFor(layer: Layer): (keyof typeof EDGES)[] {
 	return layer.type === "text" ? ["e", "w"] : ["n", "e", "s", "w"];
 }
 
+/** The box being drawn: Shift keeps it square, ⌥ grows it from the start point. */
+function drawnBox(d: Extract<Drag, { kind: "draw" }>): Rect {
+	let dx = d.to[0] - d.origin[0];
+	let dy = d.to[1] - d.origin[1];
+	if (d.square) {
+		const s = Math.max(Math.abs(dx), Math.abs(dy));
+		dx = Math.sign(dx || 1) * s;
+		dy = Math.sign(dy || 1) * s;
+	}
+	const [ox, oy] = d.origin;
+	if (d.centred) return { l: ox - Math.abs(dx), t: oy - Math.abs(dy), r: ox + Math.abs(dx), b: oy + Math.abs(dy) };
+	return { l: Math.min(ox, ox + dx), t: Math.min(oy, oy + dy), r: Math.max(ox, ox + dx), b: Math.max(oy, oy + dy) };
+}
+
 /** Layers with a Rotation setting. */
 function rotatable(layer: Layer) {
 	const def = getDef(layer.type);
@@ -562,7 +633,7 @@ function rotateCursor(angle: number) {
 function RadiusDots({ layer, f, px, scale, onDown }: { layer: Layer; f: Frame; px: (n: number) => number; scale: number; onDown: (e: ReactPointerEvent, corner: Pt, max: number) => void }) {
 	const max = radiusLimit(layer, f);
 	if (max === null || Math.min(f.w, f.h) * scale < 64) return null;
-	const inset = Math.min(max, Math.max(Number(layer.params.radius ?? 0), px(12)));
+	const inset = Math.min(max, Math.max(Number(layer.params[radiusKey(layer)] ?? 0), px(12)));
 	return (
 		<g>
 			{UNIT_CORNERS.map(([u, v]) => {

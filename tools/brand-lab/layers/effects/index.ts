@@ -171,6 +171,7 @@ vec4 run() {
 
 export const glass: LayerDef = {
 	type: "glass",
+	spills: true,
 	kind: "effect",
 	category: "distort",
 	label: "Reeded Glass",
@@ -213,6 +214,7 @@ vec4 run() {
 
 export const wave: LayerDef = {
 	type: "wave",
+	spills: true,
 	kind: "effect",
 	category: "distort",
 	label: "Wave Warp",
@@ -254,6 +256,7 @@ vec4 run() {
 
 export const slice: LayerDef = {
 	type: "slice",
+	spills: true,
 	kind: "effect",
 	category: "distort",
 	label: "Slice",
@@ -318,6 +321,7 @@ vec4 run() {
 
 export const bloom: LayerDef = {
 	type: "bloom",
+	spills: true,
 	kind: "effect",
 	category: "finish",
 	label: "Bloom",
@@ -359,6 +363,7 @@ vec4 run() {
 
 export const chroma: LayerDef = {
 	type: "chroma",
+	spills: true,
 	kind: "effect",
 	category: "distort",
 	label: "Chromatic",

@@ -1,5 +1,5 @@
 import { aabb, layerFrame, type Rect } from "../layers/bounds";
-import { getDef } from "../layers/registry";
+import { positionKeys } from "../layers/registry";
 import type { Params } from "../layers/types";
 import { useStore } from "./store";
 
@@ -17,7 +17,7 @@ export function alignSelection(mode: AlignMode) {
 		.filter((l) => s.selectedIds.includes(l.id) && !l.locked)
 		.map((l) => {
 			const frame = layerFrame(l, doc);
-			const pos = getDef(l.type)?.position;
+			const pos = positionKeys(l);
 			return frame && pos ? { l, box: aabb(frame), pos } : null;
 		})
 		.filter((x): x is NonNullable<typeof x> => !!x);

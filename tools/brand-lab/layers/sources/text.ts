@@ -41,7 +41,8 @@ export const text: LayerDef = {
 		{
 			title: "Box",
 			params: [
-				float("width", "Wrap width", 0, 1, TITLE.width, { step: 0.005 }),
+				// 0 hugs the text (one line per paragraph, box as wide as the longest); above 0 wraps at that width.
+				float("width", "Wrap width", 0.01, 1, TITLE.width, { step: 0.005, showIf: (p) => Number(p.width) > 0 }),
 				select("anchor", "Anchor", ["Top", "Middle", "Bottom"], 1),
 				float("x", "X (box left)", 0, 1, 0.25, { step: 0.001 }),
 				float("y", "Y", 0, 1, 0.5, { step: 0.001 }),

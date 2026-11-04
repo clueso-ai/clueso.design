@@ -32,6 +32,10 @@ const LAYER_ICONS: Record<string, IconName> = {
 	Aperture: "Opacity",
 	Sparkles: "Sparkles",
 	Circle: "Circle",
+	Svg: "Code",
+	Contours: "Circle",
+	Melt: "Opacity",
+	Paths: "Loop",
 };
 
 export function LayerIcon({ name, size = 16 }: { name: string; size?: number }) {

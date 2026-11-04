@@ -21,9 +21,20 @@ export type Side = keyof typeof PANEL_LIMITS;
 export interface PanelSizes {
 	left: number;
 	right: number;
+	/** Collapsed panels give the canvas their space. Both are saved with the widths. */
+	leftOpen: boolean;
+	rightOpen: boolean;
+	/** Whether the last open or close should animate: yes from the buttons, never from ⌘\ (keyboard). */
+	animate: boolean;
 	setWidth: (side: Side, w: number) => void;
 	reset: (side: Side) => void;
+	toggle: (side: Side, animate?: boolean) => void;
+	/** ⌘\: hide both panels, or bring both back when either is hidden. */
+	toggleAll: (animate?: boolean) => void;
 }
+
+/** A side's width as the layout sees it: 0 while that panel is collapsed. */
+export const shownWidth = (s: PanelSizes, side: Side) => (side === "left" ? (s.leftOpen ? s.left : 0) : s.rightOpen ? s.right : 0);
 
 export type PanelStore = UseBoundStore<StoreApi<PanelSizes>>;
 
@@ -44,16 +55,31 @@ export function panelStore(id: string): PanelStore {
 	const key = panelsKey(id);
 	const saved = (() => {
 		try {
-			return JSON.parse(localStorage.getItem(key) ?? "{}") as Partial<Record<Side, number>>;
+			return JSON.parse(localStorage.getItem(key) ?? "{}") as Partial<Record<Side, number> & { leftOpen: boolean; rightOpen: boolean }>;
 		} catch {
 			return {};
 		}
 	})();
 	const store = create<PanelSizes>((set, get) => {
-		const persist = () => localStorage.setItem(key, JSON.stringify({ left: get().left, right: get().right }));
+		const persist = () => {
+			const { left, right, leftOpen, rightOpen } = get();
+			localStorage.setItem(key, JSON.stringify({ left, right, leftOpen, rightOpen }));
+		};
 		return {
 			left: clampW("left", saved.left ?? PANEL_LIMITS.left.initial),
 			right: clampW("right", saved.right ?? PANEL_LIMITS.right.initial),
+			leftOpen: saved.leftOpen !== false,
+			rightOpen: saved.rightOpen !== false,
+			animate: false,
+			toggle: (side, animate = true) => {
+				set(side === "left" ? { leftOpen: !get().leftOpen, animate } : { rightOpen: !get().rightOpen, animate });
+				persist();
+			},
+			toggleAll: (animate = false) => {
+				const open = !(get().leftOpen && get().rightOpen);
+				set({ leftOpen: open, rightOpen: open, animate });
+				persist();
+			},
 			setWidth: (side, w) => {
 				set({ [side]: clampW(side, w) } as Pick<PanelSizes, Side>);
 				persist();

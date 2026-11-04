@@ -1,7 +1,7 @@
 import { hexToRgb, luma, resolveColor, toPalette } from "../brand/palette";
 import { aabb, layerFrame } from "../layers/bounds";
-import { getDef } from "../layers/registry";
-import { allParams, type LayerDef } from "../layers/types";
+import { getDef, isFramed, radiusKey } from "../layers/registry";
+import { allParams, type LayerDef, type Params } from "../layers/types";
 import type { Doc } from "../state/doc";
 import { BLIT_FRAG, COMPOSITE_FRAG, MARK_BAKE_FRAG, MARK_BAKE_SIZE, PRELUDE, VERT } from "./glsl";
 
@@ -124,86 +124,46 @@ export class Renderer {
 		gl.clear(gl.COLOR_BUFFER_BIT);
 
 		const live = new Set<string>();
+		const env = { width, height, comp, time, phase, darkBg };
 		for (let i = doc.layers.length - 1; i >= 0; i--) {
 			const layer = doc.layers[i];
 			const def = getDef(layer.type);
 			if (!def || !layer.visible || layer.opacity <= 0) continue;
-			const program = this.layerProgram(def, def.defines?.(layer.params) ?? []);
-			if (!program) continue;
+			const layerPalette = layer.palette ? toPalette(layer.palette) : palette;
+			const box = frameBox(layer, comp);
+
+			// The layer itself, reading the composite below it. A framed Look runs across the whole canvas
+			// and is clipped to its box when composited; a framed background draws as if the box were the canvas.
+			gl.bindFramebuffer(gl.FRAMEBUFFER, scratch.fb);
+			if (!this.pass(def, layer.id, layer.params, layer.seed, layerPalette, acc.tex, def.kind === "effect" ? null : box, env)) continue;
 			live.add(layer.id);
 
-			const layerPalette = layer.palette ? toPalette(layer.palette) : palette;
-			let texSize: [number, number] = [0, 0];
-			let tex = this.emptyTex;
-			if (def.texture) {
-				const lt = this.layerTexture(layer.id, def, layer.params, {
-					res: [width, height],
-					comp,
-					resolveColor: (c) => resolveColor(c, layerPalette),
-					darkBg,
-					invalidate: () => this.onInvalidate(),
+			// Effects on this layer alone: draw it by itself (premultiplied, clipped to its frame), run each
+			// effect reading only that, then blend the result in. Effects never see the layers below.
+			const effects = (layer.effects ?? []).filter((e) => e.visible && getDef(e.type));
+			let src = scratch.tex;
+			let premult = false;
+			if (effects.length) {
+				let [own, spare] = [this.targets[3], this.targets[4]];
+				this.composite(own.fb, this.emptyTex, scratch.tex, { blend: 0, opacity: 1, box, width, comp });
+				// Listed top first, like layers: the bottom effect runs first.
+				[...effects].reverse().forEach((e, k) => {
+					gl.bindFramebuffer(gl.FRAMEBUFFER, scratch.fb);
+					live.add(e.id);
+					if (!this.pass(getDef(e.type)!, e.id, e.params, layer.seed + k + 1, layerPalette, own.tex, null, env)) return;
+					this.composite(spare.fb, own.tex, scratch.tex, { blend: 0, opacity: 1, box: null, width, comp, keepToBase: !getDef(e.type)!.spills });
+					[own, spare] = [spare, own];
 				});
-				if (lt) {
-					tex = lt.tex;
-					texSize = lt.size;
-				}
+				src = own.tex;
+				premult = true;
 			}
 
-			gl.bindFramebuffer(gl.FRAMEBUFFER, scratch.fb);
-			gl.useProgram(program.prog);
-			this.bindTex(0, acc.tex);
-			if (def.mipInput) {
-				gl.generateMipmap(gl.TEXTURE_2D);
-				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
-			}
-			this.bindTex(1, tex);
-			const u = (name: string) => this.loc(program, name);
-			gl.uniform1i(u("u_input"), 0);
-			gl.uniform1i(u("u_tex"), 1);
-			if (this.markTex) {
-				this.bindTex(2, this.markTex.light);
-				this.bindTex(3, this.markTex.dark);
-				gl.uniform1i(u("u_markL"), 2);
-				gl.uniform1i(u("u_markD"), 3);
-			}
-			gl.uniform1f(u("u_markBaked"), this.markTex ? 1 : 0);
-			gl.uniform2f(u("u_res"), width, height);
-			gl.uniform2f(u("u_comp"), comp[0], comp[1]);
-			gl.uniform1f(u("u_time"), time);
-			gl.uniform1f(u("u_phase"), phase);
-			gl.uniform1f(u("u_seed"), layer.seed);
-			gl.uniform2f(u("u_texSize"), texSize[0], texSize[1]);
-			const logo = Number(layer.params.logo ?? 0);
-			gl.uniform1f(u("u_markDark"), logo === 1 || (logo === 0 && darkBg) ? 1 : 0);
-			for (const p of allParams(def)) {
-				const loc = u(`u_${p.key}`);
-				if (!loc) continue;
-				const v = layer.params[p.key] ?? p.default;
-				if (p.type === "float") gl.uniform1f(loc, Number(v));
-				else if (p.type === "int" || p.type === "select") gl.uniform1i(loc, Math.round(Number(v)));
-				else if (p.type === "bool") gl.uniform1i(loc, v ? 1 : 0);
-				else if (p.type === "color") gl.uniform3fv(loc, hexToRgb(resolveColor(String(v), layerPalette)));
-			}
-			gl.drawArrays(gl.TRIANGLES, 0, 3);
-			if (def.mipInput) {
-				this.bindTex(0, acc.tex);
-				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-			}
-
-			const comp2 = this.program("__composite", COMPOSITE_FRAG);
+			const comp2 = this.composite(next.fb, acc.tex, src, { blend: layer.blend, opacity: layer.opacity, box: premult ? null : box, width, comp, premult }, (prog) =>
+				this.applyAppearance(prog, layer, doc, layerPalette, comp, [width, height], src),
+			);
 			if (!comp2) continue;
-			gl.bindFramebuffer(gl.FRAMEBUFFER, next.fb);
-			gl.useProgram(comp2.prog);
-			this.bindTex(0, acc.tex);
-			this.bindTex(1, scratch.tex);
-			gl.uniform1i(this.loc(comp2, "u_base"), 0);
-			gl.uniform1i(this.loc(comp2, "u_src"), 1);
-			gl.uniform1i(this.loc(comp2, "u_mode"), layer.blend);
-			gl.uniform1f(this.loc(comp2, "u_opacity"), layer.opacity);
-			this.applyAppearance(comp2, layer, doc, layerPalette, comp, [width, height], scratch.tex);
-			gl.drawArrays(gl.TRIANGLES, 0, 3);
 			if (layer.appearance?.shadow?.blur) {
-				this.bindTex(1, scratch.tex);
+				this.bindTex(1, src);
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 			}
 			[acc, next] = [next, acc];
@@ -353,6 +313,125 @@ export class Renderer {
 		this.gl.bindTexture(this.gl.TEXTURE_2D, tex);
 	}
 
+	/**
+	 * Draw one layer or effect into the bound framebuffer: its own params, reading `input` as the image
+	 * below it. Returns false when its shader doesn't compile. Effects pass box = null.
+	 */
+	private pass(
+		def: LayerDef,
+		id: string,
+		params: Params,
+		seed: number,
+		palette: ReturnType<typeof toPalette>,
+		input: WebGLTexture,
+		box: ReturnType<typeof frameBox>,
+		env: { width: number; height: number; comp: [number, number]; time: number; phase: number; darkBg: boolean },
+	) {
+		const { gl } = this;
+		const { width, height, comp, darkBg } = env;
+		const program = this.layerProgram(def, def.defines?.(params) ?? []);
+		if (!program) return false;
+		let texSize: [number, number] = [0, 0];
+		let tex = this.emptyTex;
+		if (def.texture) {
+			const lt = this.layerTexture(id, def, params, {
+				res: [width, height],
+				comp,
+				resolveColor: (c) => resolveColor(c, palette),
+				darkBg,
+				invalidate: () => this.onInvalidate(),
+			});
+			if (lt) {
+				tex = lt.tex;
+				texSize = lt.size;
+			}
+		}
+		gl.useProgram(program.prog);
+		this.bindTex(0, input);
+		if (def.mipInput) {
+			gl.generateMipmap(gl.TEXTURE_2D);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+		}
+		this.bindTex(1, tex);
+		const u = (name: string) => this.loc(program, name);
+		gl.uniform1i(u("u_input"), 0);
+		gl.uniform1i(u("u_tex"), 1);
+		if (this.markTex) {
+			this.bindTex(2, this.markTex.light);
+			this.bindTex(3, this.markTex.dark);
+			gl.uniform1i(u("u_markL"), 2);
+			gl.uniform1i(u("u_markD"), 3);
+		}
+		gl.uniform1f(u("u_markBaked"), this.markTex ? 1 : 0);
+		gl.uniform2f(u("u_res"), width, height);
+		// A framed background renders as if its box were the whole canvas (see PRELUDE's P()).
+		gl.uniform2f(u("u_canvas"), comp[0], comp[1]);
+		gl.uniform2f(u("u_comp"), box ? box.w : comp[0], box ? box.h : comp[1]);
+		gl.uniform4f(u("u_frame"), box?.x ?? 0, box?.y ?? 0, box?.w ?? 0, box?.h ?? 0);
+		gl.uniform1f(u("u_frameRot"), box?.rot ?? 0);
+		gl.uniform1f(u("u_time"), env.time);
+		gl.uniform1f(u("u_phase"), env.phase);
+		gl.uniform1f(u("u_seed"), seed);
+		gl.uniform2f(u("u_texSize"), texSize[0], texSize[1]);
+		const logo = Number(params.logo ?? 0);
+		gl.uniform1f(u("u_markDark"), logo === 1 || (logo === 0 && darkBg) ? 1 : 0);
+		for (const p of allParams(def)) {
+			const loc = u(`u_${p.key}`);
+			if (!loc) continue;
+			const v = params[p.key] ?? p.default;
+			if (p.type === "float") gl.uniform1f(loc, Number(v));
+			else if (p.type === "int" || p.type === "select") gl.uniform1i(loc, Math.round(Number(v)));
+			else if (p.type === "bool") gl.uniform1i(loc, v ? 1 : 0);
+			else if (p.type === "color") gl.uniform3fv(loc, hexToRgb(resolveColor(String(v), palette)));
+		}
+		gl.drawArrays(gl.TRIANGLES, 0, 3);
+		if (def.mipInput) {
+			this.bindTex(0, input);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+		}
+		return true;
+	}
+
+	/**
+	 * Blend `src` onto `base` into `fb` (see COMPOSITE_FRAG). `src` is straight alpha unless premult;
+	 * a framed background or Look is clipped to its box. `style` sets the layer's appearance uniforms.
+	 */
+	private composite(
+		fb: WebGLFramebuffer,
+		base: WebGLTexture,
+		src: WebGLTexture,
+		o: { blend: number; opacity: number; box: ReturnType<typeof frameBox>; width: number; comp: [number, number]; premult?: boolean; keepToBase?: boolean },
+		style?: (prog: Program) => void,
+	) {
+		const { gl } = this;
+		const prog = this.program("__composite", COMPOSITE_FRAG);
+		if (!prog) return null;
+		gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+		gl.useProgram(prog.prog);
+		this.bindTex(0, base);
+		this.bindTex(1, src);
+		gl.uniform1i(this.loc(prog, "u_base"), 0);
+		gl.uniform1i(this.loc(prog, "u_src"), 1);
+		gl.uniform1i(this.loc(prog, "u_mode"), o.blend);
+		gl.uniform1f(this.loc(prog, "u_opacity"), o.opacity);
+		gl.uniform1i(this.loc(prog, "u_srcPremult"), o.premult ? 1 : 0);
+		gl.uniform1i(this.loc(prog, "u_keepToBase"), o.keepToBase ? 1 : 0);
+		gl.uniform1i(this.loc(prog, "u_grad"), 0);
+		gl.uniform1i(this.loc(prog, "u_shadow"), 0);
+		if (style) style(prog);
+		const { box, comp } = o;
+		gl.uniform1i(this.loc(prog, "u_clip"), box ? 1 : 0);
+		if (box) {
+			gl.uniform4f(this.loc(prog, "u_clipBox"), box.x, box.y, box.w / 2, box.h / 2);
+			gl.uniform1f(this.loc(prog, "u_clipRot"), box.rot);
+			gl.uniform1f(this.loc(prog, "u_clipRadius"), box.radius);
+			gl.uniform2f(this.loc(prog, "u_clipComp"), comp[0], comp[1]);
+			gl.uniform1f(this.loc(prog, "u_clipPx"), comp[0] / o.width);
+		}
+		gl.drawArrays(gl.TRIANGLES, 0, 3);
+		return prog;
+	}
+
 	private ensureTargets(w: number, h: number) {
 		if (this.size[0] === w && this.size[1] === h && this.targets.length) return;
 		const { gl } = this;
@@ -360,7 +439,8 @@ export class Renderer {
 			gl.deleteFramebuffer(t.fb);
 			gl.deleteTexture(t.tex);
 		}
-		this.targets = [0, 1, 2].map(() => {
+		// acc, next, scratch, and two for effects on a single layer.
+		this.targets = [0, 1, 2, 3, 4].map(() => {
 			const tex = this.createTexture();
 			gl.texImage2D(gl.TEXTURE_2D, 0, this.internalFormat, w, h, 0, gl.RGBA, this.texType, null);
 			const fb = gl.createFramebuffer()!;
@@ -389,4 +469,19 @@ export class Renderer {
 		this.layerTex.set(id, lt);
 		return lt;
 	}
+}
+
+/** A framed background or Look's box in composition px: centre (y up, from the canvas centre), size, turn, radius. */
+function frameBox(layer: Doc["layers"][number], comp: [number, number]) {
+	if (!isFramed(layer)) return null;
+	const p = layer.params;
+	const n = (k: string, d: number) => (typeof p[k] === "number" ? (p[k] as number) : d);
+	return {
+		x: (n("x", 0.5) - 0.5) * comp[0],
+		y: (n("y", 0.5) - 0.5) * comp[1],
+		w: Math.max(1, n("w", 0.6) * comp[0]),
+		h: Math.max(1, n("h", 0.6) * comp[1]),
+		rot: n("rotation", 0),
+		radius: n(radiusKey(layer), 0),
+	};
 }

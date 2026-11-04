@@ -44,6 +44,9 @@ export const flow: LayerDef = {
 		},
 		{ title: "Motion", params: [cycles(1)] },
 	],
+	// Lines only leaves the gaps clear; every other setting paints the whole canvas.
+	covers: (p) => p.contours !== 2,
+	seeThrough: { contours: 2 },
 	frag: /* glsl */ `
 float A() { return TAU * u_phase * float(u_cycles); }
 // Noise coordinates that travel around a circle once per cycle.

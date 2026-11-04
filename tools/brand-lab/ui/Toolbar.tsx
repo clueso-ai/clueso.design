@@ -7,13 +7,14 @@ import { Field } from "../components/field";
 import { Kbd } from "@/lib/design-system/jigsaw/components/ui/primitives/kbd/kbd";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/lib/design-system/jigsaw/components/ui/overlays/tooltip/tooltip";
 import { cn } from "@/lib/design-system/jigsaw/lib/utils";
-import { canExportVideo, copyImage, exportBundle, exportFrames, exportGIF, exportImage, exportJSON, exportMP4, readJSON } from "../export";
+import { canExportVideo, copyImage, exportBundle, exportFrames, exportGIF, exportImage, exportJSON, exportMP4, exportPreset, readJSON } from "../export";
 import { defaultScene } from "../state/doc";
-import { useStore } from "../state/store";
+import { TOOLS, useStore } from "../state/store";
 import { VARIATION_MODES } from "../state/variations";
 import { ToolbarDivider } from "@/tools/shell/panels";
 import { Row, Segmented } from "./controls";
 import { BAR, GAP, M, timelineRight, usePanels } from "./layout";
+import { shownWidth } from "@/tools/shell/geometry";
 
 const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
 const mod = isMac ? "⌘" : "Ctrl";
@@ -39,6 +40,26 @@ export function ToolbarStart() {
 	);
 }
 
+/** Top centre: the drawing tools (F canvas, R rectangle, O ellipse, T text). */
+export function ToolbarCenter() {
+	const tool = useStore((s) => s.tool);
+	const setTool = useStore((s) => s.setTool);
+	return (
+		<>
+			{TOOLS.map((t) => (
+				<IconButton
+					key={t.id}
+					label={t.label}
+					shortcut={[t.key]}
+					icon={t.id === "canvas" ? <I.Frame /> : t.id === "rect" ? <I.Square /> : t.id === "ellipse" ? <I.Circle /> : <I.FontSize />}
+					active={tool === t.id}
+					onClick={() => setTool(tool === t.id ? "move" : t.id)}
+				/>
+			))}
+		</>
+	);
+}
+
 /** Top right: theme, library, variations, shuffle and export. */
 export function ToolbarEnd() {
 	const theme = useStore((s) => s.theme);
@@ -60,7 +81,7 @@ export function ZoomChip({ fitScale }: { fitScale: number }) {
 	const zoom = useStore((s) => s.zoom);
 	const setZoom = useStore((s) => s.setZoom);
 	const [open, setOpen] = useState(false);
-	const rightW = usePanels((s) => s.right);
+	const rightW = usePanels((s) => shownWidth(s, "right"));
 	const snapping = useStore((s) => s.snapping);
 	const toggleSnapping = useStore((s) => s.toggleSnapping);
 	const scale = zoom === "fit" ? fitScale : zoom;
@@ -238,6 +259,16 @@ function ProjectMenu() {
 					<MenuSeparator />
 					<MenuItem icon={<I.Bookmark />} onClick={run(() => saveToLibrary({ asNew: true }))}>
 						Save as new in Library
+					</MenuItem>
+					<MenuItem
+						icon={<I.FilePlus />}
+						description="Download this canvas as a preset file, to add to Brand Lab for everyone"
+						onClick={run(() => {
+							exportPreset(doc);
+							useStore.getState().showToast("Preset file downloaded. Add it to tools/brand-lab/presets");
+						})}
+					>
+						Share as preset
 					</MenuItem>
 					<MenuItem icon={<I.Library />} onClick={run(() => setOverlay("library"))}>
 						Library and presets…

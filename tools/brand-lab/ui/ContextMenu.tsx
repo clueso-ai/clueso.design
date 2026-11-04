@@ -1,6 +1,7 @@
 import { I } from "./ci";
 import { MenuLabel } from "../components/popover";
 import { type ContextMenuSection, ContextMenuPopover } from "@/lib/design-system/jigsaw/components/ui/overlays/context-menu/context-menu";
+import { getDef } from "../layers/registry";
 import { alignSelection } from "../state/align";
 import { hasLayerClipboard, useStore } from "../state/store";
 
@@ -21,6 +22,9 @@ export function ContextMenu() {
 	const has = sel.length > 0;
 	const allLocked = has && sel.every((l) => l.locked);
 	const allHidden = has && sel.every((l) => !l.visible);
+	// A single Look layer can become an effect on the nearest object below it.
+	const look = sel.length === 1 && getDef(sel[0].type)?.kind === "effect" ? sel[0] : null;
+	const lookTarget = look ? layers.slice(layers.indexOf(look) + 1).find((l) => l.visible && getDef(l.type)?.kind === "source") : undefined;
 
 	// Nothing selected (right-click on an empty part of a canvas): actions for the canvas itself.
 	const canvasSections: ContextMenuSection[] = [
@@ -68,6 +72,7 @@ export function ContextMenu() {
 				{ label: "Duplicate", icon: <I.Duplicate />, shortcut: [M, "D"], onClick: st.duplicateSelected, disabled: !has },
 			],
 		},
+		...(look && lookTarget ? [{ items: [{ label: `Apply only to ${lookTarget.name}`, icon: <I.Layers />, onClick: () => st.applyLookTo(look.id, lookTarget.id) }] }] : []),
 		{
 			items: [
 				{ label: allHidden ? "Show" : "Hide", icon: allHidden ? <I.Eye /> : <I.EyeSlashed />, shortcut: ["⇧", M, "H"], onClick: () => st.toggleVisible(), disabled: !has },

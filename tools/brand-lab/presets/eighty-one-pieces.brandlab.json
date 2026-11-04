@@ -1,0 +1,221 @@
+{
+  "version": 2,
+  "name": "Eighty-one pieces",
+  "group": "Posters",
+  "canvases": [
+    {
+      "version": 1,
+      "name": "Eighty-one pieces",
+      "scene": {
+        "width": 1500,
+        "height": 2000,
+        "background": "$ink",
+        "transparent": false,
+        "palette": [
+          {
+            "key": "ink",
+            "name": "Ink",
+            "hex": "#171717"
+          },
+          {
+            "key": "plum",
+            "name": "Plum",
+            "hex": "#21101E"
+          },
+          {
+            "key": "magenta",
+            "name": "Magenta",
+            "hex": "#C12EAF"
+          },
+          {
+            "key": "pink",
+            "name": "Pink",
+            "hex": "#DA5CC7"
+          },
+          {
+            "key": "light",
+            "name": "Light pink",
+            "hex": "#FE89EB"
+          },
+          {
+            "key": "blush",
+            "name": "Blush",
+            "hex": "#FEEAFA"
+          },
+          {
+            "key": "paper",
+            "name": "Paper",
+            "hex": "#FFFFFF"
+          }
+        ],
+        "paletteId": "clueso",
+        "duration": 6,
+        "fps": 30
+      },
+      "layers": [
+        {
+          "id": "mw2uy540686h61",
+          "type": "text",
+          "name": "Label",
+          "visible": true,
+          "opacity": 1,
+          "blend": 0,
+          "seed": 861.2,
+          "params": {
+            "text": "Pieces / 03",
+            "font": 2,
+            "weight": 400,
+            "size": 37.300000000000004,
+            "tracking": 0.04,
+            "leading": 1.4,
+            "align": 0,
+            "upper": true,
+            "width": 0,
+            "anchor": 0,
+            "x": 0.0797,
+            "y": 0.946,
+            "rotation": 0,
+            "boxModel": true,
+            "style": 0,
+            "stroke": 1,
+            "color": "#ADA3AD",
+            "box": 0,
+            "boxColor": "$plum",
+            "pad": 0.2
+          }
+        },
+        {
+          "id": "mw2uy54069mez0",
+          "type": "text",
+          "name": "Headline",
+          "visible": true,
+          "opacity": 1,
+          "blend": 0,
+          "seed": 495.4,
+          "params": {
+            "text": "Eighty-one pieces,\none grammar",
+            "font": 0,
+            "weight": 300,
+            "size": 127.5,
+            "tracking": -0.02,
+            "leading": 1.1,
+            "align": 0,
+            "upper": false,
+            "width": 0.709,
+            "anchor": 0,
+            "x": 0.0747,
+            "y": 0.8797,
+            "rotation": 0,
+            "boxModel": true,
+            "style": 0,
+            "stroke": 1,
+            "color": "$blush",
+            "box": 0,
+            "boxColor": "$plum",
+            "pad": 0.2
+          }
+        },
+        {
+          "id": "mw2v4a7r8talr",
+          "type": "shape",
+          "name": "Rectangle",
+          "visible": true,
+          "opacity": 1,
+          "blend": 0,
+          "seed": 51.2,
+          "params": {
+            "shape": 0,
+            "w": 0.968,
+            "h": 0.291,
+            "radius": 0,
+            "chamfer": 0,
+            "rotation": 0,
+            "x": 0.4997,
+            "y": 0.8427,
+            "style": 0,
+            "stroke": 2,
+            "color": "#171717"
+          }
+        },
+        {
+          "id": "mw2v3htv7hfcnt",
+          "type": "bloom",
+          "name": "Bloom",
+          "visible": true,
+          "opacity": 1,
+          "blend": 0,
+          "seed": 103.7,
+          "params": {
+            "threshold": 0.3,
+            "radius": 50,
+            "intensity": 0.9,
+            "tint": "$pink"
+          }
+        },
+        {
+          "id": "mw2v3htv7i8umj",
+          "type": "binary",
+          "name": "Glyphs",
+          "visible": true,
+          "opacity": 1,
+          "blend": 0,
+          "seed": 209.5,
+          "params": {
+            "mode": 4,
+            "chars": " /\\CLUESO",
+            "cell": 23.63,
+            "weight": 0,
+            "threshold": 0.18,
+            "skipBg": false,
+            "contrast": 1.2,
+            "flicker": 8,
+            "scatter": 1,
+            "warp": 0,
+            "tint": 2,
+            "ink": "$pink",
+            "ink2": "$magenta",
+            "bg": true,
+            "bgColor": "$ink",
+            "under": false,
+            "dim": 0.2,
+            "glow": 0.2,
+            "rain": false,
+            "trail": 0.35,
+            "rest": 0.3,
+            "cycles": 1
+          }
+        },
+        {
+          "id": "mw2v3htv7go3vn",
+          "type": "triangles",
+          "name": "Triangles",
+          "visible": true,
+          "opacity": 1,
+          "blend": 0,
+          "seed": 655.3,
+          "params": {
+            "size": 175.3374,
+            "angle": 0,
+            "random": 0,
+            "style": 0,
+            "line": 5.1058,
+            "colorA": "$pink",
+            "twoTone": true,
+            "colorB": "$plum",
+            "flips": 1,
+            "drift": false,
+            "cycles": 1,
+            "fillCanvas": true,
+            "w": 0.6,
+            "h": 0.6,
+            "radius": 0,
+            "rotation": 0,
+            "x": 0.5,
+            "y": 0.5
+          }
+        }
+      ]
+    }
+  ],
+  "active": 0
+}

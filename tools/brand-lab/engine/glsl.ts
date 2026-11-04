@@ -53,14 +53,22 @@ uniform float u_markDark;
 uniform sampler2D u_markL;
 uniform sampler2D u_markD;
 uniform float u_markBaked;
+// The real canvas size. u_comp equals it, except for a framed background, where u_comp is the box's
+// size and u_frame (centre x, y with y up, from the canvas centre; w, h) places the box on the canvas.
+uniform vec2 u_canvas;
+uniform vec4 u_frame;
+uniform float u_frameRot;
 
 #define PI 3.14159265359
 #define TAU 6.28318530718
 
-vec2 P() { return (v_uv - 0.5) * u_comp; }
+mat2 rot(float a) { float c = cos(a), s = sin(a); return mat2(c, s, -s, c); }
+vec2 P() {
+  if (u_frame.z <= 0.0) return (v_uv - 0.5) * u_comp;
+  return rot(-radians(u_frameRot)) * ((v_uv - 0.5) * u_canvas - u_frame.xy);
+}
 vec2 compPx() { return v_uv * u_comp; }
 vec2 toUV(vec2 p) { return p / u_comp + 0.5; }
-mat2 rot(float a) { float c = cos(a), s = sin(a); return mat2(c, s, -s, c); }
 float luma(vec3 c) { return dot(c, vec3(0.2126, 0.7152, 0.0722)); }
 
 float hash11(float p) { p = fract(p * 0.1031); p *= p + 33.33; p *= p + p; return fract(p); }
@@ -83,7 +91,7 @@ vec3 loopP(vec2 p, float r, float cycles) { float a = TAU * u_phase * cycles; re
 
 // Antialias a distance in composition px. Uses the constant px footprint instead of fwidth(d), which
 // spikes where cell-based SDFs are discontinuous and leaves hairline seams between tiles.
-float fillAA(float d) { float w = u_comp.x / u_res.x; return clamp(0.5 - d / w, 0.0, 1.0); }
+float fillAA(float d) { float w = u_canvas.x / u_res.x; return clamp(0.5 - d / w, 0.0, 1.0); }
 float sdBox(vec2 p, vec2 b) { vec2 d = abs(p) - b; return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0); }
 float sdSegment(vec2 p, vec2 a, vec2 b) { vec2 pa = p - a, ba = b - a; float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0); return length(pa - ba * h); }
 
@@ -182,6 +190,9 @@ uniform sampler2D u_base;
 uniform sampler2D u_src;
 uniform int u_mode;
 uniform float u_opacity;
+uniform int u_srcPremult;
+// An effect on a single layer that doesn't spill: it only changes pixels the layer already covers.
+uniform int u_keepToBase;
 // Layer styles. Gradient: 0 none, 1 linear, 2 radial, across u_gradRect (uv: x0, y0, x1, y1).
 uniform int u_grad;
 uniform vec3 u_gradA;
@@ -196,6 +207,23 @@ uniform float u_shadowBlur;
 uniform float u_shadowLod;
 uniform vec3 u_shadowColor;
 uniform float u_shadowOpacity;
+// Framed backgrounds and Looks: clip to the box (centre, half size in composition px, y up), turned and rounded.
+uniform int u_clip;
+uniform vec4 u_clipBox;
+uniform float u_clipRot;
+uniform float u_clipRadius;
+uniform vec2 u_clipComp;
+uniform float u_clipPx;
+
+float clipMask() {
+  if (u_clip == 0) return 1.0;
+  float a = radians(u_clipRot);
+  vec2 p = mat2(cos(a), -sin(a), sin(a), cos(a)) * ((v_uv - 0.5) * u_clipComp - u_clipBox.xy);
+  float r = min(u_clipRadius, min(u_clipBox.z, u_clipBox.w));
+  vec2 d = abs(p) - (u_clipBox.zw - r);
+  float sd = length(max(d, 0.0)) + min(max(d.x, d.y), 0.0) - r;
+  return clamp(0.5 - sd / u_clipPx, 0.0, 1.0);
+}
 
 float shadowAlpha() {
   vec2 c = v_uv - u_shadowOff;
@@ -242,7 +270,8 @@ vec3 blendMode(vec3 b, vec3 s, int m) {
 
 void main() {
   vec4 B = texture(u_base, v_uv);   // premultiplied
-  vec4 S = texture(u_src, v_uv);    // straight
+  vec4 S = texture(u_src, v_uv);    // straight, or premultiplied for a layer with its own effects
+  if (u_srcPremult == 1) S.rgb = S.a > 0.0 ? S.rgb / S.a : vec3(0.0);
   S = clamp(S, 0.0, 1.0);
   if (u_shadow == 1) {
     // The shadow goes under the layer, composited normally.
@@ -250,7 +279,8 @@ void main() {
     B = vec4(u_shadowColor * sa + B.rgb * (1.0 - sa), sa + B.a * (1.0 - sa));
   }
   if (u_grad != 0) S.rgb = gradientColor();
-  float as = S.a * u_opacity;
+  float as = S.a * u_opacity * clipMask();
+  if (u_keepToBase == 1) as *= B.a;
   vec3 Cb = B.a > 0.0 ? B.rgb / B.a : vec3(0.0);
   vec3 mixed = (1.0 - B.a) * S.rgb + B.a * blendMode(Cb, S.rgb, u_mode);
   outColor = vec4(as * mixed + (1.0 - as) * B.rgb, as + B.a * (1.0 - as));

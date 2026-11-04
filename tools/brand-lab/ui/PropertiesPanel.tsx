@@ -2,9 +2,11 @@ import { removeBackground } from "../ml/bgremove";
 import { readImageFile } from "./image-file";
 import { I } from "./ci";
 import { useRef } from "react";
-import type { Palette } from "../brand/palette";
-import { EFFECTS, getDef, SOURCES } from "../layers/registry";
-import { type Appearance, BLEND_MODES, type Layer, type ParamDef } from "../layers/types";
+import { nearestColor, type Palette } from "../brand/palette";
+import { EFFECTS, getDef, isFramed, SOURCES } from "../layers/registry";
+import { type Appearance, BLEND_MODES, CATEGORIES, type Layer, type ParamDef } from "../layers/types";
+import { parseColorMap, svgColors } from "../layers/sources/svg";
+import { textBox } from "../layers/sources/text";
 import { SIZE_PRESETS } from "../state/doc";
 import { selectedLayer, useStore } from "../state/store";
 import { ICON_NORMAL, IconButton } from "@/tools/shell/components/icon-button";
@@ -97,14 +99,211 @@ function LayerProps({ layer, count, error }: { layer: Layer; count: number; erro
 				if (!visible.length) return null;
 				return (
 					<Section title={g.title} key={g.title}>
+						{layer.type === "text" && g.title === "Box" && <TextSizing layer={layer} />}
 						{visible.map((p) => (
 							<ParamControl key={p.key} def={p} value={layer.params[p.key]} palette={palette} layerId={layer.id} onChange={(v) => setParam(layer.id, p.key, v)} />
 						))}
 					</Section>
 				);
 			})}
+			{layer.type === "svg" && count === 1 && <SvgColorsSection layer={layer} palette={palette} />}
+			{def.kind === "source" && count === 1 && <EffectsSection layer={layer} palette={palette} />}
+			{def.kind === "effect" && count === 1 && <AppliesToSection layer={layer} />}
 			{def.kind === "source" && <AppearanceSection layer={layer} palette={palette} />}
 		</>
+	);
+}
+
+/**
+ * Figma's text resizing: Hug grows the box with the text, one line per paragraph. Wrap keeps a fixed width
+ * and breaks lines inside it, starting from the width the text has now. Dragging a side handle on the
+ * canvas switches to Wrap; double-clicking one goes back to Hug.
+ */
+function TextSizing({ layer }: { layer: Layer }) {
+	const W = useStore((s) => s.doc.scene.width);
+	const hug = !(Number(layer.params.width) > 0);
+	return (
+		<Row label="Width">
+			<Segmented
+				label="Text width"
+				value={hug ? "hug" : "wrap"}
+				options={[
+					{ value: "hug", label: "Hug" },
+					{ value: "wrap", label: "Wrap" },
+				]}
+				onChange={(v) => {
+					if ((v === "hug") === hug) return;
+					const box = textBox({ ...layer.params, width: 0 }, W);
+					const width = v === "hug" ? 0 : Math.min(1, Math.max(0.01, Math.round(((box?.w ?? W * 0.5) / W) * 1000) / 1000));
+					useStore.getState().setParam(layer.id, "width", width);
+				}}
+			/>
+		</Row>
+	);
+}
+
+/**
+ * Every colour a pasted SVG uses, each swappable for a palette colour (or any colour). "Use palette"
+ * maps them all to the nearest palette colour by lightness, which keeps the artwork's contrast.
+ */
+function SvgColorsSection({ layer, palette }: { layer: Layer; palette: Palette }) {
+	const colors = svgColors(String(layer.params.markup ?? ""));
+	const map = parseColorMap(layer.params);
+	const set = (next: Record<string, string>) => useStore.getState().setParam(layer.id, "colors", JSON.stringify(next));
+	const edited = Object.keys(map).length > 0;
+	return (
+		<Section
+			title="Colours"
+			action={
+				colors.length > 0 && (
+					<span className="flex items-center gap-xs">
+						{edited && <IconButton size="xsmall" label="Back to the original colours" icon={<I.Reset />} onClick={() => set({})} />}
+						<IconButton
+							size="xsmall"
+							label="Use palette: swap every colour for the nearest palette colour"
+							icon={<I.Swatches />}
+							onClick={() => set(Object.fromEntries(colors.map((c) => [c, `$${nearestColor(palette, toHex(c))?.key ?? ""}`]).filter(([, v]) => v !== "$")))}
+						/>
+					</span>
+				)
+			}
+		>
+			{colors.length === 0 ? (
+				<p className="para-xxsmall text-weak">This SVG doesn&rsquo;t set any colours of its own, so it draws in black.</p>
+			) : (
+				colors.map((c) => <ColorField key={c} label={c.startsWith("#") ? c.toUpperCase() : c} value={map[c] ?? toHex(c)} palette={palette} onChange={(v) => set({ ...map, [c]: v })} />)
+			)}
+		</Section>
+	);
+}
+
+/** A CSS colour (hex, rgb() or a name) as #rrggbb, read through a canvas. */
+function toHex(c: string) {
+	if (/^#[0-9a-f]{6}$/i.test(c)) return c.toLowerCase();
+	const g = document.createElement("canvas").getContext("2d")!;
+	g.fillStyle = "#000";
+	g.fillStyle = c;
+	return String(g.fillStyle);
+}
+
+/** Effects on this layer alone, top first. Each restyles only this layer, never what's below it. */
+function EffectsSection({ layer, palette }: { layer: Layer; palette: Palette }) {
+	const effects = layer.effects ?? [];
+	const st = useStore.getState;
+	const [closed, setClosed] = useState<Set<string>>(() => new Set());
+	const toggle = (id: string) =>
+		setClosed((c) => {
+			const n = new Set(c);
+			if (n.has(id)) n.delete(id);
+			else n.add(id);
+			return n;
+		});
+	return (
+		<Section title="Effects" action={<AddEffectMenu onPick={(type) => st().addEffect(layer.id, type)} />}>
+			{effects.length === 0 && <p className="para-xxsmall text-weak">Effects here change only this layer. A Look layer in the Layers panel changes everything below it.</p>}
+			{effects.map((e, i) => {
+				const def = getDef(e.type);
+				if (!def) return null;
+				const open = !closed.has(e.id);
+				const params = def.groups
+					.filter((g) => !g.stackOnly)
+					.flatMap((g) => g.params)
+					.filter((p) => !p.hidden && (!p.showIf || p.showIf(e.params)));
+				return (
+					<div key={e.id} className="flex flex-col rounded-sm border border-weak">
+						<div className="flex h-[36px] items-center gap-xs pr-xs pl-sm">
+							<button type="button" className="flex min-w-0 flex-1 items-center gap-sm text-left" aria-expanded={open} onClick={() => toggle(e.id)}>
+								<I.ChevronDown width={12} height={12} className={cn("shrink-0 text-weak transition-transform", !open && "-rotate-90")} />
+								<LayerIcon name={def.icon} size={14} />
+								<span className={cn("label-xsmall truncate", e.visible ? "text-strong" : "text-weak")}>{def.label}</span>
+							</button>
+							<IconButton size="xsmall" label="Move up" icon={<I.ChevronDown className="rotate-180" />} disabled={i === 0} onClick={() => st().moveEffect(layer.id, e.id, -1)} />
+							<IconButton size="xsmall" label="Move down" icon={<I.ChevronDown />} disabled={i === effects.length - 1} onClick={() => st().moveEffect(layer.id, e.id, 1)} />
+							<IconButton size="xsmall" label="Apply to everything below instead" icon={<I.Layers />} onClick={() => st().liftEffect(layer.id, e.id)} />
+							<IconButton size="xsmall" label={`Remove ${def.label}`} icon={<I.Bin />} onClick={() => st().removeEffect(layer.id, e.id)} />
+							<IconButton
+								size="xsmall"
+								label={e.visible ? `Hide ${def.label}` : `Show ${def.label}`}
+								icon={e.visible ? <I.Eye /> : <I.EyeSlashed />}
+								onClick={() => st().updateEffect(layer.id, e.id, { visible: !e.visible })}
+							/>
+						</div>
+						{open && params.length > 0 && (
+							<div className="flex flex-col gap-md border-t border-dashed border-weak px-sm py-md">
+								{params.map((p) => (
+									<ParamControl
+										key={p.key}
+										def={p}
+										value={e.params[p.key]}
+										palette={palette}
+										layerId={layer.id}
+										onChange={(v) => st().updateEffect(layer.id, e.id, { params: { ...e.params, [p.key]: v } }, `${e.id}:${p.key}`)}
+									/>
+								))}
+							</div>
+						)}
+					</div>
+				);
+			})}
+		</Section>
+	);
+}
+
+/** The effects list, grouped like the Look tab of the add menu. */
+function AddEffectMenu({ onPick }: { onPick: (type: string) => void }) {
+	const [open, setOpen] = useState(false);
+	return (
+		<Popover open={open} onOpenChange={setOpen}>
+			<PopoverTrigger asChild>
+				<IconButton size="xsmall" label="Add effect to this layer" icon={<I.Plus />} />
+			</PopoverTrigger>
+			<PopoverContent align="end" className="max-h-[min(560px,calc(100vh-96px))] w-[280px] gap-2xs overflow-y-auto p-xs">
+				{CATEGORIES.map((c) => {
+					const defs = EFFECTS.filter((d) => d.category === c.id);
+					if (!defs.length) return null;
+					return (
+						<div key={c.id} className="flex flex-col gap-2xs">
+							<MenuLabel>{c.label}</MenuLabel>
+							{defs.map((d) => (
+								<MenuItem
+									key={d.type}
+									icon={<LayerIcon name={d.icon} size={14} />}
+									description={d.description}
+									onClick={() => {
+										onPick(d.type);
+										setOpen(false);
+									}}
+								>
+									{d.label}
+								</MenuItem>
+							))}
+						</div>
+					);
+				})}
+			</PopoverContent>
+		</Popover>
+	);
+}
+
+/** On a Look layer: what it changes, and a one-click switch to change just one layer instead. */
+function AppliesToSection({ layer }: { layer: Layer }) {
+	const layers = useStore((s) => s.doc.layers);
+	const i = layers.findIndex((l) => l.id === layer.id);
+	const below = layers.slice(i + 1).filter((l) => l.visible);
+	const target = below.find((l) => getDef(l.type)?.kind === "source");
+	return (
+		<Section title="Applies to">
+			<p className="para-xxsmall text-weak">
+				{below.length
+					? `${isFramed(layer) ? "Everything below it, inside its frame" : "Everything below it"}: ${below.length} layer${below.length > 1 ? "s" : ""}.`
+					: "Nothing yet. Move it above the layers it should change."}
+			</p>
+			{target && (
+				<Button iconClassName={ICON_NORMAL} variant="outlined" sentiment="neutral" size="small" iconBefore icon={<I.Layers />} onClick={() => useStore.getState().applyLookTo(layer.id, target.id)}>
+					Apply only to {target.name}
+				</Button>
+			)}
+		</Section>
 	);
 }
 

@@ -36,6 +36,7 @@ export const gradient: LayerDef = {
 		},
 	],
 	position: ["cx", "cy"],
+	covers: () => true,
 	frag: /* glsl */ `
 vec3 ramp(float t) {
   t = clamp(t, 0.0, 1.0);

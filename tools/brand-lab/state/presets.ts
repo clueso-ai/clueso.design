@@ -1,8 +1,9 @@
-import { createLayer } from "../layers/registry";
+import { createLayer, newId } from "../layers/registry";
+import { FILE_PRESETS } from "../presets";
 import type { Layer } from "../layers/types";
 import { type Doc, defaultScene, type Scene } from "./doc";
 
-interface Preset {
+export interface Preset {
 	id: string;
 	name: string;
 	group: "Posters" | "Illustrations" | "Patterns";
@@ -163,13 +164,10 @@ const logo = (params: Record<string, number | string | boolean> = {}) =>
 // Layout grid: 6% margins (90px on a 1500×2000 poster).
 
 type P = Record<string, number | string | boolean>;
-const body = (text: string, params: P = {}) =>
-	createLayer("text", { name: "Body", params: { text, font: 1, weight: 300, size: 30, tracking: 0, leading: 1.4, align: 0, anchor: 0, width: 0.5, x: 0.06, y: 0.5, color: "$paper", ...params } });
 const label = (text: string, params: P = {}) =>
 	createLayer("text", { name: "Label", params: { text, font: 2, weight: 400, size: 22, tracking: 0.04, leading: 1.4, upper: true, align: 0, anchor: 0, width: 0, x: 0.06, y: 0.96, color: "$paper", ...params } });
-const panel = (params: P) => createLayer("shape", { name: "Panel", params: { shape: 0, color: "$plum", ...params } });
 
-export const POSTER_PRESETS: Preset[] = [
+const CODE_POSTER_PRESETS: Preset[] = [
 	{
 		// Skale: a soft gradient field, the subject drawn in white LED pills, a wordmark in corner brackets.
 		id: "poster-led",
@@ -189,24 +187,6 @@ export const POSTER_PRESETS: Preset[] = [
 					createLayer("parts", { name: "Mark", params: { layout: 0, size: 760, x: 0.5, y: 0.56, fill: 1, colorA: "$paper", motion: 1, amount: 0.4, stagger: 0.4 } }),
 				],
 				{ ...POSTER, background: "#000000" },
-			),
-	},
-	{
-		// Paradigm card: pixel-checker rays in the top half, a big two-line title, body copy and a CTA bar.
-		id: "poster-rays-card",
-		group: "Posters",
-		name: "Pixel rays card",
-		build: () =>
-			doc(
-				"Systems that run reliably",
-				[
-					body("Every piece has a shape, an edge and a place it fits.", { x: 0.08, width: 0.6, y: 0.16, size: 32, color: "$blush" }),
-					title("Systems that\nrun reliably", { size: 140, x: 0.08, width: 0.84, y: 0.2, anchor: 2 }),
-					panel({ name: "Lower panel", w: 1, h: 0.4, x: 0.5, y: 0.2 }),
-					createLayer("matrix", { name: "Pixels", params: { mode: 2, cell: 24, gap: 0.2, round: 0.08, bayer: 1, tint: 0, ink: "$light", under: 1, bgColor: "$plum", contrast: 1.5, threshold: 0.08 } }),
-					createLayer("radial", { name: "Rays", params: { mode: 0, count: 9, twist: 1.4, profile: 1, hole: 0.03, fade: 0, cx: 0.55, cy: 0.74, scale: 1.25, colorA: "$light", colorB: "$plum", motion: 1 } }),
-				],
-				{ ...POSTER, background: "$plum" },
 			),
 	},
 	{
@@ -265,39 +245,6 @@ export const POSTER_PRESETS: Preset[] = [
 			),
 	},
 	{
-		// Toss: glowing glass tiles with crisp labels on top, a headline at the foot.
-		id: "poster-glass-tiles",
-		group: "Posters",
-		name: "Glass tiles",
-		build: () =>
-			doc(
-				"Built for every team",
-				[
-					title("Built for every team", { size: 96, align: 1, x: 0.06, width: 0.88, y: 0.1, anchor: 1 }),
-					...(
-						[
-							["Video", 0.29, 0.66, 0.42, 0.38],
-							["Docs", 0.73, 0.66, 0.34, 0.38],
-							["Agents", 0.25, 0.33, 0.34, 0.2],
-							["Brand", 0.69, 0.33, 0.42, 0.2],
-						] as const
-					).map(([t, x, y]) => createLayer("text", { name: `${t} label`, params: { text: t, font: 1, weight: 400, size: 44, tracking: 0, leading: 1.2, align: 1, anchor: 1, width: 0.4, x: x - 0.2, y, color: "$paper" } })),
-					createLayer("grain", { params: { amount: 0.04 } }),
-					createLayer("bloom", { params: { threshold: 0.45, radius: 60, intensity: 0.7, tint: "$light" } }),
-					createLayer("blur", { params: { radius: 46, lift: 1.3 } }),
-					...(
-						[
-							[0.29, 0.66, 0.42, 0.38, "$pink"],
-							[0.73, 0.66, 0.34, 0.38, "$light"],
-							[0.25, 0.33, 0.34, 0.2, "$magenta"],
-							[0.69, 0.33, 0.42, 0.2, "$pink"],
-						] as const
-					).map(([x, y, w, h, c], i) => panel({ name: `Tile ${i + 1}`, x, y, w, h: h * 0.8, radius: 120, color: c })),
-				],
-				{ ...POSTER, background: "$ink" },
-			),
-	},
-	{
 		// Oxide RFD card: a mono kicker, a title, and terminal-bar art in a framed card.
 		id: "poster-terminal",
 		group: "Posters",
@@ -312,24 +259,6 @@ export const POSTER_PRESETS: Preset[] = [
 					createLayer("forms", { name: "Orbit", seed: 6, params: { arrange: 3, block: 4, count: 10, rings: 4, blockScale: 0.42, inner: 0.15, size: 1050, x: 0.5, y: 0.36, soft: 0.5, fill: 0, colorA: "$paper", colorB: "$pink", colorC: "$plum", motion: 1 } }),
 				],
 				{ ...POSTER, background: "$ink" },
-			),
-	},
-	{
-		// Tulips: the subject rendered as glyphs over its own soft-focus image.
-		id: "poster-glyph-bloom",
-		group: "Posters",
-		name: "Glyph bloom",
-		build: () =>
-			doc(
-				"Made of pieces",
-				[
-					title("Made of\npieces", { size: 150, x: 0.06, width: 0.8, y: 0.94 }),
-					label("Clueso / Brand Lab", { x: 0.06, y: 0.045, anchor: 2 }),
-					createLayer("binary", { name: "Glyphs", params: { mode: 3, chars: " .:/+*=2e", tint: 0, bg: false, under: true, skipBg: true, dim: 0, cell: 24, contrast: 1.25, glow: 0.35, flicker: 0, threshold: 0.1 } }),
-					createLayer("blur", { params: { radius: 22 } }),
-					createLayer("forms", { name: "Bloom", seed: 2, params: { arrange: 0, block: 4, count: 6, rings: 2, blockScale: 0.52, inner: 0.22, orient: 0, size: 1250, x: 0.55, y: 0.4, fill: 0, colorA: "$paper", colorB: "$light", colorC: "$pink", motion: 1 } }),
-				],
-				{ ...POSTER, background: "$plum" },
 			),
 	},
 ];
@@ -389,7 +318,7 @@ const SQUARE = { width: 1080, height: 1080 };
 const WIDE = { width: 1920, height: 1080 };
 
 // Illustrations: a subject made of brand blocks, re-rendered by a visual treatment.
-const ILLUSTRATION_PRESETS: Preset[] = [
+const CODE_ILLUSTRATION_PRESETS: Preset[] = [
 	{
 		id: "ill-play",
 		group: "Illustrations",
@@ -561,6 +490,24 @@ const ILLUSTRATION_PRESETS: Preset[] = [
 			),
 	},
 ];
+
+/**
+ * Presets saved as Brand Lab files in tools/brand-lab/presets (see its README). Each loads as a fresh
+ * copy with new layer ids, so a preset opened twice never shares layers.
+ */
+const fromFiles = (group: Preset["group"]): Preset[] =>
+	FILE_PRESETS.filter((f) => f.file.group === group).map(({ id, file }) => ({
+		id,
+		group,
+		name: file.name,
+		build: () => {
+			const canvas = structuredClone(file.canvases[0]);
+			return { ...canvas, name: file.name, layers: canvas.layers.map((l) => ({ ...l, id: newId() })) };
+		},
+	}));
+
+export const POSTER_PRESETS: Preset[] = [...CODE_POSTER_PRESETS, ...fromFiles("Posters")];
+const ILLUSTRATION_PRESETS: Preset[] = [...CODE_ILLUSTRATION_PRESETS, ...fromFiles("Illustrations")];
 
 export const PRESETS: Preset[] = [...POSTER_PRESETS, ...ILLUSTRATION_PRESETS, ...BASE_PRESETS.filter((p) => p.group === "Patterns"), ...PATTERN_PRESETS_EXTRA];
 

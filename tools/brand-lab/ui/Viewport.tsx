@@ -12,6 +12,7 @@ import type { Doc } from "../state/doc";
 import { renderThumb } from "../export/thumb";
 import { boardPositions } from "../state/board";
 import { insets, usePanels } from "./layout";
+import { shownWidth } from "@/tools/shell/geometry";
 
 const MAX_PREVIEW = 4096;
 
@@ -19,10 +20,10 @@ const MAX_PREVIEW = 4096;
 export function Viewport({ onFitScale, onErrors }: { onFitScale: (s: number) => void; onErrors: (e: Map<string, string>) => void }) {
 	const scene = useStore((s) => s.doc.scene);
 	const zoom = useStore((s) => s.zoom);
-	const leftW = usePanels((s) => s.left);
-	const rightW = usePanels((s) => s.right);
+	// A collapsed panel gives the canvas its space.
+	const leftW = usePanels((s) => shownWidth(s, "left"));
+	const rightW = usePanels((s) => shownWidth(s, "right"));
 	const empty = useStore((s) => s.doc.layers.length === 0);
-	const select = useStore((s) => s.select);
 	const setZoom = useStore((s) => s.setZoom);
 
 	const viewportRef = useRef<HTMLDivElement>(null);
@@ -53,7 +54,8 @@ export function Viewport({ onFitScale, onErrors }: { onFitScale: (s: number) => 
 	const cx = ins.left + (vp.w - ins.left - ins.right) / 2;
 	const cy = ins.top + (vp.h - ins.top - ins.bottom) / 2;
 	const base: [number, number] = [cx - (pos[active].x * scale + dispW / 2), cy - (pos[active].y * scale + dispH / 2)];
-	const canvasSelected = useStore((s) => s.canvasSelected);
+	const selectedCanvases = useStore((s) => s.selectedCanvases);
+	const canvasSelected = selectedCanvases.includes(active);
 	const hoverCanvas = useStore((s) => s.hoverCanvas);
 	// Right-click on empty board: create a canvas there.
 	const [boardMenu, setBoardMenu] = useState<{ x: number; y: number; at: { x: number; y: number } } | null>(null);
@@ -160,6 +162,68 @@ export function Viewport({ onFitScale, onErrors }: { onFitScale: (s: number) => 
 		keepView.current = true;
 		if (useStore.getState().zoom === "fit") setZoom(scale);
 	};
+	// F: drag on the board to draw a new canvas, like a frame in Figma. Shift keeps it square, ⌥ draws
+	// from the centre. A click without a drag places one the size of the current canvas.
+	const tool = useStore((s) => s.tool);
+	const [draft, setDraft] = useState<{ from: [number, number]; to: [number, number]; square: boolean; centred: boolean } | null>(null);
+	const toBoard = (e: { clientX: number; clientY: number }): [number, number] => {
+		const r = viewportRef.current!.getBoundingClientRect();
+		return [(e.clientX - r.left - base[0] - pan[0]) / scale, (e.clientY - r.top - base[1] - pan[1]) / scale];
+	};
+	const draftRect = draft && drawnRect(draft);
+	const placeDrawnCanvas = () => {
+		const st = useStore.getState();
+		const r = draftRect;
+		setDraft(null);
+		if (!r) return;
+		// A click (no real drag) drops a canvas the size of the current one, its corner at the pointer.
+		const clicked = r.w * scale < 4 && r.h * scale < 4;
+		const width = clicked ? st.doc.scene.width : Math.min(MAX_CANVAS, Math.max(MIN_CANVAS, r.w));
+		const height = clicked ? st.doc.scene.height : Math.min(MAX_CANVAS, Math.max(MIN_CANVAS, r.h));
+		keepView.current = true;
+		if (st.zoom === "fit") setZoom(scale);
+		st.addCanvas({ version: 1, name: "", scene: { ...st.doc.scene, width, height }, layers: [], board: { x: r.x, y: r.y } });
+		st.setCanvasSelected(true);
+		st.setTool("move");
+	};
+
+	// Marquee on the empty board, like Figma: every canvas it touches is selected (Shift adds to the
+	// selection). A plain click on empty board clears it. Starts inside a canvas select its layers instead.
+	const [boardMarquee, setBoardMarquee] = useState<{ l: number; t: number; w: number; h: number } | null>(null);
+	const startBoardMarquee = (e: React.PointerEvent) => {
+		const r = viewportRef.current!.getBoundingClientRect();
+		const x0 = e.clientX - r.left;
+		const y0 = e.clientY - r.top;
+		const st = useStore.getState();
+		const additive = e.shiftKey;
+		const base0 = additive ? st.selectedCanvases : [];
+		const off = [base[0] + pan[0], base[1] + pan[1]];
+		let moved = false;
+		const move = (ev: PointerEvent) => {
+			const x1 = ev.clientX - r.left;
+			const y1 = ev.clientY - r.top;
+			if (!moved && Math.hypot(x1 - x0, y1 - y0) < 3) return;
+			moved = true;
+			const m = { l: Math.min(x0, x1), t: Math.min(y0, y1), w: Math.abs(x1 - x0), h: Math.abs(y1 - y0) };
+			setBoardMarquee(m);
+			// Screen → board px, then every canvas the marquee touches.
+			const b = { l: (m.l - off[0]) / scale, t: (m.t - off[1]) / scale, r: (m.l + m.w - off[0]) / scale, b: (m.t + m.h - off[1]) / scale };
+			const hit = rects.flatMap((c, i) => (c.x < b.r && c.x + c.w > b.l && c.y < b.b && c.y + c.h > b.t ? [i] : []));
+			useStore.getState().selectCanvases([...base0, ...hit]);
+		};
+		const up = () => {
+			window.removeEventListener("pointermove", move);
+			window.removeEventListener("pointerup", up);
+			setBoardMarquee(null);
+			if (!moved && !additive) {
+				useStore.getState().select(null);
+				useStore.getState().setCanvasSelected(false);
+			}
+		};
+		window.addEventListener("pointermove", move);
+		window.addEventListener("pointerup", up);
+	};
+
 	const activateFromBoard = (i: number) => {
 		if (i === useStore.getState().active) return;
 		keepView.current = true;
@@ -217,10 +281,7 @@ export function Viewport({ onFitScale, onErrors }: { onFitScale: (s: number) => 
 				setBoardMenu({ x: e.clientX, y: e.clientY, at });
 			}}
 			onPointerDown={(e) => {
-				if (e.button === 0 && (e.target === e.currentTarget || (e.target as HTMLElement).classList.contains("board"))) {
-					select(null);
-					useStore.getState().setCanvasSelected(false);
-				}
+				if (e.button === 0 && (e.target === e.currentTarget || (e.target as HTMLElement).classList.contains("board"))) startBoardMarquee(e);
 			}}
 		>
 			<div className="board absolute top-0 left-0" style={{ transform: `translate(${base[0] + pan[0]}px, ${base[1] + pan[1]}px)` }}>
@@ -235,15 +296,16 @@ export function Viewport({ onFitScale, onErrors }: { onFitScale: (s: number) => 
 								doc={c}
 								at={pos[i]}
 								active={isActive}
-								selected={isActive && canvasSelected}
+								selected={selectedCanvases.includes(i)}
 								scale={scale}
-								others={rects.filter((_, j) => j !== i)}
+								positions={pos}
+								rects={rects}
 								onGuides={setBoardGuides}
 								onHoldView={holdView}
 								onActivate={() => activateFromBoard(i)}
 							/>
 							{!isActive && <BoardThumb doc={c} w={w} h={h} onActivate={() => activateFromBoard(i)} />}
-							{hoverCanvas === i && !(isActive && canvasSelected) && <span className="pointer-events-none absolute inset-0 z-20 shadow-[0_0_0_1px_var(--color-bg-accent-normal)]" />}
+							{((hoverCanvas === i && !(isActive && canvasSelected)) || (selectedCanvases.includes(i) && !isActive)) && <span className="pointer-events-none absolute inset-0 z-20 shadow-[0_0_0_1px_var(--color-bg-accent-normal)]" />}
 						</div>
 					);
 				})}
@@ -256,6 +318,34 @@ export function Viewport({ onFitScale, onErrors }: { onFitScale: (s: number) => 
 					{canvasSelected && <span className="pointer-events-none absolute inset-0 shadow-[0_0_0_1px_var(--color-bg-accent-normal)]" />}
 				</div>
 			</div>
+			{boardMarquee && <span className="board-marquee" style={{ left: boardMarquee.l, top: boardMarquee.t, width: boardMarquee.w, height: boardMarquee.h }} />}
+			{tool === "canvas" && (
+				<div
+					className="absolute inset-0 z-10 cursor-crosshair"
+					aria-label="Draw a canvas"
+					onPointerDown={(e) => {
+						if (e.button !== 0) return;
+						e.currentTarget.setPointerCapture(e.pointerId);
+						const at = toBoard(e);
+						setDraft({ from: at, to: at, square: e.shiftKey, centred: e.altKey });
+					}}
+					onPointerMove={(e) => draft && setDraft({ ...draft, to: toBoard(e), square: e.shiftKey, centred: e.altKey })}
+					onPointerUp={placeDrawnCanvas}
+					onPointerCancel={() => setDraft(null)}
+				>
+					{draftRect && (
+						<>
+							<span
+								className="pointer-events-none absolute shadow-[0_0_0_1px_var(--color-bg-accent-normal)]"
+								style={{ left: base[0] + pan[0] + draftRect.x * scale, top: base[1] + pan[1] + draftRect.y * scale, width: draftRect.w * scale, height: draftRect.h * scale }}
+							/>
+							<span className="draw-size" style={{ left: base[0] + pan[0] + (draftRect.x + draftRect.w / 2) * scale, top: base[1] + pan[1] + (draftRect.y + draftRect.h) * scale + 8 }}>
+								{draftRect.w} × {draftRect.h}
+							</span>
+						</>
+					)}
+				</div>
+			)}
 			{boardMenu && (
 				<ContextMenuPopover
 					key={`${boardMenu.x},${boardMenu.y}`}
@@ -289,6 +379,25 @@ export function Viewport({ onFitScale, onErrors }: { onFitScale: (s: number) => 
 			)}
 		</div>
 	);
+}
+
+const MIN_CANVAS = 16;
+const MAX_CANVAS = 8000;
+
+/** The canvas being drawn, in whole board px: Shift makes it square, ⌥ grows it from the start point. */
+function drawnRect({ from, to, square, centred }: { from: [number, number]; to: [number, number]; square: boolean; centred: boolean }) {
+	let dx = to[0] - from[0];
+	let dy = to[1] - from[1];
+	if (square) {
+		const s = Math.max(Math.abs(dx), Math.abs(dy));
+		dx = Math.sign(dx || 1) * s;
+		dy = Math.sign(dy || 1) * s;
+	}
+	const w = Math.abs(dx) * (centred ? 2 : 1);
+	const h = Math.abs(dy) * (centred ? 2 : 1);
+	const x = centred ? from[0] - Math.abs(dx) : Math.min(from[0], from[0] + dx);
+	const y = centred ? from[1] - Math.abs(dy) : Math.min(from[1], from[1] + dy);
+	return { x: Math.round(x), y: Math.round(y), w: Math.round(w), h: Math.round(h) };
 }
 
 /** Shown inside an empty canvas, scaled down for small canvases; ⌘K is the quickest way in. */
@@ -444,7 +553,8 @@ function BoardLabel({
 	active,
 	selected,
 	scale,
-	others,
+	positions,
+	rects,
 	onGuides,
 	onHoldView,
 	onActivate,
@@ -455,7 +565,9 @@ function BoardLabel({
 	active: boolean;
 	selected: boolean;
 	scale: number;
-	others: BoardRect[];
+	/** Every canvas's board position and rect, for moving a selected group and snapping to the rest. */
+	positions: { x: number; y: number }[];
+	rects: BoardRect[];
 	onGuides: (g: { x: number[]; y: number[] } | null) => void;
 	onHoldView: () => void;
 	onActivate: () => void;
@@ -495,8 +607,20 @@ function BoardLabel({
 							onPointerDown={(e) => {
 								if (e.button !== 0) return;
 								e.stopPropagation();
-								onActivate();
-								useStore.getState().setCanvasSelected(true);
+								const st0 = useStore.getState();
+								// Shift-click adds this canvas to the selection, or takes it out.
+								if (e.shiftKey) {
+									st0.selectCanvases(st0.selectedCanvases.includes(index) ? st0.selectedCanvases.filter((j) => j !== index) : [...st0.selectedCanvases, index]);
+									return;
+								}
+								// Dragging one of several selected canvases moves them all; otherwise this one is selected.
+								const group = st0.selectedCanvases.includes(index) && st0.selectedCanvases.length > 1 ? st0.selectedCanvases : [index];
+								if (group.length === 1) {
+									onActivate();
+									useStore.getState().setCanvasSelected(true);
+								}
+								const starts = Object.fromEntries(group.map((j) => [j, { ...positions[j] }]));
+								const others = rects.filter((_, j) => !group.includes(j));
 								const x0 = e.clientX;
 								const y0 = e.clientY;
 								const start = { ...at };
@@ -509,7 +633,7 @@ function BoardLabel({
 									d = { dx: ev.clientX - x0, dy: ev.clientY - y0 };
 									if (!moved && Math.hypot(d.dx, d.dy) < 4) return;
 									moved = true;
-									copy = ev.altKey;
+									copy = ev.altKey && group.length === 1;
 									// Snap to the other canvases (⌘ skips), then express it back as a screen offset.
 									const raw = { x: start.x + d.dx / scale, y: start.y + d.dy / scale };
 									if (useStore.getState().snapping && !ev.metaKey && !ev.ctrlKey) {
@@ -525,7 +649,7 @@ function BoardLabel({
 										setGhost(d);
 									} else {
 										setGhost(null);
-										st.moveCanvasOnBoard(index, { x: Math.round(start.x + d.dx / scale), y: Math.round(start.y + d.dy / scale) });
+										st.moveCanvasesOnBoard(Object.fromEntries(group.map((j) => [j, { x: Math.round(starts[j].x + d.dx / scale), y: Math.round(starts[j].y + d.dy / scale) }])));
 									}
 								};
 								const up = () => {
@@ -548,7 +672,7 @@ function BoardLabel({
 							{doc.name || "Untitled"}
 						</span>
 					</TooltipTrigger>
-					<TooltipContent>Click to select, double-click to rename, drag to move, ⌥-drag to duplicate</TooltipContent>
+					<TooltipContent>Click to select, Shift-click to add, double-click to rename, drag to move, ⌥-drag to duplicate</TooltipContent>
 				</Tooltip>
 			)}
 			{ghost && (
