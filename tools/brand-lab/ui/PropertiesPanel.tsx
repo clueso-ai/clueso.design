@@ -1,3 +1,5 @@
+import { removeBackground } from "../ml/bgremove";
+import { readImageFile } from "./image-file";
 import { I } from "./ci";
 import { useRef } from "react";
 import type { Palette } from "../brand/palette";
@@ -96,7 +98,7 @@ function LayerProps({ layer, count, error }: { layer: Layer; count: number; erro
 				return (
 					<Section title={g.title} key={g.title}>
 						{visible.map((p) => (
-							<ParamControl key={p.key} def={p} value={layer.params[p.key]} palette={palette} onChange={(v) => setParam(layer.id, p.key, v)} />
+							<ParamControl key={p.key} def={p} value={layer.params[p.key]} palette={palette} layerId={layer.id} onChange={(v) => setParam(layer.id, p.key, v)} />
 						))}
 					</Section>
 				);
@@ -151,7 +153,7 @@ function AppearanceSection({ layer, palette }: { layer: Layer; palette: Palette 
 	);
 }
 
-function ParamControl({ def, value, palette, onChange }: { def: ParamDef; value: unknown; palette: Palette; onChange: (v: number | boolean | string) => void }) {
+function ParamControl({ def, value, palette, layerId, onChange }: { def: ParamDef; value: unknown; palette: Palette; layerId: string; onChange: (v: number | boolean | string) => void }) {
 	switch (def.type) {
 		case "float":
 			return <Slider label={def.label} value={Number(value)} min={def.min} max={def.max} step={def.step ?? 1} unit={def.unit} onChange={onChange} />;
@@ -185,35 +187,58 @@ function ParamControl({ def, value, palette, onChange }: { def: ParamDef; value:
 				</label>
 			);
 		case "image":
-			return <ImageField value={String(value)} onChange={onChange} />;
+			return <ImageField value={String(value)} onChange={onChange} onFile={(src) => useStore.getState().setImage(layerId, src)} />;
 	}
 }
 
-export function readImageFile(file: File): Promise<string> {
-	return new Promise((resolve, reject) => {
-		const reader = new FileReader();
-		reader.onload = () => resolve(String(reader.result));
-		reader.onerror = reject;
-		reader.readAsDataURL(file);
-	});
-}
+// Cut-out → original, so "Restore original" works for the session (⌘Z also undoes a removal).
+const originals = new Map<string, string>();
 
-function ImageField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+/** `onFile` takes a chosen file (placed inside the canvas when the layer was empty); `onChange` a cut-out or restore. */
+function ImageField({ value, onChange, onFile }: { value: string; onChange: (v: string) => void; onFile: (src: string) => void }) {
 	const input = useRef<HTMLInputElement>(null);
+	const [busy, setBusy] = useState<string | null>(null);
+	const showToast = useStore((s) => s.showToast);
+	const original = originals.get(value);
+
+	const cutOut = async () => {
+		setBusy("Removing background…");
+		try {
+			const out = await removeBackground(value, ({ loaded, total }) => setBusy(`Downloading model ${Math.round((loaded / total) * 100)}%`));
+			originals.set(out, value);
+			onChange(out);
+		} catch (err) {
+			console.error(err);
+			showToast("Couldn't remove the background");
+		} finally {
+			setBusy(null);
+		}
+	};
+
 	return (
 		<div className="flex flex-col gap-md">
-			{value && <img src={value} alt="" className="max-h-[160px] w-full rounded-sm bg-depth-inset-1 object-contain" />}
+			{value && <img src={value} alt="" className="checker max-h-[160px] w-full rounded-sm object-contain" />}
 			<Button iconClassName={ICON_NORMAL} variant="outlined" sentiment="neutral" size="small" iconBefore icon={<I.ImagePlus />} onClick={() => input.current?.click()}>
 				{value ? "Replace image" : "Choose image"}
 			</Button>
+			{value &&
+				(original ? (
+					<Button iconClassName={ICON_NORMAL} variant="outlined" sentiment="neutral" size="small" iconBefore icon={<I.Undo />} onClick={() => onChange(original)}>
+						Restore original
+					</Button>
+				) : (
+					<Button iconClassName={ICON_NORMAL} variant="outlined" sentiment="neutral" size="small" iconBefore icon={<I.Sparkles />} disabled={!!busy} onClick={cutOut}>
+						{busy ?? "Remove background"}
+					</Button>
+				))}
 			<input
 				ref={input}
 				type="file"
-				accept="image/*"
+				accept="image/*,.svg"
 				hidden
 				onChange={async (e) => {
 					const f = e.target.files?.[0];
-					if (f) onChange(await readImageFile(f));
+					if (f) onFile(await readImageFile(f));
 					e.target.value = "";
 				}}
 			/>
