@@ -15,10 +15,45 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
 	{
-		date: "2026-11-04",
+		date: "2026-11-05",
 		title: "Icon Lab gets Brand Lab's editor frame",
 		body: "Icon Lab now opens in the same frame as Brand Lab: the library on the left, the icon's settings on the right, sizes and search along the bottom. Your edits, chosen options and kept icons are all still there.",
 		area: "Icon Lab",
+		by: "ajinkya",
+	},
+	{
+		date: "2026-11-04",
+		title: "Rotate, round and crop like in Figma",
+		body: "Hover just outside a corner of anything you've selected and drag to rotate it, images included. Drag the dots inside a rectangle's or image's corners to round them, and hold ⌘ while dragging an image's edge or corner to crop it.",
+		area: "Brand Lab",
+		by: "ajinkya",
+	},
+	{
+		date: "2026-11-04",
+		title: "Grab objects past the canvas edge in Brand Lab",
+		body: "When something hangs off the canvas, its outline and handles now show there and you can still select, move and resize it. You can also drag any edge of a box to resize it, not just its handles.",
+		area: "Brand Lab",
+		by: "ajinkya",
+	},
+	{
+		date: "2026-11-04",
+		title: "Images land inside the canvas",
+		body: "Pasted, dropped and chosen images now sit inside the canvas instead of covering it, and small ones keep their size. Adding an image layer opens the file picker right away.",
+		area: "Brand Lab",
+		by: "ajinkya",
+	},
+	{
+		date: "2026-11-04",
+		title: "Type straight onto the canvas in Brand Lab",
+		body: "Double-click any text, or select it and press Enter, to edit it right where it sits. Press Esc or click away when you're done.",
+		area: "Brand Lab",
+		by: "ajinkya",
+	},
+	{
+		date: "2026-11-04",
+		title: "Cut out backgrounds and bring in SVGs in Brand Lab",
+		body: "Select an image and press Remove background to cut out its subject, free and right in your browser. Your image never leaves your machine. You can also drop in an .svg file or paste SVG code, and it comes in sharp.",
+		area: "Brand Lab",
 		by: "ajinkya",
 	},
 	{

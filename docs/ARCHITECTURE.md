@@ -113,6 +113,8 @@ Brand Lab started as a port of the standalone Vite app at `../brand-lab`, baseli
 - It mounts client-only (`dynamic(..., { ssr: false })`) because its modules read localStorage when they load.
 - New React Compiler lint rules are warnings in `tools/brand-lab/**`. They get fixed during harness extraction.
 
+Background removal runs in the browser, in a web worker (`tools/brand-lab/ml/`), with transformers.js and the ormbg model (Apache 2.0). The model downloads from Hugging Face on first use (about 88 MB on WebGPU, 44 MB on the CPU fallback) and the browser caches it. Images never leave the visitor's machine and there is no server cost.
+
 ## Icon Lab
 
 Icon Lab (tool #002, Sneha) started as a standalone plain-JavaScript app, first shown here by loading its files from `public/tools/icon-lab`. It was ported onto the tool shell on 4 November 2026, and this repo is now its home: it's improved here like any other tool, and the standalone app and its sync script are no longer the source.

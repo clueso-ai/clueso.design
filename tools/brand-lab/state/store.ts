@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { BUILT_IN_PALETTES, clonePalette, nearestColor, type Palette, type PaletteDef, samePalette, toPalette } from "../brand/palette";
 import { createLayer, getDef, newId } from "../layers/registry";
+import { fitInside } from "../layers/sources/image";
 import { migrateText } from "../layers/sources/text";
 import { allParams, type Layer, type ParamValue, type Params } from "../layers/types";
 import { placeAll } from "./board";
@@ -10,6 +11,7 @@ import { renderThumb } from "../export/thumb";
 import { getEntry, type LibraryEntry, putEntry } from "./library";
 import { mulberry32, shuffleParams } from "./shuffle";
 import { remapColorRefs, type VariationMode, vary } from "./variations";
+import { pickImageFile, readImageFile } from "../ui/image-file";
 
 const STORAGE_KEY = "clueso-brand-lab:doc";
 // clueso.design: the homepage embeds Brand Lab at /tools/brand-lab?embed. The embed shares the
@@ -41,6 +43,8 @@ interface State {
 	selectedId: string | null;
 	selectedIds: string[];
 	hoverId: string | null;
+	/** Text layer being typed into on the canvas (double-click or Enter). */
+	editingTextId: string | null;
 	menu: { x: number; y: number } | null;
 	past: Snap[];
 	future: Snap[];
@@ -103,12 +107,15 @@ interface State {
 	moveLayer: (from: number, to: number) => void;
 	updateLayer: (id: string, patch: Partial<Layer>, coalesceKey?: string) => void;
 	setParam: (id: string, key: string, value: ParamValue) => void;
+	/** Give an image layer a picture. An empty layer also gets placed inside the canvas. */
+	setImage: (id: string, src: string) => Promise<void>;
 	/** Swap a layer to another type in place (e.g. Slice → Glitch), keeping what carries over. */
 	swapLayerType: (id: string, type: string) => void;
 	setScene: (patch: Partial<Scene>, coalesceKey?: string) => void;
 	select: (id: string | null, mode?: "replace" | "toggle" | "range") => void;
 	selectMany: (ids: string[]) => void;
 	setHover: (id: string | null) => void;
+	setEditingText: (id: string | null) => void;
 	openMenu: (x: number, y: number) => void;
 	closeMenu: () => void;
 	arrange: (dir: "front" | "forward" | "backward" | "back") => void;
@@ -237,6 +244,7 @@ export const useStore = create<State>((set, get) => ({
 	selectedId: null,
 	selectedIds: [],
 	hoverId: null,
+	editingTextId: null,
 	menu: null,
 	past: [],
 	future: [],
@@ -476,6 +484,12 @@ export const useStore = create<State>((set, get) => ({
 			return { ...doc, layers };
 		});
 		set({ selectedId: layer.id, selectedIds: [layer.id] });
+		// A new, empty image layer asks for its picture straight away (still inside the click that added it).
+		if (type === "image" && !layer.params.src) {
+			pickImageFile().then(async (file) => {
+				if (file) await get().setImage(layer.id, await readImageFile(file));
+			});
+		}
 	},
 	removeLayer: (id) => {
 		const { doc, selectedId } = get();
@@ -523,6 +537,12 @@ export const useStore = create<State>((set, get) => ({
 			}),
 			`${id}:${key}`,
 		),
+	setImage: async (id, src) => {
+		const empty = !get().doc.layers.find((l) => l.id === id)?.params.src;
+		// A new picture starts uncropped.
+		const patch = empty ? await fitInside(src, get().doc.scene) : { src, cropL: 0, cropT: 0, cropR: 0, cropB: 0 };
+		if (get().doc.layers.some((l) => l.id === id)) get().patchLayers({ [id]: patch });
+	},
 	swapLayerType: (id, type) => {
 		const def = getDef(type);
 		if (!def) return;
@@ -561,6 +581,7 @@ export const useStore = create<State>((set, get) => ({
 	},
 	selectMany: (ids) => set({ selectedIds: ids, selectedId: ids[ids.length - 1] ?? null }),
 	setHover: (hoverId) => get().hoverId !== hoverId && set({ hoverId }),
+	setEditingText: (editingTextId) => set({ editingTextId }),
 	openMenu: (x, y) => set({ menu: { x, y } }),
 	closeMenu: () => set({ menu: null }),
 	arrange: (dir) => {

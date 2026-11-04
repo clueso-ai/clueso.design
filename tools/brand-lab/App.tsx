@@ -4,6 +4,7 @@ import { createLayer, getDef } from "./layers/registry";
 import type { Params } from "./layers/types";
 import { ALIGN_KEYS, alignSelection } from "./state/align";
 import { hasLayerClipboard, LAYER_CLIP_MARK, useStore } from "./state/store";
+import { fitInside } from "./layers/sources/image";
 import { TYPE_STYLES } from "./layers/sources/text";
 import { CommandMenu } from "./ui/CommandMenu";
 import { ContextMenu } from "./ui/ContextMenu";
@@ -11,7 +12,9 @@ import { Explore } from "./ui/Explore";
 import { LayersPanel } from "./ui/LayersPanel";
 import { Library } from "./ui/Library";
 import { Palettes } from "./ui/Palettes";
-import { PropertiesPanel, readImageFile } from "./ui/PropertiesPanel";
+import { PropertiesPanel } from "./ui/PropertiesPanel";
+import { readImageFile } from "./ui/image-file";
+import { isSvgCode, svgToPng } from "./ui/svg";
 import { Timeline } from "./ui/Timeline";
 import { ToolbarEnd, ToolbarStart, ZoomChip } from "./ui/Toolbar";
 import { Viewport } from "./ui/Viewport";
@@ -103,6 +106,8 @@ export function App() {
 			else if (k === "e") s.setOverlay("explore");
 			else if (k === "l") s.setOverlay("library");
 			else if (k === "0") s.setZoom("fit");
+			// Enter types into the selected text, like a double-click (a focused button keeps its Enter).
+			else if (k === "enter" && (e.target as HTMLElement).tagName !== "BUTTON" && sel.length === 1 && s.doc.layers.find((l) => l.id === sel[0])?.type === "text") s.setEditingText(sel[0]);
 			else if (k === "escape") {
 				s.select(null);
 				s.setCanvasSelected(false);
@@ -133,12 +138,23 @@ export function App() {
 			}
 			if (image) {
 				const src = await readImageFile(image);
-				s.addLayer("image", { params: { src }, name: image.name && image.name !== "image.png" ? image.name.replace(/\.[^.]+$/, "") : "Pasted image" });
+				s.addLayer("image", { params: await fitInside(src, s.doc.scene), name: image.name && image.name !== "image.png" ? image.name.replace(/\.[^.]+$/, "") : "Pasted image" });
 				s.showToast("Pasted image");
 				return;
 			}
 			const clean = text.replace(/\r\n?/g, "\n").trim();
 			if (!clean) return;
+			// SVG code (Figma "Copy as SVG", icon sites, a code editor) draws as an image, not text.
+			if (isSvgCode(clean)) {
+				try {
+					const { src, title } = await svgToPng(clean);
+					s.addLayer("image", { name: title ?? "Pasted SVG", params: await fitInside(src, s.doc.scene, 0.6) });
+					s.showToast("Pasted SVG");
+				} catch {
+					s.showToast("That SVG couldn't be read");
+				}
+				return;
+			}
 			// A short single line reads as a headline; anything longer as body copy.
 			const style = clean.length <= 48 && !clean.includes("\n") ? TYPE_STYLES[0] : TYPE_STYLES[1];
 			const name = clean.split("\n")[0].slice(0, 32);
@@ -173,9 +189,9 @@ export function App() {
 			const file = e.dataTransfer!.files[0];
 			if (!file) return;
 			const s = useStore.getState();
-			if (file.type.startsWith("image/")) {
+			if (file.type.startsWith("image/") || file.name.toLowerCase().endsWith(".svg")) {
 				const src = await readImageFile(file);
-				const layer = createLayer("image", { name: file.name.replace(/\.[^.]+$/, ""), params: { src } });
+				const layer = createLayer("image", { name: file.name.replace(/\.[^.]+$/, ""), params: await fitInside(src, s.doc.scene) });
 				s.commit((doc) => ({ ...doc, layers: [...doc.layers, layer] }));
 				s.select(layer.id);
 			} else if (file.name.endsWith(".json")) {
