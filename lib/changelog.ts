@@ -15,6 +15,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
 	{
+		date: "2026-11-04",
+		title: "Icon Lab gets Brand Lab's editor frame",
+		body: "Icon Lab now opens in the same frame as Brand Lab: the library on the left, the icon's settings on the right, sizes and search along the bottom. Your edits, chosen options and kept icons are all still there.",
+		area: "Icon Lab",
+		by: "ajinkya",
+	},
+	{
 		date: "2026-11-03",
 		title: "Try every tool right from the homepage",
 		body: "Each featured tool now runs live on the homepage, so you can click in and play with Icon Lab too. The playground has its own page, laid out like the tools page, and the homepage shows a still of each experiment.",

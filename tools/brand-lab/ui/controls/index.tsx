@@ -8,10 +8,14 @@ import { Button } from "@/lib/design-system/jigsaw/components/ui/controls/button
 import { Field } from "../../components/field";
 import { WrappedSelect } from "@/lib/design-system/jigsaw/components/ui/controls/select/select";
 import { Slider as JSlider } from "@/lib/design-system/jigsaw/components/ui/controls/slider/slider";
-import { ToggleButton } from "@/lib/design-system/jigsaw/components/ui/controls/toggle-button/toggle-button";
 import { ToggleSwitch } from "@/lib/design-system/jigsaw/components/ui/controls/toggle-switch/toggle-switch";
 import { cn } from "@/lib/design-system/jigsaw/lib/utils";
 import { useStore } from "../../state/store";
+import { Row } from "@/tools/shell/components/controls";
+
+// clueso.design: Segmented and Row moved to the tool shell (tools/shell/components/controls.tsx) so
+// Icon Lab shares them. They are re-exported here unchanged.
+export { Row, Segmented } from "@/tools/shell/components/controls";
 
 // Brand Lab's control vocabulary (the props panel, export popover and sheets all use these), built
 // on jigsaw components so the look follows the Clueso design system.
@@ -91,52 +95,11 @@ export function Select<T extends number | string>({
 	);
 }
 
-export function Segmented<T extends string | number>({
-	value,
-	options,
-	onChange,
-	label,
-	className,
-	size = "small",
-}: {
-	value: T;
-	options: Option<T>[];
-	onChange: (v: T) => void;
-	label?: string;
-	className?: string;
-	/** small = 24px (panels); button = 28px, the height of a small jigsaw button (sheet headers). */
-	size?: "small" | "button";
-}) {
-	return (
-		<ToggleButton
-			aria-label={label}
-			size="small"
-			// jigsaw's small tabs are 20px inside a 24px group; 6px vertical padding makes the group 28px.
-			className={cn(size === "button" && "[&>button]:py-[6px]", className)}
-			value={String(value)}
-			options={options.map((o) => ({ value: String(o.value), label: o.label }))}
-			onChange={(v) => {
-				const hit = options.find((o) => String(o.value) === v);
-				if (hit) onChange(hit.value);
-			}}
-		/>
-	);
-}
-
 export function Switch({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
 	return (
 		<span aria-label={label} className="inline-flex">
 			<ToggleSwitch checked={checked} onChange={onChange} />
 		</span>
-	);
-}
-
-export function Row({ label, children, className }: { label: string; children: React.ReactNode; className?: string }) {
-	return (
-		<div className={cn("flex min-h-[24px] items-center justify-between gap-md", className)}>
-			<span className="label-xsmall shrink-0 text-normal">{label}</span>
-			{children}
-		</div>
 	);
 }
 
