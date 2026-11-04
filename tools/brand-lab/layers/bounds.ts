@@ -1,6 +1,6 @@
 import { MARK_PARTS } from "../brand/mark";
 import type { Doc } from "../state/doc";
-import { imageSize } from "./sources/image";
+import { CROP, imageSize } from "./sources/image";
 import { textBox } from "./sources/text";
 import type { Layer, Params } from "./types";
 
@@ -70,15 +70,23 @@ export function layerFrame(layer: Layer, doc: Doc): Frame | null {
 			if (p.mode === 3) return null;
 			return centred(num(p, "size"), num(p, "size") * (p.mode === 0 ? 1 : num(p, "aspect", 1)));
 		case "image": {
-			const size = imageSize(String(p.src ?? ""));
-			if (!size) return null;
-			const fit = p.fit === 0 ? Math.max(W / size[0], H / size[1]) : Math.min(W / size[0], H / size[1]);
-			const k = fit * num(p, "scale", 1);
-			return centred(size[0] * k, size[1] * k);
+			const g = imageGeom(p, W, H);
+			if (!g) return null;
+			const [l, t, r, b] = g.crop;
+			return centred(g.full[0] * (1 - l - r), g.full[1] * (1 - t - b), num(p, "rotation"));
 		}
 		default:
 			return null;
 	}
+}
+
+/** An image's uncropped size on the canvas (composition px) and its crop (left, top, right, bottom shares). */
+export function imageGeom(p: Params, W: number, H: number) {
+	const size = imageSize(String(p.src ?? ""));
+	if (!size) return null;
+	const fit = p.fit === 0 ? Math.max(W / size[0], H / size[1]) : Math.min(W / size[0], H / size[1]);
+	const k = fit * num(p, "scale", 1);
+	return { full: [size[0] * k, size[1] * k] as Pt, crop: CROP.map((key) => num(p, key)) as [number, number, number, number] };
 }
 
 /** Local frame point → composition px. Positive rot turns counter-clockwise on screen (y down). */
@@ -241,4 +249,49 @@ export function resizeParams(layer: Layer, start: Params, f: Frame, handle: Hand
 		default:
 			return { size: round(num(start, "size") * k, 1), ...at(left + w / 2, top + hh / 2) };
 	}
+}
+
+/** The smallest a crop can get, in composition px. */
+const MIN_CROP = 8;
+
+/**
+ * ⌘-drag a handle or edge of an image: move that side of the crop instead of scaling. Sides stop at
+ * the image's own edges, so dragging back out uncrops. The rest of the picture stays where it is.
+ */
+export function cropParams(start: Params, f: Frame, handle: Handle, local: Pt, doc: Doc): Params | null {
+	const { width: W, height: H } = doc.scene;
+	const g = imageGeom(start, W, H);
+	if (!g) return null;
+	const [fw, fh] = g.full;
+	const [cl, ct] = g.crop;
+	// The uncropped image's edges, in the frame's local space.
+	const L = f.left - cl * fw;
+	const T = f.top - ct * fh;
+	const R = L + fw;
+	const B = T + fh;
+	let l = f.left;
+	let t = f.top;
+	let r = f.left + f.w;
+	let b = f.top + f.h;
+	const h = HANDLES.find((x) => x.id === handle)!;
+	if (h.u === 0) l = Math.min(Math.max(local[0], L), r - MIN_CROP);
+	if (h.u === 1) r = Math.max(Math.min(local[0], R), l + MIN_CROP);
+	if (h.v === 0) t = Math.min(Math.max(local[1], T), b - MIN_CROP);
+	if (h.v === 1) b = Math.max(Math.min(local[1], B), t + MIN_CROP);
+	const [x, y] = toWorld(f, [(l + r) / 2, (t + b) / 2]);
+	const share = (v: number) => Math.round(Math.max(0, v) * 10000) / 10000;
+	return {
+		cropL: share((l - L) / fw),
+		cropT: share((t - T) / fh),
+		cropR: share((R - r) / fw),
+		cropB: share((B - b) / fh),
+		x: Math.round((x / W) * 10000) / 10000,
+		y: Math.round((1 - y / H) * 10000) / 10000,
+	};
+}
+
+/** Layers whose corners round, and the most their radius can be (composition px). */
+export function radiusLimit(layer: Layer, f: Frame) {
+	const rounds = (layer.type === "shape" && (layer.params.shape ?? 0) === 0) || layer.type === "image";
+	return rounds ? Math.min(f.w, f.h) / 2 : null;
 }

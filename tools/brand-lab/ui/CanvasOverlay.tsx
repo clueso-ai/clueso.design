@@ -1,7 +1,8 @@
 import { type PointerEvent as ReactPointerEvent, useEffect, useMemo, useRef, useState } from "react";
-import { aabb, corners, hits, type Frame, HANDLES, type Handle, handlesFor, intersects, layerFrame, type Rect, resizeParams, toLocal, toWorld, union } from "../layers/bounds";
+import { aabb, corners, cropParams, hits, type Frame, HANDLES, type Handle, handlesFor, imageGeom, intersects, layerFrame, radiusLimit, type Rect, resizeParams, toLocal, toWorld, union } from "../layers/bounds";
 import { getDef } from "../layers/registry";
-import type { Layer, Params } from "../layers/types";
+import { FONTS } from "../layers/sources/text";
+import { allParams, type Layer, type Params } from "../layers/types";
 import { useStore } from "../state/store";
 
 type Pt = [number, number];
@@ -9,10 +10,18 @@ type Pt = [number, number];
 type Drag =
 	| { kind: "move"; origin: Pt; ids: string[]; starts: Record<string, Params>; box: Rect | null; others: Rect[]; moved: boolean }
 	| { kind: "resize"; id: string; handle: Handle; frame: Frame; start: Params }
+	| { kind: "crop"; id: string; handle: Handle; frame: Frame; start: Params }
+	| { kind: "radius"; id: string; corner: Pt; frame: Frame; max: number }
 	| { kind: "marquee"; origin: Pt; moved: boolean; additive: boolean; base: string[] }
 	| { kind: "rotate"; id: string; centre: Pt; pivot: Pt; startAngle: number; startRot: number; keys: [string, string] };
 
 const SNAP_PX = 6;
+/**
+ * The overlay reaches this far past the artboard (screen px), so objects that hang off the canvas
+ * keep their outline, handles and hover there. Only object frames, handles and the artboard itself
+ * take the pointer; the rest passes through to the board and the canvases around it.
+ */
+const REACH = 2400;
 
 /**
  * The canvas and layer rows aren't focusable, so clicking them can leave a panel field focused
@@ -32,6 +41,7 @@ export function CanvasOverlay({ scale }: { scale: number }) {
 	const doc = useStore((s) => s.doc);
 	const selectedIds = useStore((s) => s.selectedIds);
 	const hoverId = useStore((s) => s.hoverId);
+	const editingTextId = useStore((s) => s.editingTextId);
 	const { width: W, height: H } = doc.scene;
 	const svg = useRef<SVGSVGElement>(null);
 	const drag = useRef<Drag | null>(null);
@@ -40,6 +50,8 @@ export function CanvasOverlay({ scale }: { scale: number }) {
 	const [alt, setAlt] = useState(false);
 	const [dragging, setDragging] = useState(false);
 	const [rotation, setRotation] = useState<number | null>(null);
+	const [cropping, setCropping] = useState(false);
+	const [radiusPill, setRadiusPill] = useState<{ value: number; at: Pt } | null>(null);
 
 	const frames = useMemo(() => {
 		const m = new Map<string, Frame>();
@@ -67,9 +79,11 @@ export function CanvasOverlay({ scale }: { scale: number }) {
 
 	const px = (n: number) => n / scale; // screen px → composition px
 	const toComp = (e: { clientX: number; clientY: number }): Pt => {
-		const r = svg.current!.getBoundingClientRect();
+		// Measured on the artboard: the SVG itself reaches past it.
+		const r = svg.current!.parentElement!.getBoundingClientRect();
 		return [((e.clientX - r.left) / r.width) * W, ((e.clientY - r.top) / r.height) * H];
 	};
+	const onCanvas = ([x, y]: Pt) => x >= 0 && y >= 0 && x <= W && y <= H;
 
 	/** Topmost visible, unlocked object under the point. Fill layers never win a click. */
 	const hitTest = (pt: Pt) => doc.layers.find((l) => !l.locked && frames.has(l.id) && hits(l, frames.get(l.id)!, pt)) ?? null;
@@ -156,6 +170,22 @@ export function CanvasOverlay({ scale }: { scale: number }) {
 			setRotation(Math.round(next));
 			return;
 		}
+		if (d.kind === "crop") {
+			const patch = cropParams(d.start, d.frame, d.handle, toLocal(d.frame, pt), st.doc);
+			if (patch) st.patchLayers({ [d.id]: patch }, `crop:${d.id}`);
+			return;
+		}
+		if (d.kind === "radius") {
+			// Figma's corner dots: the radius is how far the dot has come in along the corner's diagonal.
+			const f = d.frame;
+			const [cu, cv] = d.corner;
+			const [lx, ly] = toLocal(f, pt);
+			const inward = ((lx - (f.left + cu * f.w)) * (cu ? -1 : 1) + (ly - (f.top + cv * f.h)) * (cv ? -1 : 1)) / 2;
+			const radius = Math.round(Math.min(d.max, Math.max(0, inward)));
+			st.patchLayers({ [d.id]: { radius } }, `radius:${d.id}`);
+			setRadiusPill({ value: radius, at: pt });
+			return;
+		}
 		if (d.kind === "resize") {
 			const layer = st.doc.layers.find((l) => l.id === d.id);
 			if (!layer) return;
@@ -219,12 +249,15 @@ export function CanvasOverlay({ scale }: { scale: number }) {
 		const d = drag.current;
 		drag.current = null;
 		setRotation(null);
+		setCropping(false);
+		setRadiusPill(null);
 		setDragging(false);
 		setMarquee(null);
 		setGuides({ x: [], y: [] });
 		if (d?.kind === "marquee" && !d.moved && !d.additive) {
 			// A plain click on empty space selects the pattern underneath, like clicking a frame's fill.
-			const fill = topFill();
+			// Off the canvas there's nothing underneath.
+			const fill = onCanvas(d.origin) ? topFill() : null;
 			useStore.getState().select(fill?.id ?? null);
 		}
 	};
@@ -233,7 +266,19 @@ export function CanvasOverlay({ scale }: { scale: number }) {
 		e.stopPropagation();
 		if (e.button !== 0) return;
 		svg.current!.setPointerCapture(e.pointerId);
-		drag.current = { kind: "resize", id: layer.id, handle, frame: frames.get(layer.id)!, start: { ...layer.params } };
+		const frame = frames.get(layer.id)!;
+		// ⌘-drag on an image crops it instead of scaling.
+		const crop = (e.metaKey || e.ctrlKey) && layer.type === "image";
+		drag.current = { kind: crop ? "crop" : "resize", id: layer.id, handle, frame, start: { ...layer.params } };
+		setCropping(crop);
+		setDragging(true);
+	};
+
+	const onRadiusDown = (e: ReactPointerEvent, layer: Layer, corner: Pt, max: number) => {
+		e.stopPropagation();
+		if (e.button !== 0) return;
+		svg.current!.setPointerCapture(e.pointerId);
+		drag.current = { kind: "radius", id: layer.id, corner, frame: frames.get(layer.id)!, max };
 		setDragging(true);
 	};
 
@@ -262,17 +307,27 @@ export function CanvasOverlay({ scale }: { scale: number }) {
 	const fillSelected = selected.some((l) => !frames.has(l.id));
 	const hover = hoverId && !selectedIds.includes(hoverId) ? frames.get(hoverId) : undefined;
 
+	const m = px(REACH);
 	const poly = (f: Frame) =>
 		corners(f)
 			.map((p) => p.join(","))
 			.join(" ");
 
+	const editing = editingTextId ? doc.layers.find((l) => l.id === editingTextId && l.type === "text") : undefined;
+	const editingFrame = editing ? frames.get(editing.id) : undefined;
+	// Undo, a canvas switch or a delete took the layer away mid-edit.
+	useEffect(() => {
+		if (editingTextId && !editing) useStore.getState().setEditingText(null);
+	}, [editingTextId, editing]);
+
 	return (
+		<>
 		<svg
 			ref={svg}
 			data-dup
 			className={`canvas-overlay${dragging ? " dragging" : ""}`}
-			viewBox={`0 0 ${W} ${H}`}
+			style={{ inset: -REACH, width: `calc(100% + ${REACH * 2}px)`, height: `calc(100% + ${REACH * 2}px)` }}
+			viewBox={`${-m} ${-m} ${W + m * 2} ${H + m * 2}`}
 			preserveAspectRatio="none"
 			onPointerDown={onPointerDown}
 			onPointerMove={onPointerMove}
@@ -281,7 +336,10 @@ export function CanvasOverlay({ scale }: { scale: number }) {
 			onPointerLeave={() => !drag.current && useStore.getState().setHover(null)}
 			onDoubleClick={(e) => {
 				const hit = hitTest(toComp(e));
-				if (hit?.type === "text") document.querySelector<HTMLTextAreaElement>(".props-panel textarea")?.focus();
+				if (hit?.type !== "text") return;
+				const st = useStore.getState();
+				st.select(hit.id);
+				st.setEditingText(hit.id);
 			}}
 			onContextMenu={(e) => {
 				e.preventDefault();
@@ -294,6 +352,9 @@ export function CanvasOverlay({ scale }: { scale: number }) {
 				st.openMenu(e.clientX, e.clientY);
 			}}
 		>
+			{/* Pointer targets: the artboard, then every object's frame, which may reach past it. */}
+			<rect className="hit" x={0} y={0} width={W} height={H} />
+			{doc.layers.map((l) => !l.locked && frames.has(l.id) && <polygon key={l.id} className="hit" points={poly(frames.get(l.id)!)} />)}
 			{fillSelected && <rect className="sel-fill" x={0} y={0} width={W} height={H} />}
 			{hover && <polygon className="hover-outline" points={poly(hover)} />}
 			{/* Hovering a full-bleed layer (pattern, fill, effect) in the Layers panel: it covers the whole canvas. */}
@@ -301,12 +362,32 @@ export function CanvasOverlay({ scale }: { scale: number }) {
 			{selected.map((l) => frames.has(l.id) && <polygon key={l.id} className="sel-outline" points={poly(frames.get(l.id)!)} />)}
 			{selected.length > 1 && selBox && <rect className="sel-group" x={selBox.l} y={selBox.t} width={selBox.r - selBox.l} height={selBox.b - selBox.t} />}
 
-			{single && singleFrame && !single.locked && (!dragging || rotation !== null) && "rotation" in single.params && (
-				<RotateHandle f={singleFrame} px={px} onDown={(e) => onRotateDown(e, single, singleFrame)} />
-			)}
+			{/* Just outside each corner: hover there to turn the object, as in Figma. */}
+			{single && singleFrame && !single.locked && !dragging && rotatable(single) && <RotateZones f={singleFrame} px={px} onDown={(e) => onRotateDown(e, single, singleFrame)} />}
+			{/* While turning, the rotate cursor holds wherever the pointer goes. */}
+			{rotation !== null && singleFrame && <rect className="hit" x={-m} y={-m} width={W + m * 2} height={H + m * 2} style={{ cursor: rotateCursor(0) }} />}
+			{cropping && single && singleFrame && <CropOutline layer={single} f={singleFrame} W={W} H={H} />}
 			{rotation !== null && singleFrame && <Pill x={toWorld(singleFrame, [singleFrame.left + singleFrame.w / 2, singleFrame.top])[0]} y={toWorld(singleFrame, [singleFrame.left + singleFrame.w / 2, singleFrame.top])[1] - px(52)} text={`${rotation}°`} px={px} />}
-			{single && singleFrame && !single.locked && !dragging && (
+			{single && singleFrame && !single.locked && !dragging && !editing && (
 				<g>
+					{/* The whole edge resizes, not just its middle handle. */}
+					{edgesFor(single).map((id) => {
+						const [a, b] = EDGES[id];
+						const p1 = toWorld(singleFrame, [singleFrame.left + a[0] * singleFrame.w, singleFrame.top + a[1] * singleFrame.h]);
+						const p2 = toWorld(singleFrame, [singleFrame.left + b[0] * singleFrame.w, singleFrame.top + b[1] * singleFrame.h]);
+						return (
+							<line
+								key={id}
+								className="edge"
+								x1={p1[0]}
+								y1={p1[1]}
+								x2={p2[0]}
+								y2={p2[1]}
+								style={{ cursor: cursorFor(id, singleFrame.rot) }}
+								onPointerDown={(e) => onHandleDown(e, single, id)}
+							/>
+						);
+					})}
 					{handlesFor(single).map((id) => {
 						const h = HANDLES.find((x) => x.id === id)!;
 						const [x, y] = toWorld(singleFrame, [singleFrame.left + h.u * singleFrame.w, singleFrame.top + h.v * singleFrame.h]);
@@ -327,6 +408,9 @@ export function CanvasOverlay({ scale }: { scale: number }) {
 				</g>
 			)}
 
+			{single && singleFrame && !single.locked && !dragging && !editing && <RadiusDots layer={single} f={singleFrame} px={px} scale={scale} onDown={(e, corner, max) => onRadiusDown(e, single, corner, max)} />}
+			{radiusPill && <Pill x={radiusPill.at[0]} y={radiusPill.at[1] + px(24)} text={`Radius ${radiusPill.value}`} px={px} />}
+
 			{selBox && !alt && <SizeLabel box={selBox} px={px} />}
 
 			{guides.x.map((x) => (
@@ -340,18 +424,167 @@ export function CanvasOverlay({ scale }: { scale: number }) {
 
 			{alt && selBox && !dragging && <Measure from={selBox} to={hoverId && !selectedIds.includes(hoverId) && frames.has(hoverId) ? aabb(frames.get(hoverId)!) : null} W={W} H={H} px={px} />}
 		</svg>
+		{editing && editingFrame && <TextEditor key={editing.id} layer={editing} frame={editingFrame} W={W} H={H} scale={scale} />}
+		</>
 	);
 }
 
-/** Round knob above the top edge, joined by a short stem, that turns the object. */
-function RotateHandle({ f, px, onDown }: { f: Frame; px: (n: number) => number; onDown: (e: ReactPointerEvent) => void }) {
-	const top = toWorld(f, [f.left + f.w / 2, f.top]);
-	const knob = toWorld(f, [f.left + f.w / 2, f.top - px(26)]);
+/**
+ * Typing straight onto the canvas. A textarea sits exactly over the text box with the layer's own
+ * type settings, its glyphs transparent: every keystroke updates the layer, so what shows is the
+ * real render (wrap, outline, highlight) and the textarea only adds the caret and selection.
+ * Esc, ⌘Enter or clicking away finishes; a box left empty is removed, as in Figma.
+ */
+function TextEditor({ layer, frame: f, W, H, scale }: { layer: Layer; frame: Frame; W: number; H: number; scale: number }) {
+	const ref = useRef<HTMLTextAreaElement>(null);
+	const p = layer.params;
+	const size = Number(p.size);
+
+	useEffect(() => {
+		const el = ref.current;
+		if (!el) return;
+		el.focus();
+		el.select();
+	}, []);
+
+	const finish = () => {
+		const st = useStore.getState();
+		if (st.editingTextId !== layer.id) return;
+		st.setEditingText(null);
+		const current = st.doc.layers.find((l) => l.id === layer.id);
+		if (current && !String(current.params.text ?? "").trim()) st.removeLayer(layer.id);
+	};
+
+	// An unwrapped box is only as wide as its longest line, so give the caret room to type into,
+	// on the side the text grows towards.
+	const wraps = Number(p.width) > 0;
+	const align = Number(p.align) || 0;
+	const slack = wraps ? 0 : size;
+	const left = f.left - slack * [0, 0.5, 1][align];
 	return (
-		<g className="rotate-handle">
-			<line x1={top[0]} y1={top[1]} x2={knob[0]} y2={knob[1]} />
-			<circle cx={knob[0]} cy={knob[1]} r={px(6)} onPointerDown={onDown} />
+		<div className="pointer-events-none absolute top-0 left-0 origin-top-left" style={{ width: W, height: H, transform: `scale(${scale})` }}>
+			<textarea
+				ref={ref}
+				className="text-editor"
+				aria-label="Text"
+				spellCheck={false}
+				value={String(p.text ?? "")}
+				onChange={(e) => useStore.getState().setParam(layer.id, "text", e.target.value)}
+				onBlur={finish}
+				onPointerDown={(e) => e.stopPropagation()}
+				onKeyDown={(e) => {
+					if (e.key === "Escape" || (e.key === "Enter" && (e.metaKey || e.ctrlKey))) {
+						e.preventDefault();
+						ref.current?.blur();
+					}
+				}}
+				style={{
+					left: f.px + left,
+					top: f.py + f.top,
+					width: f.w + slack,
+					height: f.h,
+					transformOrigin: `${-left}px ${-f.top}px`,
+					transform: `rotate(${-f.rot}deg)`,
+					fontFamily: `"${FONTS[Number(p.font)] ?? "Geist"}"`,
+					fontWeight: Math.round(Number(p.weight)),
+					fontSize: size,
+					lineHeight: `${size * Number(p.leading)}px`,
+					letterSpacing: `${Number(p.tracking) * size}px`,
+					textAlign: (["left", "center", "right"] as const)[align] ?? "left",
+					textTransform: p.upper ? "uppercase" : "none",
+					whiteSpace: wraps ? "pre-wrap" : "pre",
+				}}
+			/>
+		</div>
+	);
+}
+
+/** Each edge's ends, in the frame's unit square. */
+const EDGES = {
+	n: [[0, 0], [1, 0]],
+	e: [[1, 0], [1, 1]],
+	s: [[0, 1], [1, 1]],
+	w: [[0, 0], [0, 1]],
+} as const satisfies Record<string, readonly [readonly [number, number], readonly [number, number]]>;
+
+/** Text edges set the wrap width, so only its sides drag; everything else takes all four. */
+function edgesFor(layer: Layer): (keyof typeof EDGES)[] {
+	return layer.type === "text" ? ["e", "w"] : ["n", "e", "s", "w"];
+}
+
+/** Layers with a Rotation setting. */
+function rotatable(layer: Layer) {
+	const def = getDef(layer.type);
+	return !!def && allParams(def).some((p) => p.key === "rotation");
+}
+
+const UNIT_CORNERS: Pt[] = [
+	[0, 0],
+	[1, 0],
+	[1, 1],
+	[0, 1],
+];
+
+/** Invisible pads just past each corner that turn the object, each showing a rotate cursor that faces out. */
+function RotateZones({ f, px, onDown }: { f: Frame; px: (n: number) => number; onDown: (e: ReactPointerEvent) => void }) {
+	const reach = px(10);
+	return (
+		<g>
+			{UNIT_CORNERS.map(([u, v]) => {
+				const corner = toWorld(f, [f.left + u * f.w, f.top + v * f.h]);
+				const out = toWorld(f, [f.left + u * f.w + (u ? reach : -reach), f.top + v * f.h + (v ? reach : -reach)]);
+				const angle = (Math.atan2(out[1] - corner[1], out[0] - corner[0]) * 180) / Math.PI;
+				return <circle key={`${u}${v}`} className="rotate-zone" cx={out[0]} cy={out[1]} r={px(11)} style={{ cursor: rotateCursor(angle) }} onPointerDown={onDown} />;
+			})}
 		</g>
+	);
+}
+
+const rotateCursors = new Map<number, string>();
+
+/** Figma's curved double arrow, its bulge facing `angle` degrees (screen, y down). */
+function rotateCursor(angle: number) {
+	const a = Math.round(angle / 5) * 5;
+	let cursor = rotateCursors.get(a);
+	if (!cursor) {
+		const d = "M9 5A8 8 0 0 1 9 19M10.8 8.6L9 5L13 4.6M10.8 15.4L9 19L13 19.4";
+		const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><g transform="rotate(${a} 12 12)" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="${d}" stroke="white" stroke-width="3.5"/><path d="${d}" stroke="black" stroke-width="1.5"/></g></svg>`;
+		cursor = `url("data:image/svg+xml,${encodeURIComponent(svg)}") 12 12, crosshair`;
+		rotateCursors.set(a, cursor);
+	}
+	return cursor;
+}
+
+/**
+ * Figma's corner radius dots, inside each corner of a rectangle or image. They sit at the radius
+ * (or a little in, while it's small) and hide when the object is too small on screen to fit them.
+ */
+function RadiusDots({ layer, f, px, scale, onDown }: { layer: Layer; f: Frame; px: (n: number) => number; scale: number; onDown: (e: ReactPointerEvent, corner: Pt, max: number) => void }) {
+	const max = radiusLimit(layer, f);
+	if (max === null || Math.min(f.w, f.h) * scale < 64) return null;
+	const inset = Math.min(max, Math.max(Number(layer.params.radius ?? 0), px(12)));
+	return (
+		<g>
+			{UNIT_CORNERS.map(([u, v]) => {
+				const [x, y] = toWorld(f, [f.left + u * f.w + (u ? -inset : inset), f.top + v * f.h + (v ? -inset : inset)]);
+				return <circle key={`${u}${v}`} className="radius-dot" cx={x} cy={y} r={px(4)} onPointerDown={(e) => onDown(e, [u, v], max)} />;
+			})}
+		</g>
+	);
+}
+
+/** While cropping, the whole picture's outline, so you can see how much is left to uncover. */
+function CropOutline({ layer, f, W, H }: { layer: Layer; f: Frame; W: number; H: number }) {
+	const g = imageGeom(layer.params, W, H);
+	if (!g) return null;
+	const full: Frame = { ...f, left: f.left - g.crop[0] * g.full[0], top: f.top - g.crop[1] * g.full[1], w: g.full[0], h: g.full[1] };
+	return (
+		<polygon
+			className="crop-outline"
+			points={corners(full)
+				.map((p) => p.join(","))
+				.join(" ")}
+		/>
 	);
 }
 

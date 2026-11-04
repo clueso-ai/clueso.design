@@ -113,6 +113,8 @@ Brand Lab started as a port of the standalone Vite app at `../brand-lab`, baseli
 - It mounts client-only (`dynamic(..., { ssr: false })`) because its modules read localStorage when they load.
 - New React Compiler lint rules are warnings in `tools/brand-lab/**`. They get fixed during harness extraction.
 
+Background removal runs in the browser, in a web worker (`tools/brand-lab/ml/`), with transformers.js and the ormbg model (Apache 2.0). The model downloads from Hugging Face on first use (about 88 MB on WebGPU, 44 MB on the CPU fallback) and the browser caches it. Images never leave the visitor's machine and there is no server cost.
+
 ## Tool shell
 
 Built: `tools/shell/` holds the editor frame Brand Lab runs in, so a new tool can start from it. `ToolShell` gives a full-window canvas, the top bar with the mark and the tool's name (linking home), resizable side panels with widths saved per tool, a bottom bar, a toast and the Clueso cursor. The tool fills the slots. `tools/shell/README.md` shows how to start a tool. Brand Lab's look and behaviour didn't change when it moved onto the shell.

@@ -41,18 +41,33 @@ svg :is(path, line, polyline, polygon, rect, circle, ellipse)[stroke] {
 	min-height: 100%;
 }
 
-.artboard {
-	position: relative;
-	flex: none;
-	box-shadow: var(--artboard-shadow);
+/* Transparency checkerboard, shared by the artboard and image previews in the panel. */
+.artboard,
+.checker {
+	--checker-size: 16px;
+	--checker-half: calc(var(--checker-size) / 2);
 	background-color: var(--checker-b);
 	background-image:
 		linear-gradient(45deg, var(--checker-a) 25%, transparent 25%),
 		linear-gradient(-45deg, var(--checker-a) 25%, transparent 25%),
 		linear-gradient(45deg, transparent 75%, var(--checker-a) 75%),
 		linear-gradient(-45deg, transparent 75%, var(--checker-a) 75%);
-	background-size: 16px 16px;
-	background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+	background-size: var(--checker-size) var(--checker-size);
+	background-position:
+		0 0,
+		0 var(--checker-half),
+		var(--checker-half) calc(var(--checker-half) * -1),
+		calc(var(--checker-half) * -1) 0;
+}
+
+.checker {
+	--checker-size: 12px;
+}
+
+.artboard {
+	position: relative;
+	flex: none;
+	box-shadow: var(--artboard-shadow);
 
 	canvas {
 		display: block;
@@ -65,11 +80,10 @@ svg :is(path, line, polyline, polygon, rect, circle, ellipse)[stroke] {
 
 .canvas-overlay {
 	position: absolute;
-	inset: 0;
-	width: 100%;
-	height: 100%;
 	overflow: visible;
 	touch-action: none;
+	/* The SVG reaches past the artboard; only .hit, handles and edges take the pointer. */
+	pointer-events: none;
 	--sel: var(--color-bg-accent-normal);
 	--measure: #ff5a36;
 
@@ -110,26 +124,39 @@ svg :is(path, line, polyline, polygon, rect, circle, ellipse)[stroke] {
 		stroke-width: 1;
 		stroke-dasharray: 6 4;
 	}
-	.handle {
+	.hit {
+		fill: none;
+		stroke: none;
+		pointer-events: all;
+	}
+	.edge {
+		stroke: transparent;
+		stroke-width: 8;
+		pointer-events: stroke;
+	}
+	.rotate-zone {
+		fill: transparent;
+		pointer-events: all;
+	}
+	.radius-dot {
+		pointer-events: all;
 		fill: #fff;
 		stroke: var(--sel);
 		stroke-width: 1;
+		cursor: default;
 	}
-	.rotate-handle {
-		line {
-			stroke: var(--sel);
-			stroke-width: 1;
-			pointer-events: none;
-		}
-		circle {
-			fill: #fff;
-			stroke: var(--sel);
-			stroke-width: 1;
-			cursor: grab;
-		}
+	.crop-outline {
+		fill: none;
+		pointer-events: none;
+		stroke: var(--sel);
+		stroke-width: 1;
+		stroke-dasharray: 4 3;
 	}
-	&.dragging .rotate-handle circle {
-		cursor: grabbing;
+	.handle {
+		pointer-events: all;
+		fill: #fff;
+		stroke: var(--sel);
+		stroke-width: 1;
 	}
 	.marquee {
 		fill: color-mix(in srgb, var(--sel) 10%, transparent);
@@ -168,5 +195,27 @@ svg :is(path, line, polyline, polygon, rect, circle, ellipse)[stroke] {
 			stroke-width: 1;
 			stroke-dasharray: 3 3;
 		}
+	}
+}
+
+/* Typing on the canvas: the layer renders the glyphs, the textarea only shows caret and selection. */
+.text-editor {
+	position: absolute;
+	pointer-events: auto;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	outline: none;
+	resize: none;
+	overflow: hidden;
+	background: transparent;
+	color: transparent;
+	caret-color: var(--color-bg-accent-normal);
+	overflow-wrap: normal;
+	word-break: normal;
+	font-kerning: normal;
+
+	&::selection {
+		background: color-mix(in srgb, var(--color-bg-accent-normal) 30%, transparent);
 	}
 }
