@@ -26,6 +26,8 @@ export type ParamDef =
 export interface ParamGroup {
 	title: string;
 	params: ParamDef[];
+	/** Only for a layer in the stack, not for an effect on one layer (a Look's frame). */
+	stackOnly?: boolean;
 }
 
 export interface TextureImage {
@@ -88,6 +90,31 @@ export interface LayerDef {
 	onParamChange?: (key: string, value: ParamValue, params: Params) => Params;
 	/** Make params self-consistent when a layer is created or loaded (e.g. derive a preset choice from colours). */
 	normalize?: (params: Params) => Params;
+	/**
+	 * Effects only: may reach past the layer's edge when applied to a single layer (blur, glow, warps).
+	 * Others are kept to the layer's own pixels there, so they never paint on the canvas around it.
+	 */
+	spills?: boolean;
+	/** Backgrounds only: true when these settings paint every pixel, so the layer hides whatever is under it. */
+	covers?: (params: Params) => boolean;
+	/** Backgrounds only: the settings that make it see-through, for the "covers layers below" fix. */
+	seeThrough?: Params;
+}
+
+/**
+ * What a layer is, as people think about it. Backgrounds fill the canvas (or a frame), brand pieces and
+ * content are objects you place, and a Look restyles everything below it (or below its frame). The stack stays free: this
+ * only labels layers and decides where new ones go.
+ */
+export type LayerKind = "background" | "brand" | "content" | "look";
+
+export const KIND_LABELS: Record<LayerKind, string> = { background: "Background", brand: "Brand", content: "Content", look: "Look" };
+
+export function kindOf(def: LayerDef): LayerKind {
+	if (def.kind === "effect") return "look";
+	if (def.category === "brand") return "brand";
+	if (def.category === "content") return "content";
+	return "background";
 }
 
 export const BLEND_MODES = [
@@ -125,6 +152,18 @@ export interface Layer {
 	locked?: boolean;
 	/** Layer styles applied when compositing, so they work on any source: a gradient fill and a drop shadow. */
 	appearance?: Appearance;
+	/** The "covers layers below" warning was dismissed for this layer: the overlap is on purpose. */
+	coverOk?: boolean;
+	/** Effects on this layer only, top first: they restyle the layer itself, never what's below it. */
+	effects?: LayerEffect[];
+}
+
+/** An effect attached to one layer (a Look that applies to that layer alone). */
+export interface LayerEffect {
+	id: string;
+	type: string;
+	visible: boolean;
+	params: Params;
 }
 
 export function allParams(def: LayerDef): ParamDef[] {

@@ -9,7 +9,9 @@ canvas with panels around it.
 - A top bar: the Clueso mark and your tool's name on the left (they link back to `/` with a full page
   load), your own controls after them, and a group on the right.
 - A left and a right panel. Visitors drag their inner edges to resize them and double-click to
-  reset. Widths are saved in localStorage under `clueso-<id>:panels`. Both hide below 1100px wide.
+  reset. Each has a toggle in the top bar to collapse it, and ⌘\ hides or shows both. Widths and
+  open state are saved in localStorage under `clueso-<id>:panels`. Both hide below 1100px wide. Use
+  `shownWidth(state, side)` (0 while collapsed) when framing the canvas in the free space.
 - A bottom bar, like Brand Lab's timeline. It stops at the right panel. Pass `bottomHeight` for a taller one (Icon Lab's is 64px).
 - A toast, the Clueso cursor, Jigsaw's focus reset and the light and dark themes.
 
@@ -19,7 +21,7 @@ The shell doesn't handle keys, undo, saving or the canvas itself. Those belong t
 
 | Import from `@/tools/shell` | What it is |
 | --- | --- |
-| `ToolShell` | The frame. Props: `id`, `name`, `theme`, `children` (the canvas), `toolbarStart`, `toolbarEnd`, `toolbarLabels`, `left`, `right`, `bottom`, `bottomHeight` (40 by default), `resizeLabels`, `overlays`, `toast`, `cursor` |
+| `ToolShell` | The frame. Props: `id`, `name`, `theme`, `children` (the canvas), `toolbarStart`, `toolbarCenter` (a centred bar, for drawing tools), `toolbarEnd`, `toolbarLabels`, `left`, `right`, `bottom`, `bottomHeight` (40 by default), `resizeLabels`, `overlays`, `toast`, `cursor` |
 | `LeftPanel`, `RightPanel`, `BottomBar` | Panels already in their place. Put them in the `left`, `right` and `bottom` slots |
 | `Panel`, `PanelHeader`, `Section` | The panel surface, a titled header and a group of controls |
 | `IconButton`, `ICON_NORMAL`, `ToolbarDivider` | An icon button with a tooltip, the neutral icon colour, a rule between top bar groups |

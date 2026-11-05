@@ -3,6 +3,9 @@ import { useEffect, useMemo } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/lib/design-system/jigsaw/components/ui/overlays/tooltip/tooltip";
 import { cn } from "@/lib/design-system/jigsaw/lib/utils";
 import CluesoIcon from "@icons/icons/Brands/Clueso-icon.svg?react";
+import SidebarIcon from "@icons/icons/Technical Concepts/Sidebar.svg?react";
+import { useStore } from "zustand";
+import { IconButton } from "./components/icon-button";
 import { CustomCursor } from "./components/cursor";
 import { Panel } from "./components/panel";
 import { Toast } from "./components/toast";
@@ -24,6 +27,8 @@ export interface ToolShellProps {
 	toolbarStart?: React.ReactNode;
 	/** Controls top right. */
 	toolbarEnd?: React.ReactNode;
+	/** Tools centred at the top, in their own bar (drawing tools, like Figma's). */
+	toolbarCenter?: React.ReactNode;
 	/** Accessible names for the two top bar groups. */
 	toolbarLabels?: { start?: string; end?: string };
 	/** The left panel. Use <LeftPanel>. Gets a resize handle. */
@@ -48,11 +53,27 @@ export interface ToolShellProps {
  * The editor frame every tool shares: a full-window canvas, the top bar with the mark and the tool's
  * name, resizable side panels, a bottom bar, a toast and the Clueso cursor. The tool fills the slots.
  */
-export function ToolShell({ id, name, theme, children, toolbarStart, toolbarEnd, toolbarLabels, left, right, bottom, bottomHeight = BAR, resizeLabels, overlays, toast, cursor = true }: ToolShellProps) {
+export function ToolShell({ id, name, theme, children, toolbarStart, toolbarEnd, toolbarCenter, toolbarLabels, left, right, bottom, bottomHeight = BAR, resizeLabels, overlays, toast, cursor = true }: ToolShellProps) {
 	const panels = panelStore(id);
 	const hasBottom = !!bottom;
 	const hasRight = !!right;
 	const ctx = useMemo(() => ({ panels, hasBottom, hasRight, bottomHeight }), [panels, hasBottom, hasRight, bottomHeight]);
+
+	const leftOpen = useStore(panels, (s) => s.leftOpen);
+	const rightOpen = useStore(panels, (s) => s.rightOpen);
+	const mod = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘" : "Ctrl";
+
+	// ⌘\ hides both side panels for a clear view of the canvas, and brings them back. Like Figma's.
+	useEffect(() => {
+		const onKey = (e: KeyboardEvent) => {
+			if ((e.metaKey || e.ctrlKey) && e.key === "\\") {
+				e.preventDefault();
+				panels.getState().toggleAll();
+			}
+		};
+		window.addEventListener("keydown", onKey);
+		return () => window.removeEventListener("keydown", onKey);
+	}, [panels]);
 
 	// jigsaw themes with a .dark class; on <html> so portalled menus and modals pick it up too.
 	useEffect(() => {
@@ -76,6 +97,16 @@ export function ToolShell({ id, name, theme, children, toolbarStart, toolbarEnd,
 						</TooltipTrigger>
 						<TooltipContent>Back to clueso.design</TooltipContent>
 					</Tooltip>
+					{left && (
+						<IconButton
+							label={leftOpen ? "Hide left panel" : "Show left panel"}
+							shortcut={[mod, "\\"]}
+							active={!leftOpen}
+							icon={<SidebarIcon />}
+							onClick={() => panels.getState().toggle("left")}
+							className="max-[1099px]:hidden"
+						/>
+					)}
 					{toolbarStart && (
 						<>
 							<ToolbarDivider />
@@ -83,16 +114,32 @@ export function ToolShell({ id, name, theme, children, toolbarStart, toolbarEnd,
 						</>
 					)}
 				</Panel>
+				{toolbarCenter && (
+					<Panel className="left-1/2 -translate-x-1/2 flex-row items-center gap-2xs overflow-visible px-xs" style={{ top: M, height: BAR }} role="toolbar" aria-label="Tools">
+						{toolbarCenter}
+					</Panel>
+				)}
 				{toolbarEnd && (
 					<div className="absolute flex items-center gap-xs" style={{ top: M, right: M, height: BAR }} role="toolbar" aria-label={toolbarLabels?.end ?? "Actions"}>
 						{toolbarEnd}
+						{right && (
+							<IconButton
+								variant="outlined"
+								label={rightOpen ? "Hide right panel" : "Show right panel"}
+								shortcut={[mod, "\\"]}
+								active={!rightOpen}
+								icon={<SidebarIcon className="-scale-x-100" />}
+								onClick={() => panels.getState().toggle("right")}
+								className="max-[1099px]:hidden"
+							/>
+						)}
 					</div>
 				)}
 				{left}
 				{right}
 				{bottom}
-				{left && <ResizeHandle side="left" label={resizeLabels?.left ?? "Resize left panel"} />}
-				{right && <ResizeHandle side="right" label={resizeLabels?.right ?? "Resize right panel"} />}
+				{left && leftOpen && <ResizeHandle side="left" label={resizeLabels?.left ?? "Resize left panel"} />}
+				{right && rightOpen && <ResizeHandle side="right" label={resizeLabels?.right ?? "Resize right panel"} />}
 				{overlays}
 				{cursor && <CustomCursor />}
 				{toast && <Toast>{toast}</Toast>}

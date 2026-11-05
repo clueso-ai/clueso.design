@@ -259,6 +259,18 @@ export function exportJSON(project: ProjectFile) {
 	download(new Blob([JSON.stringify(body, null, 2)], { type: "application/json" }), `${slug(project.name)}.brandlab.json`);
 }
 
+/**
+ * One canvas as a preset file for tools/brand-lab/presets: the project format with one canvas and a
+ * Library group (Posters when it has text, Illustrations otherwise). See that folder's README.
+ */
+export function exportPreset(canvas: Doc) {
+	const rest: Doc = { ...canvas };
+	delete rest.board;
+	const group = canvas.layers.some((l) => l.type === "text") ? "Posters" : "Illustrations";
+	const body = { version: 2, name: canvas.name, group, canvases: [rest], active: 0 };
+	download(new Blob([JSON.stringify(body, null, 2) + "\n"], { type: "application/json" }), `${slug(canvas.name)}.brandlab.json`);
+}
+
 export async function readJSON(file: File): Promise<ProjectFile> {
 	const data = JSON.parse(await file.text());
 	const isDoc = (d: unknown): d is Doc => !!d && (d as Doc).version === 1 && Array.isArray((d as Doc).layers) && !!(d as Doc).scene;

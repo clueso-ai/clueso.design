@@ -1,6 +1,8 @@
 import { MARK_PARTS } from "../brand/mark";
 import type { Doc } from "../state/doc";
+import { isFramed } from "./registry";
 import { CROP, imageSize } from "./sources/image";
+import { svgAspect } from "./sources/svg";
 import { textBox } from "./sources/text";
 import type { Layer, Params } from "./types";
 
@@ -36,6 +38,8 @@ export function layerFrame(layer: Layer, doc: Doc): Frame | null {
 	const px = num(p, "x", 0.5) * W;
 	const py = (1 - num(p, "y", 0.5)) * H;
 	const centred = (w: number, h: number, rot = 0): Frame => ({ px, py, left: -w / 2, top: -h / 2, w, h, rot });
+	// A framed background is a box like a rectangle shape; one that fills the canvas has no frame.
+	if (isFramed(layer)) return centred(num(p, "w", 0.6) * W, num(p, "h", 0.6) * H, num(p, "rotation"));
 
 	switch (layer.type) {
 		case "text": {
@@ -63,12 +67,19 @@ export function layerFrame(layer: Layer, doc: Doc): Frame | null {
 			const top = -(0.5 + out("top")) * size;
 			return { px, py, left, top, w: (1 + out("left") + out("right")) * size, h: (1 + out("top") + out("bottom")) * size, rot: num(p, "rotation") };
 		}
+		case "melt": {
+			// Drifting apart pushes the top corner and body out along the diagonal.
+			const s = num(p, "size") * (1 + 0.6 * num(p, "drift") * num(p, "amount"));
+			return centred(s, s, num(p, "rotation"));
+		}
 		case "motif":
 		case "forms":
 			return centred(num(p, "size"), num(p, "size"), num(p, "rotation"));
 		case "construct":
 			if (p.mode === 3) return null;
 			return centred(num(p, "size"), num(p, "size") * (p.mode === 0 ? 1 : num(p, "aspect", 1)));
+		case "svg":
+			return centred(num(p, "size", 480), num(p, "size", 480) * svgAspect(String(p.markup ?? "")), num(p, "rotation"));
 		case "image": {
 			const g = imageGeom(p, W, H);
 			if (!g) return null;
@@ -190,7 +201,7 @@ export const HANDLES: { id: Handle; u: number; v: number }[] = [
 
 /** Which handles a layer offers: free rectangles get all eight, text gets sides for wrap width. */
 export function handlesFor(layer: Layer): Handle[] {
-	if (layer.type === "shape" && layer.params.shape !== 2) return HANDLES.map((h) => h.id);
+	if ((layer.type === "shape" && layer.params.shape !== 2) || isFramed(layer)) return HANDLES.map((h) => h.id);
 	if (layer.type === "text") return ["nw", "ne", "se", "sw", "e", "w"];
 	return ["nw", "ne", "se", "sw"];
 }
@@ -216,7 +227,7 @@ export function resizeParams(layer: Layer, start: Params, f: Frame, handle: Hand
 	let hh = dirY ? Math.max(4, fromCenter ? 2 * (local[1] - cy) * dirY : (local[1] - fy) * dirY) : f.h;
 
 	const textSide = layer.type === "text" && !dirY;
-	const free = (layer.type === "shape" && layer.params.shape !== 2 && !keepRatio) || textSide;
+	const free = (((layer.type === "shape" && layer.params.shape !== 2) || isFramed(layer)) && !keepRatio) || textSide;
 	if (!free) {
 		const k = dirX && dirY ? Math.max(w / f.w, hh / f.h) : dirX ? w / f.w : hh / f.h;
 		w = f.w * k;
@@ -233,6 +244,7 @@ export function resizeParams(layer: Layer, start: Params, f: Frame, handle: Hand
 	};
 	const round = (v: number, step = 0.1) => Math.round(v / step) * step;
 
+	if (isFramed(layer)) return { w: Math.round((w / W) * 1000) / 1000, h: Math.round((hh / H) * 1000) / 1000, ...at(left + w / 2, top + hh / 2) };
 	switch (layer.type) {
 		case "text": {
 			const anchor = [0, 0.5, 1][num(start, "anchor", 1)];
@@ -292,6 +304,6 @@ export function cropParams(start: Params, f: Frame, handle: Handle, local: Pt, d
 
 /** Layers whose corners round, and the most their radius can be (composition px). */
 export function radiusLimit(layer: Layer, f: Frame) {
-	const rounds = (layer.type === "shape" && (layer.params.shape ?? 0) === 0) || layer.type === "image";
+	const rounds = (layer.type === "shape" && (layer.params.shape ?? 0) === 0) || layer.type === "image" || isFramed(layer);
 	return rounds ? Math.min(f.w, f.h) / 2 : null;
 }

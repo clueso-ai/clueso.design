@@ -5,9 +5,10 @@ import type { Doc } from "./doc";
 import { generateDoc, generatePoster, PAIRINGS, pick, type Rng, shuffleParams } from "./shuffle";
 import { applyStyle, newSubject, STYLES } from "./styles";
 
-export type VariationMode = "pattern" | "poster" | "colors" | "settings" | "arrangement" | "styles" | "subject";
+export type VariationMode = "everything" | "pattern" | "poster" | "colors" | "settings" | "arrangement" | "styles" | "subject";
 
 export const VARIATION_MODES: { value: VariationMode; label: string; hint: string; key?: string }[] = [
+	{ value: "everything", label: "Everything", hint: "New illustration, style, colours and motion at once. Your text and images stay" },
 	{ value: "styles", label: "Styles", hint: "The same subject in different visual styles" },
 	{ value: "subject", label: "Illustration", hint: "New illustrations from brand blocks, in the current style" },
 	{ value: "colors", label: "Colours", hint: "Same design, new colour roles", key: "C" },
@@ -18,6 +19,14 @@ export const VARIATION_MODES: { value: VariationMode; label: string; hint: strin
 ];
 
 export function vary(doc: Doc, mode: VariationMode, rng: Rng): Doc {
+	// Every kind of shuffle in one go, in the order a designer would: what's drawn, how it's drawn,
+	// its colours, then fresh seeds. Content (text, images, shapes) and the canvas stay as they are.
+	if (mode === "everything") {
+		let next = newSubject(doc, rng);
+		next = applyStyle(next, pick(rng, STYLES), rng);
+		next = shuffleColors(next, rng);
+		return { ...next, layers: next.layers.map((l) => ({ ...l, seed: Math.round(rng() * 10000) / 10 })) };
+	}
 	if (mode === "pattern") return { ...generateDoc(doc, rng), name: doc.name };
 	if (mode === "poster") return generatePoster(doc, rng);
 	if (mode === "colors") return shuffleColors(doc, rng);

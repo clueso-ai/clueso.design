@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { readJSON } from "./export";
-import { createLayer, getDef } from "./layers/registry";
+import { createLayer, positionKeys } from "./layers/registry";
 import type { Params } from "./layers/types";
 import { ALIGN_KEYS, alignSelection } from "./state/align";
-import { hasLayerClipboard, LAYER_CLIP_MARK, useStore } from "./state/store";
+import { hasLayerClipboard, LAYER_CLIP_MARK, TOOLS, useStore } from "./state/store";
 import { fitInside } from "./layers/sources/image";
 import { TYPE_STYLES } from "./layers/sources/text";
 import { CommandMenu } from "./ui/CommandMenu";
@@ -14,9 +14,9 @@ import { Library } from "./ui/Library";
 import { Palettes } from "./ui/Palettes";
 import { PropertiesPanel } from "./ui/PropertiesPanel";
 import { readImageFile } from "./ui/image-file";
-import { isSvgCode, svgToPng } from "./ui/svg";
+import { isSvgCode, svgAspect, svgTitle } from "./layers/sources/svg";
 import { Timeline } from "./ui/Timeline";
-import { ToolbarEnd, ToolbarStart, ZoomChip } from "./ui/Toolbar";
+import { ToolbarCenter, ToolbarEnd, ToolbarStart, ZoomChip } from "./ui/Toolbar";
 import { Viewport } from "./ui/Viewport";
 import { ToolShell } from "@/tools/shell/ToolShell";
 
@@ -28,7 +28,7 @@ function nudge(key: string, step: number) {
 	const dy = key === "arrowup" ? -step : key === "arrowdown" ? step : 0;
 	const patches: Record<string, Params> = {};
 	for (const l of s.doc.layers) {
-		const pos = getDef(l.type)?.position;
+		const pos = positionKeys(l);
 		if (!s.selectedIds.includes(l.id) || l.locked || !pos) continue;
 		patches[l.id] = {
 			[pos[0]]: Math.round((Number(l.params[pos[0]]) + dx / W) * 10000) / 10000,
@@ -48,6 +48,12 @@ function isTyping(e: KeyboardEvent) {
 	if (t.tagName === "INPUT") return !["checkbox", "radio", "range", "button", "color"].includes((t as HTMLInputElement).type);
 	if (t.tagName === "SELECT") return e.key.startsWith("Arrow") || e.key === " " || e.key === "Enter";
 	return false;
+}
+
+/** A new SVG layer: centred, at 60% of the canvas's short side (by its own proportions). */
+function svgParams(markup: string, scene: { width: number; height: number }) {
+	const k = svgAspect(markup);
+	return { markup, size: Math.round(Math.min(scene.width, scene.height / k) * 0.6), x: 0.5, y: 0.5 };
 }
 
 export function App() {
@@ -71,6 +77,11 @@ export function App() {
 				return;
 			}
 			if (isTyping(e)) return;
+			// A focused menu, list, dialog or popover keeps its own keys (arrows, Space, Enter, letters).
+			// So do sliders, tabs and radio groups for the arrow keys they step with.
+			const t = e.target as HTMLElement | null;
+			if (t?.closest?.("[role=menu], [role=listbox], [role=dialog], [data-radix-popper-content-wrapper]")) return;
+			if (e.key.startsWith("Arrow") && t?.closest?.("[role=slider], [role=radiogroup], [role=tablist], [role=group]")) return;
 			if (mod && k === "s") {
 				e.preventDefault();
 				s.saveToLibrary({ asNew: e.shiftKey });
@@ -95,10 +106,9 @@ export function App() {
 			else if (e.altKey && ALIGN_KEYS[code] && sel.length) alignSelection(ALIGN_KEYS[code]);
 			else if (code === "BracketRight" && !e.altKey && sel.length) s.arrange("front");
 			else if (code === "BracketLeft" && !e.altKey && sel.length) s.arrange("back");
-			else if (k === " ") s.setPlaying(!s.playing);
 			else if ((k === "backspace" || k === "delete") && sel.length) s.removeSelected();
 			// A selected canvas frame (no layers selected) deletes the canvas, like a Figma frame.
-			else if ((k === "backspace" || k === "delete") && s.canvasSelected && s.canvases.length > 1) s.removeCanvas(s.active);
+			else if ((k === "backspace" || k === "delete") && s.selectedCanvases.length) s.removeSelectedCanvases();
 			else if (k.startsWith("arrow") && sel.length) nudge(k, e.shiftKey ? 10 : 1);
 			else if (k === "s" && e.shiftKey && s.selectedId) s.shuffleLayer(s.selectedId);
 			else if (k === "s") s.shuffleAll();
@@ -108,6 +118,12 @@ export function App() {
 			else if (k === "0") s.setZoom("fit");
 			// Enter types into the selected text, like a double-click (a focused button keeps its Enter).
 			else if (k === "enter" && (e.target as HTMLElement).tagName !== "BUTTON" && sel.length === 1 && s.doc.layers.find((l) => l.id === sel[0])?.type === "text") s.setEditingText(sel[0]);
+			// F draws a canvas on the board, like Figma's frame tool. Again (or Esc) goes back.
+			// Drawing tools, as in Figma: F canvas, R rectangle, O ellipse, T text. The same key again, or Esc, goes back.
+			else if (!e.shiftKey && !e.altKey && TOOLS.some((t) => t.key.toLowerCase() === k)) {
+				const t = TOOLS.find((x) => x.key.toLowerCase() === k)!.id;
+				s.setTool(s.tool === t ? "move" : t);
+			} else if (k === "escape" && s.tool !== "move") s.setTool("move");
 			else if (k === "escape") {
 				s.select(null);
 				s.setCanvasSelected(false);
@@ -115,8 +131,42 @@ export function App() {
 			else return;
 			e.preventDefault();
 		};
-		window.addEventListener("keydown", onKey);
-		return () => window.removeEventListener("keydown", onKey);
+		// Capture phase: the editor sees its shortcuts before any control can stop them. (Typing in a field,
+		// and controls that own a key, are let through above.)
+		window.addEventListener("keydown", onKey, true);
+		return () => window.removeEventListener("keydown", onKey, true);
+	}, []);
+
+	// Shortcuts belong to the editor unless you're typing. Two things used to steal them:
+	// - Space on a focused button or slider (play, the seekbar) also pressed that control, so playback
+	//   toggled twice and nothing happened. Space now only plays or pauses, and drops that focus.
+	// - A text field kept focus after you clicked elsewhere, swallowing Delete and ⌘Z. Pressing anywhere
+	//   that isn't a field now lets go of it.
+	useEffect(() => {
+		const textField = (el: Element | null) => !!el && el instanceof HTMLElement && (el.isContentEditable || el.tagName === "TEXTAREA" || (el.tagName === "INPUT" && !["checkbox", "radio", "range", "button", "color"].includes((el as HTMLInputElement).type)));
+		const onSpace = (e: KeyboardEvent) => {
+			if (e.key !== " " || e.metaKey || e.ctrlKey || e.altKey || isTyping(e)) return;
+			const s = useStore.getState();
+			if (s.overlay || s.commandOpen) return;
+			e.preventDefault();
+			e.stopPropagation();
+			if (e.type !== "keydown") return;
+			if (document.activeElement instanceof HTMLElement && document.activeElement !== document.body) document.activeElement.blur();
+			if (!e.repeat) s.setPlaying(!s.playing);
+		};
+		const onPress = (e: PointerEvent) => {
+			const t = e.target as Element | null;
+			if (t?.closest("input, textarea, select, [contenteditable=true], [role=dialog]")) return;
+			if (textField(document.activeElement)) (document.activeElement as HTMLElement).blur();
+		};
+		window.addEventListener("keydown", onSpace, true);
+		window.addEventListener("keyup", onSpace, true);
+		window.addEventListener("pointerdown", onPress, true);
+		return () => {
+			window.removeEventListener("keydown", onSpace, true);
+			window.removeEventListener("keyup", onSpace, true);
+			window.removeEventListener("pointerdown", onPress, true);
+		};
 	}, []);
 
 	// ⌘V: layers copied here, an image (screenshot, copied file) or plain text from anywhere else.
@@ -144,15 +194,10 @@ export function App() {
 			}
 			const clean = text.replace(/\r\n?/g, "\n").trim();
 			if (!clean) return;
-			// SVG code (Figma "Copy as SVG", icon sites, a code editor) draws as an image, not text.
+			// SVG code (Figma "Copy as SVG", icon sites, a code editor) becomes a vector layer, not text.
 			if (isSvgCode(clean)) {
-				try {
-					const { src, title } = await svgToPng(clean);
-					s.addLayer("image", { name: title ?? "Pasted SVG", params: await fitInside(src, s.doc.scene, 0.6) });
-					s.showToast("Pasted SVG");
-				} catch {
-					s.showToast("That SVG couldn't be read");
-				}
+				s.addLayer("svg", { name: svgTitle(clean) ?? "Pasted SVG", params: svgParams(clean, s.doc.scene) });
+				s.showToast("Pasted SVG. Swap its colours in the right panel");
 				return;
 			}
 			// A short single line reads as a headline; anything longer as body copy.
@@ -189,7 +234,10 @@ export function App() {
 			const file = e.dataTransfer!.files[0];
 			if (!file) return;
 			const s = useStore.getState();
-			if (file.type.startsWith("image/") || file.name.toLowerCase().endsWith(".svg")) {
+			if (file.type === "image/svg+xml" || file.name.toLowerCase().endsWith(".svg")) {
+				const code = (await file.text()).trim();
+				if (isSvgCode(code)) s.addLayer("svg", { name: file.name.replace(/\.[^.]+$/, ""), params: svgParams(code, s.doc.scene) });
+			} else if (file.type.startsWith("image/")) {
 				const src = await readImageFile(file);
 				const layer = createLayer("image", { name: file.name.replace(/\.[^.]+$/, ""), params: await fitInside(src, s.doc.scene) });
 				s.commit((doc) => ({ ...doc, layers: [...doc.layers, layer] }));
@@ -222,6 +270,7 @@ export function App() {
 			name="Brand Lab"
 			theme={theme}
 			toolbarStart={<ToolbarStart />}
+			toolbarCenter={<ToolbarCenter />}
 			toolbarEnd={<ToolbarEnd />}
 			toolbarLabels={{ start: "Project", end: "Create and export" }}
 			left={<LayersPanel />}

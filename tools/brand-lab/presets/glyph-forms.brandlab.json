@@ -1,0 +1,141 @@
+{
+  "version": 2,
+  "name": "Glyph forms",
+  "group": "Illustrations",
+  "canvases": [
+    {
+      "version": 1,
+      "name": "Glyph forms",
+      "scene": {
+        "width": 1500,
+        "height": 2000,
+        "background": "$ink",
+        "transparent": false,
+        "palette": [
+          {
+            "key": "ink",
+            "name": "Ink",
+            "hex": "#171717"
+          },
+          {
+            "key": "plum",
+            "name": "Plum",
+            "hex": "#21101E"
+          },
+          {
+            "key": "magenta",
+            "name": "Magenta",
+            "hex": "#C12EAF"
+          },
+          {
+            "key": "pink",
+            "name": "Pink",
+            "hex": "#DA5CC7"
+          },
+          {
+            "key": "light",
+            "name": "Light pink",
+            "hex": "#FE89EB"
+          },
+          {
+            "key": "blush",
+            "name": "Blush",
+            "hex": "#FEEAFA"
+          },
+          {
+            "key": "paper",
+            "name": "Paper",
+            "hex": "#FFFFFF"
+          }
+        ],
+        "paletteId": "clueso",
+        "duration": 6,
+        "fps": 30
+      },
+      "layers": [
+        {
+          "id": "mw2v9b2z1lebqd",
+          "type": "bloom",
+          "name": "Bloom",
+          "visible": true,
+          "opacity": 1,
+          "blend": 0,
+          "seed": 926.8,
+          "params": {
+            "threshold": 0.3,
+            "radius": 50,
+            "intensity": 0.9,
+            "tint": "$paper"
+          }
+        },
+        {
+          "id": "mw2v9b2z1muyt2",
+          "type": "binary",
+          "name": "Glyphs",
+          "visible": true,
+          "opacity": 1,
+          "blend": 0,
+          "seed": 624.3,
+          "params": {
+            "mode": 4,
+            "chars": " /\\CLUESO",
+            "cell": 19.304,
+            "weight": 0,
+            "threshold": 0.18,
+            "skipBg": false,
+            "contrast": 1.2,
+            "flicker": 8,
+            "scatter": 1,
+            "warp": 0,
+            "tint": 2,
+            "ink": "$paper",
+            "ink2": "$pink",
+            "bg": true,
+            "bgColor": "$ink",
+            "under": false,
+            "dim": 0.2,
+            "glow": 0.2,
+            "rain": false,
+            "trail": 0.35,
+            "rest": 0.3,
+            "cycles": 1
+          }
+        },
+        {
+          "id": "mw2v9b2y1k253k",
+          "type": "forms",
+          "name": "Forms",
+          "visible": true,
+          "opacity": 1,
+          "blend": 0,
+          "seed": 212.7,
+          "params": {
+            "arrange": 0,
+            "block": 5,
+            "count": 8,
+            "rings": 2,
+            "blockScale": 0.24,
+            "inner": 0.16,
+            "twist": 12,
+            "orient": 1,
+            "size": 1243,
+            "rotation": 0,
+            "x": 0.5,
+            "y": 0.5,
+            "logo": 0,
+            "soft": 0.38,
+            "fill": 3,
+            "colorA": "$paper",
+            "colorB": "$blush",
+            "colorC": "$pink",
+            "motion": 2,
+            "axis": 2,
+            "stagger": 0.5,
+            "cycles": 2
+          }
+        }
+      ]
+    }
+  ],
+  "active": 0
+}

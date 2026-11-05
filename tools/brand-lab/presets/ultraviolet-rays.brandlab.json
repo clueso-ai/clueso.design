@@ -1,0 +1,128 @@
+{
+  "version": 2,
+  "name": "Ultraviolet rays",
+  "group": "Illustrations",
+  "canvases": [
+    {
+      "version": 1,
+      "name": "Ultraviolet rays",
+      "scene": {
+        "width": 1500,
+        "height": 2000,
+        "background": "$ink",
+        "transparent": false,
+        "palette": [
+          {
+            "key": "ink",
+            "name": "Ink",
+            "hex": "#0A0614"
+          },
+          {
+            "key": "plum",
+            "name": "Night",
+            "hex": "#170E33"
+          },
+          {
+            "key": "magenta",
+            "name": "Violet",
+            "hex": "#5B2EE0"
+          },
+          {
+            "key": "pink",
+            "name": "Bright violet",
+            "hex": "#8F6BFF"
+          },
+          {
+            "key": "light",
+            "name": "Lilac",
+            "hex": "#C7B8FF"
+          },
+          {
+            "key": "blush",
+            "name": "Haze",
+            "hex": "#F0ECFF"
+          },
+          {
+            "key": "paper",
+            "name": "Paper",
+            "hex": "#FFFFFF"
+          }
+        ],
+        "paletteId": "ultraviolet",
+        "duration": 6,
+        "fps": 30
+      },
+      "layers": [
+        {
+          "id": "mw2wp08g1cv4kjc",
+          "type": "binary",
+          "name": "Glyphs",
+          "visible": true,
+          "opacity": 1,
+          "blend": 0,
+          "seed": 698.5,
+          "params": {
+            "mode": 0,
+            "chars": " /\\CLUESO",
+            "cell": 22.395,
+            "weight": 1,
+            "threshold": 0.33,
+            "skipBg": false,
+            "contrast": 0.91,
+            "flicker": 12,
+            "scatter": 0.38,
+            "warp": 0.41,
+            "tint": 0,
+            "ink": "$blush",
+            "ink2": "$magenta",
+            "bg": true,
+            "bgColor": "$ink",
+            "under": false,
+            "dim": 0.2,
+            "glow": 0.16,
+            "rain": false,
+            "trail": 0.35,
+            "rest": 0.3,
+            "cycles": 1
+          }
+        },
+        {
+          "id": "mw2wp08g1cu6lhs",
+          "type": "radial",
+          "name": "Radial",
+          "visible": true,
+          "opacity": 1,
+          "blend": 0,
+          "seed": 278.2,
+          "params": {
+            "mode": 0,
+            "count": 7,
+            "arms": 2,
+            "turn": 1,
+            "twist": 1.47,
+            "profile": 1,
+            "soft": 0.45,
+            "scale": 0.86,
+            "hole": 0.05,
+            "fade": 0.03,
+            "cx": 0.5,
+            "cy": 0.5,
+            "fill": 0,
+            "colorA": "$blush",
+            "colorB": "$plum",
+            "motion": 1,
+            "cycles": 2,
+            "fillCanvas": true,
+            "w": 0.6,
+            "h": 0.6,
+            "radius": 0,
+            "rotation": 0,
+            "x": 0.5,
+            "y": 0.5
+          }
+        }
+      ]
+    }
+  ],
+  "active": 0
+}

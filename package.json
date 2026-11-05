@@ -10,7 +10,7 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "check": "pnpm typecheck && pnpm lint && node scripts/check-registry.ts && node scripts/check-styles.ts && node scripts/check-changelog.ts"
+    "check": "pnpm typecheck && pnpm lint && node scripts/check-registry.ts && node scripts/check-styles.ts && node scripts/check-changelog.ts && node scripts/check-presets.ts"
   },
   "dependencies": {
     "@huggingface/transformers": "4.3.2",

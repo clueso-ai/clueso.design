@@ -8,7 +8,7 @@ import { presetDoc } from "@/tools/brand-lab/state/presets";
 import { useStore } from "@/tools/brand-lab/state/store";
 
 /** Posters the homepage embed opens with. */
-const EMBED_POSTERS = ["poster-sunrise", "poster-led", "poster-glyph-bloom"];
+const EMBED_POSTERS = ["poster-sunrise", "poster-led", "85-on-brand"];
 
 /** Brand Lab, plus anything the site handed over (opened as a new canvas). */
 export function BrandLabClient() {

@@ -1,0 +1,213 @@
+{
+  "version": 2,
+  "name": "85% on brand",
+  "group": "Posters",
+  "canvases": [
+    {
+      "version": 1,
+      "name": "85% on brand",
+      "scene": {
+        "width": 1500,
+        "height": 2000,
+        "background": "$paper",
+        "transparent": false,
+        "palette": [
+          {
+            "key": "ink",
+            "name": "Ink",
+            "hex": "#171717"
+          },
+          {
+            "key": "plum",
+            "name": "Plum",
+            "hex": "#21101E"
+          },
+          {
+            "key": "magenta",
+            "name": "Magenta",
+            "hex": "#C12EAF"
+          },
+          {
+            "key": "pink",
+            "name": "Pink",
+            "hex": "#DA5CC7"
+          },
+          {
+            "key": "light",
+            "name": "Light pink",
+            "hex": "#FE89EB"
+          },
+          {
+            "key": "blush",
+            "name": "Blush",
+            "hex": "#FEEAFA"
+          },
+          {
+            "key": "paper",
+            "name": "Paper",
+            "hex": "#FFFFFF"
+          }
+        ],
+        "paletteId": "clueso",
+        "duration": 6,
+        "fps": 30
+      },
+      "layers": [
+        {
+          "id": "mw2w4iwau1bk15",
+          "type": "text",
+          "name": "Headline",
+          "visible": true,
+          "opacity": 1,
+          "blend": 0,
+          "seed": 880.7,
+          "params": {
+            "text": "85%",
+            "font": 0,
+            "weight": 300,
+            "size": 460,
+            "tracking": -0.04,
+            "leading": 1,
+            "align": 0,
+            "upper": false,
+            "width": 0.9,
+            "anchor": 0,
+            "x": 0.055,
+            "y": 0.955,
+            "rotation": 0,
+            "boxModel": true,
+            "style": 0,
+            "stroke": 2,
+            "color": "$paper",
+            "box": 0,
+            "boxColor": "$ink",
+            "pad": 0.2
+          }
+        },
+        {
+          "id": "mw2w4iwau2d8gy",
+          "type": "text",
+          "name": "Headline",
+          "visible": true,
+          "opacity": 1,
+          "blend": 0,
+          "seed": 450.8,
+          "params": {
+            "text": "of every frame\nstays on brand",
+            "font": 0,
+            "weight": 300,
+            "size": 80,
+            "tracking": -0.02,
+            "leading": 1.1,
+            "align": 0,
+            "upper": false,
+            "width": 0.8,
+            "anchor": 0,
+            "x": 0.06,
+            "y": 0.74,
+            "rotation": 0,
+            "boxModel": true,
+            "style": 0,
+            "stroke": 2,
+            "color": "$blush",
+            "box": 0,
+            "boxColor": "$ink",
+            "pad": 0.2
+          }
+        },
+        {
+          "id": "mw2w4iwau39pe7",
+          "type": "mark",
+          "name": "Logo",
+          "visible": true,
+          "opacity": 1,
+          "blend": 0,
+          "seed": 176,
+          "params": {
+            "layout": 0,
+            "size": 54,
+            "rotation": 0,
+            "spacing": 1.4,
+            "randRot": false,
+            "missing": 0,
+            "x": 0.08,
+            "y": 0.055,
+            "logo": 0,
+            "style": 0,
+            "stroke": 3,
+            "theme": 3,
+            "fill": 1,
+            "colorA": "$paper",
+            "colorB": "$magenta",
+            "motion": 0,
+            "axis": 2,
+            "cycles": 1
+          }
+        },
+        {
+          "id": "mw2w77tn107xq8z",
+          "type": "matrix",
+          "name": "Dot Matrix",
+          "visible": true,
+          "opacity": 1,
+          "blend": 0,
+          "seed": 266.6,
+          "params": {
+            "mode": 2,
+            "cell": 20.975,
+            "gap": 0.18,
+            "round": 0.08,
+            "join": 0.35,
+            "bayer": 0,
+            "dir": 0,
+            "widthByTone": true,
+            "threshold": 0.1,
+            "contrast": 1.4,
+            "bias": 0,
+            "invert": false,
+            "tint": 0,
+            "ink": "$magenta",
+            "ink2": "$light",
+            "under": 1,
+            "bgColor": "$paper",
+            "dim": 0
+          }
+        },
+        {
+          "id": "mw2w77tn106wcod",
+          "type": "forms",
+          "name": "Forms",
+          "visible": true,
+          "opacity": 1,
+          "blend": 0,
+          "seed": 518.4,
+          "params": {
+            "arrange": 2,
+            "block": 3,
+            "count": 9,
+            "rings": 2,
+            "blockScale": 0.33,
+            "inner": 0.37,
+            "twist": -20,
+            "orient": 1,
+            "size": 1164,
+            "rotation": 0,
+            "x": 0.5,
+            "y": 0.5,
+            "logo": 0,
+            "soft": 0.38,
+            "fill": 1,
+            "colorA": "$magenta",
+            "colorB": "$pink",
+            "colorC": "$light",
+            "motion": 1,
+            "axis": 2,
+            "stagger": 0.5,
+            "cycles": 2
+          }
+        }
+      ]
+    }
+  ],
+  "active": 0
+}

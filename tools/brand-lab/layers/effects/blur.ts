@@ -5,6 +5,7 @@ import type { LayerDef } from "../types";
 // direction, or a zoom blur towards a point. Optional frost tint for glass panels.
 export const blur: LayerDef = {
 	type: "blur",
+	spills: true,
 	kind: "effect",
 	category: "finish",
 	label: "Blur",

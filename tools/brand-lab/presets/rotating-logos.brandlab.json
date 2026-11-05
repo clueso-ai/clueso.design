@@ -1,0 +1,188 @@
+{
+  "version": 2,
+  "name": "Rotating logos",
+  "group": "Posters",
+  "canvases": [
+    {
+      "version": 1,
+      "name": "Rotating logos",
+      "scene": {
+        "width": 1500,
+        "height": 2000,
+        "background": "$paper",
+        "transparent": false,
+        "palette": [
+          {
+            "key": "ink",
+            "name": "Ink",
+            "hex": "#171717"
+          },
+          {
+            "key": "plum",
+            "name": "Plum",
+            "hex": "#21101E"
+          },
+          {
+            "key": "magenta",
+            "name": "Magenta",
+            "hex": "#C12EAF"
+          },
+          {
+            "key": "pink",
+            "name": "Pink",
+            "hex": "#DA5CC7"
+          },
+          {
+            "key": "light",
+            "name": "Light pink",
+            "hex": "#FE89EB"
+          },
+          {
+            "key": "blush",
+            "name": "Blush",
+            "hex": "#FEEAFA"
+          },
+          {
+            "key": "paper",
+            "name": "Paper",
+            "hex": "#FFFFFF"
+          }
+        ],
+        "paletteId": "clueso",
+        "duration": 6,
+        "fps": 30
+      },
+      "layers": [
+        {
+          "id": "mw2vegwrs0oner",
+          "type": "text",
+          "name": "Headline",
+          "visible": true,
+          "opacity": 1,
+          "blend": 0,
+          "seed": 511.1,
+          "params": {
+            "text": "Rotating \nLogos",
+            "font": 0,
+            "weight": 300,
+            "size": 150,
+            "tracking": -0.02,
+            "leading": 1.1,
+            "align": 0,
+            "upper": false,
+            "width": 0.8,
+            "anchor": 0,
+            "x": 0.06,
+            "y": 0.94,
+            "rotation": 0,
+            "boxModel": true,
+            "style": 0,
+            "stroke": 2,
+            "color": "$plum",
+            "box": 0,
+            "boxColor": "$paper",
+            "pad": 0.2
+          }
+        },
+        {
+          "id": "mw2vegwrs1pjl1",
+          "type": "text",
+          "name": "Label",
+          "visible": true,
+          "opacity": 1,
+          "blend": 0,
+          "seed": 534,
+          "params": {
+            "text": "Clueso / Brand Lab",
+            "font": 2,
+            "weight": 400,
+            "size": 22,
+            "tracking": 0.04,
+            "leading": 1.4,
+            "align": 0,
+            "upper": true,
+            "width": 0,
+            "anchor": 2,
+            "x": 0.06,
+            "y": 0.045,
+            "rotation": 0,
+            "boxModel": true,
+            "style": 0,
+            "stroke": 2,
+            "color": "$plum",
+            "box": 0,
+            "boxColor": "$paper",
+            "pad": 0.2
+          }
+        },
+        {
+          "id": "mw2vg5s7scaj0r",
+          "type": "binary",
+          "name": "Glyphs",
+          "visible": true,
+          "opacity": 1,
+          "blend": 0,
+          "seed": 913,
+          "params": {
+            "mode": 1,
+            "chars": " /\\CLUESO",
+            "cell": 15.48,
+            "weight": 0,
+            "threshold": 0.15,
+            "skipBg": false,
+            "contrast": 1.4,
+            "flicker": 12,
+            "scatter": 1,
+            "warp": 0.328,
+            "tint": 0,
+            "ink": "$magenta",
+            "ink2": "$blush",
+            "bg": true,
+            "bgColor": "$paper",
+            "under": false,
+            "dim": 0.2,
+            "glow": 0.4,
+            "rain": false,
+            "trail": 0.35,
+            "rest": 0.3,
+            "cycles": 1
+          }
+        },
+        {
+          "id": "mw2vg5s7sbaz0c",
+          "type": "forms",
+          "name": "Forms",
+          "visible": true,
+          "opacity": 1,
+          "blend": 0,
+          "seed": 443.7,
+          "params": {
+            "arrange": 0,
+            "block": 0,
+            "count": 7,
+            "rings": 1,
+            "blockScale": 0.16,
+            "inner": 0.02,
+            "twist": -80,
+            "orient": 3,
+            "size": 1394,
+            "rotation": 0,
+            "x": 0.5,
+            "y": 0.4265,
+            "logo": 1,
+            "soft": 0.01,
+            "fill": 2,
+            "colorA": "$magenta",
+            "colorB": "$pink",
+            "colorC": "$blush",
+            "motion": 1,
+            "axis": 2,
+            "stagger": 0.5,
+            "cycles": 0
+          }
+        }
+      ]
+    }
+  ],
+  "active": 0
+}

@@ -1,0 +1,209 @@
+{
+  "version": 2,
+  "name": "Made of pieces",
+  "group": "Posters",
+  "canvases": [
+    {
+      "version": 1,
+      "name": "Made of pieces",
+      "scene": {
+        "width": 1500,
+        "height": 2000,
+        "background": "$plum",
+        "transparent": false,
+        "palette": [
+          {
+            "key": "ink",
+            "name": "Ink",
+            "hex": "#171717"
+          },
+          {
+            "key": "plum",
+            "name": "Plum",
+            "hex": "#21101E"
+          },
+          {
+            "key": "magenta",
+            "name": "Magenta",
+            "hex": "#C12EAF"
+          },
+          {
+            "key": "pink",
+            "name": "Pink",
+            "hex": "#DA5CC7"
+          },
+          {
+            "key": "light",
+            "name": "Light pink",
+            "hex": "#FE89EB"
+          },
+          {
+            "key": "blush",
+            "name": "Blush",
+            "hex": "#FEEAFA"
+          },
+          {
+            "key": "paper",
+            "name": "Paper",
+            "hex": "#FFFFFF"
+          }
+        ],
+        "paletteId": "clueso",
+        "duration": 6,
+        "fps": 30
+      },
+      "layers": [
+        {
+          "id": "mw2vdpsdp98nzy",
+          "type": "text",
+          "name": "Headline",
+          "visible": true,
+          "opacity": 1,
+          "blend": 0,
+          "seed": 77,
+          "params": {
+            "text": "Made of\npieces",
+            "font": 0,
+            "weight": 300,
+            "size": 150,
+            "tracking": -0.02,
+            "leading": 1.1,
+            "align": 0,
+            "upper": false,
+            "width": 0.8,
+            "anchor": 0,
+            "x": 0.06,
+            "y": 0.94,
+            "rotation": 0,
+            "boxModel": true,
+            "style": 0,
+            "stroke": 2,
+            "color": "$paper",
+            "box": 0,
+            "boxColor": "$magenta",
+            "pad": 0.2
+          }
+        },
+        {
+          "id": "mw2vdpsdpaa7yb",
+          "type": "text",
+          "name": "Label",
+          "visible": true,
+          "opacity": 1,
+          "blend": 0,
+          "seed": 21.7,
+          "params": {
+            "text": "Clueso / Brand Lab",
+            "font": 2,
+            "weight": 400,
+            "size": 22,
+            "tracking": 0.04,
+            "leading": 1.4,
+            "align": 0,
+            "upper": true,
+            "width": 0,
+            "anchor": 2,
+            "x": 0.06,
+            "y": 0.045,
+            "rotation": 0,
+            "boxModel": true,
+            "style": 0,
+            "stroke": 2,
+            "color": "$paper",
+            "box": 0,
+            "boxColor": "$magenta",
+            "pad": 0.2
+          }
+        },
+        {
+          "id": "mw2vdpsdpbm2kj",
+          "type": "binary",
+          "name": "Glyphs",
+          "visible": true,
+          "opacity": 1,
+          "blend": 0,
+          "seed": 99.2,
+          "params": {
+            "mode": 3,
+            "chars": " .:/+*=2e",
+            "cell": 24,
+            "weight": 0,
+            "threshold": 0.1,
+            "skipBg": true,
+            "contrast": 1.25,
+            "flicker": 0,
+            "scatter": 1,
+            "warp": 0,
+            "tint": 0,
+            "ink": "$light",
+            "ink2": "$magenta",
+            "bg": false,
+            "bgColor": "$plum",
+            "under": true,
+            "dim": 0,
+            "glow": 0.35,
+            "rain": false,
+            "trail": 0.35,
+            "rest": 0.3,
+            "cycles": 1
+          }
+        },
+        {
+          "id": "mw2vdpsdpcb68v",
+          "type": "blur",
+          "name": "Blur",
+          "visible": true,
+          "opacity": 1,
+          "blend": 0,
+          "seed": 77.2,
+          "params": {
+            "mode": 0,
+            "radius": 22,
+            "angle": -90,
+            "from": 0.35,
+            "to": 0.9,
+            "cx": 0.5,
+            "cy": 0.5,
+            "frost": 0,
+            "tint": "$blush",
+            "lift": 1
+          }
+        },
+        {
+          "id": "mw2vdpsdpdpgmo",
+          "type": "forms",
+          "name": "Bloom",
+          "visible": true,
+          "opacity": 1,
+          "blend": 0,
+          "seed": 843.9,
+          "params": {
+            "arrange": 1,
+            "block": 5,
+            "count": 12,
+            "rings": 1,
+            "blockScale": 0.21,
+            "inner": 0,
+            "twist": 43,
+            "orient": 0,
+            "size": 1250,
+            "rotation": 0,
+            "x": 0.5,
+            "y": 0.424,
+            "logo": 0,
+            "soft": 0.36,
+            "fill": 3,
+            "colorA": "$paper",
+            "colorB": "$light",
+            "colorC": "$pink",
+            "motion": 3,
+            "axis": 2,
+            "stagger": 0.5,
+            "cycles": 2
+          }
+        }
+      ]
+    }
+  ],
+  "active": 0
+}

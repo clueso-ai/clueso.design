@@ -3,7 +3,7 @@ import { BUILT_IN_PALETTES, clonePalette, nearestColor, type Palette, type Palet
 import { createLayer, getDef, newId } from "../layers/registry";
 import { fitInside } from "../layers/sources/image";
 import { migrateText } from "../layers/sources/text";
-import { allParams, type Layer, type ParamValue, type Params } from "../layers/types";
+import { allParams, kindOf, type Layer, type LayerEffect, type LayerKind, type ParamValue, type Params } from "../layers/types";
 import { placeAll } from "./board";
 import type { Doc, Scene } from "./doc";
 import { PRESETS } from "./presets";
@@ -43,6 +43,8 @@ interface State {
 	selectedId: string | null;
 	selectedIds: string[];
 	hoverId: string | null;
+	/** What a drag does: select and move, or draw a canvas (F), rectangle (R), ellipse (O) or text box (T). */
+	tool: Tool;
 	/** Text layer being typed into on the canvas (double-click or Enter). */
 	editingTextId: string | null;
 	menu: { x: number; y: number } | null;
@@ -75,9 +77,15 @@ interface State {
 	duplicateCanvas: (i: number, to?: number, board?: { x: number; y: number }) => void;
 	/** Place a canvas on the board (composition px). Drags coalesce into one undo step. */
 	moveCanvasOnBoard: (i: number, board: { x: number; y: number }) => void;
-	/** The canvas itself is selected on the board (its frame, not a layer). */
-	canvasSelected: boolean;
+	/** Canvases selected on the board as frames (indices), not their layers. Several with a marquee or Shift. */
+	selectedCanvases: number[];
+	/** Select the active canvas's frame, or clear the canvas selection. */
 	setCanvasSelected: (on: boolean) => void;
+	selectCanvases: (indices: number[]) => void;
+	/** Move several canvases on the board at once, in one undo step (a group drag). */
+	moveCanvasesOnBoard: (moves: Record<number, { x: number; y: number }>) => void;
+	/** Delete every selected canvas, keeping at least one in the project. */
+	removeSelectedCanvases: () => void;
 	/** Snap moves to guides (objects, canvases) and whole pixels. A saved preference. */
 	snapping: boolean;
 	toggleSnapping: () => void;
@@ -107,6 +115,16 @@ interface State {
 	moveLayer: (from: number, to: number) => void;
 	updateLayer: (id: string, patch: Partial<Layer>, coalesceKey?: string) => void;
 	setParam: (id: string, key: string, value: ParamValue) => void;
+	/** Effects on one layer only (top first). New ones go on top of that layer's list. */
+	addEffect: (layerId: string, type: string) => void;
+	updateEffect: (layerId: string, effectId: string, patch: Partial<Omit<LayerEffect, "id">>, coalesceKey?: string) => void;
+	removeEffect: (layerId: string, effectId: string) => void;
+	/** Move an effect one step up (-1) or down (+1) in its layer's list. */
+	moveEffect: (layerId: string, effectId: string, dir: -1 | 1) => void;
+	/** A Look layer becomes an effect on one layer (the nearest object below it, unless given). */
+	applyLookTo: (lookId: string, targetId?: string) => void;
+	/** An effect on a layer becomes a Look layer just above it, restyling everything below again. */
+	liftEffect: (layerId: string, effectId: string) => void;
 	/** Give an image layer a picture. An empty layer also gets placed inside the canvas. */
 	setImage: (id: string, src: string) => Promise<void>;
 	/** Swap a layer to another type in place (e.g. Slice → Glitch), keeping what carries over. */
@@ -116,6 +134,7 @@ interface State {
 	selectMany: (ids: string[]) => void;
 	setHover: (id: string | null) => void;
 	setEditingText: (id: string | null) => void;
+	setTool: (tool: Tool) => void;
 	openMenu: (x: number, y: number) => void;
 	closeMenu: () => void;
 	arrange: (dir: "front" | "forward" | "backward" | "back") => void;
@@ -222,12 +241,40 @@ export function sanitize(doc: Doc): Doc {
 				const params = l.type === "text" ? migrateText(l.params, doc.scene.width) : l.params;
 				const merged = { ...fresh.params, ...params };
 				const def = getDef(l.type);
-				return { ...fresh, ...l, params: def?.normalize ? def.normalize(merged) : merged };
+				// Effects on the layer: drop any whose type no longer exists, fill in params added since.
+				const effects = l.effects?.filter((e) => getDef(e.type)).map((e) => ({ ...e, params: { ...createLayer(e.type).params, ...e.params } }));
+				return { ...fresh, ...l, params: def?.normalize ? def.normalize(merged) : merged, ...(effects ? { effects } : {}) };
 			}),
 	};
 }
 
 let toastTimer: number | undefined;
+/**
+ * Where a new layer goes in the stack (top first). A Look goes on top so it restyles everything, a
+ * background at the bottom. Brand pieces and content go above the selected object, or just under the
+ * Looks when nothing (or a Look or background) is selected. Layers can still be dragged anywhere.
+ */
+function insertAt(layers: Layer[], kind: LayerKind, selectedId: string | null) {
+	if (kind === "look") return 0;
+	if (kind === "background") return layers.length;
+	const sel = layers.findIndex((l) => l.id === selectedId);
+	const selKind = sel >= 0 ? kindOf(getDef(layers[sel].type)!) : null;
+	if (selKind === "brand" || selKind === "content") return sel;
+	let i = 0;
+	while (i < layers.length && kindOf(getDef(layers[i].type)!) === "look") i++;
+	return i;
+}
+
+export type Tool = "move" | "canvas" | "rect" | "ellipse" | "text";
+
+/** Drawing tools and their keys, as Figma has them. */
+export const TOOLS: { id: Exclude<Tool, "move">; label: string; key: string }[] = [
+	{ id: "canvas", label: "Draw a canvas", key: "F" },
+	{ id: "rect", label: "Rectangle", key: "R" },
+	{ id: "ellipse", label: "Ellipse", key: "O" },
+	{ id: "text", label: "Text", key: "T" },
+];
+
 /** In-app layer clipboard for ⌘C / ⌘V. */
 let clipboard: Layer[] = [];
 /** What ⌘C puts on the system clipboard when copying layers. */
@@ -244,6 +291,7 @@ export const useStore = create<State>((set, get) => ({
 	selectedId: null,
 	selectedIds: [],
 	hoverId: null,
+	tool: "move",
 	editingTextId: null,
 	menu: null,
 	past: [],
@@ -285,6 +333,7 @@ export const useStore = create<State>((set, get) => ({
 			past: past.slice(0, -1),
 			future: [{ canvases, active }, ...future],
 			lastEdit: null,
+			selectedCanvases: get().selectedCanvases.filter((i) => i < prev.canvases.length),
 			...(prev.active !== active || selectedIds.some((id) => !prev.canvases[prev.active].layers.some((l) => l.id === id)) ? { selectedId: null, selectedIds: [] } : {}),
 		});
 	},
@@ -299,6 +348,7 @@ export const useStore = create<State>((set, get) => ({
 			past: [...past, { canvases, active }],
 			future: future.slice(1),
 			lastEdit: null,
+			selectedCanvases: get().selectedCanvases.filter((i) => i < next.canvases.length),
 			...(next.active !== active ? { selectedId: null, selectedIds: [] } : {}),
 		});
 	},
@@ -351,6 +401,25 @@ export const useStore = create<State>((set, get) => ({
 			const canvases = cs.filter((_, j) => j !== i);
 			return { canvases, active: Math.min(active > i || active === canvases.length ? active - 1 : active, canvases.length - 1) };
 		});
+		set({ selectedCanvases: [] });
+	},
+	removeSelectedCanvases: () => {
+		const { selectedCanvases, canvases } = get();
+		if (!selectedCanvases.length) return;
+		if (selectedCanvases.length >= canvases.length) {
+			get().showToast("A project needs at least one canvas");
+			return;
+		}
+		const gone = new Set(selectedCanvases);
+		editProject(get, set, (cs, active) => {
+			const kept = cs.filter((_, j) => !gone.has(j));
+			// Stay on the active canvas if it survives, else the nearest one before it.
+			let next = active;
+			while (next > 0 && gone.has(next)) next--;
+			if (gone.has(next)) next = cs.findIndex((_, j) => !gone.has(j));
+			return { canvases: kept, active: kept.indexOf(cs[next]) };
+		});
+		set({ selectedCanvases: [] });
 	},
 	snapping: localStorage.getItem("clueso-brand-lab:snap") !== "off",
 	toggleSnapping: () => {
@@ -365,15 +434,22 @@ export const useStore = create<State>((set, get) => ({
 	setPreview: (preview) => set({ preview }),
 	commandOpen: false,
 	setCommandOpen: (commandOpen) => set({ commandOpen }),
-	canvasSelected: false,
-	setCanvasSelected: (canvasSelected) => set(canvasSelected ? { canvasSelected, selectedId: null, selectedIds: [] } : { canvasSelected }),
-	moveCanvasOnBoard: (i, board) => {
+	selectedCanvases: [],
+	setCanvasSelected: (on) => set(on ? { selectedCanvases: [get().active], selectedId: null, selectedIds: [] } : { selectedCanvases: [] }),
+	selectCanvases: (indices) => {
+		const n = get().canvases.length;
+		const selectedCanvases = [...new Set(indices)].filter((i) => i >= 0 && i < n).sort((a, b) => a - b);
+		set(selectedCanvases.length ? { selectedCanvases, selectedId: null, selectedIds: [] } : { selectedCanvases });
+	},
+	moveCanvasOnBoard: (i, board) => get().moveCanvasesOnBoard({ [i]: board }),
+	moveCanvasesOnBoard: (moves) => {
 		const { canvases, active, past, lastEdit } = get();
-		if (!canvases[i]) return;
+		const ids = Object.keys(moves).map(Number);
+		if (!ids.length || ids.some((i) => !canvases[i])) return;
 		const now = performance.now();
-		const key = `board:${i}`;
+		const key = `board:${ids.join(",")}`;
 		const coalesce = lastEdit && lastEdit.key === key && now - lastEdit.at < COALESCE_MS;
-		const next = placeAll(canvases).map((c, j) => (j === i ? { ...c, board } : c));
+		const next = placeAll(canvases).map((c, j) => (moves[j] ? { ...c, board: moves[j] } : c));
 		set({
 			canvases: next,
 			doc: next[active],
@@ -395,6 +471,7 @@ export const useStore = create<State>((set, get) => ({
 			canvases.splice(to, 0, c);
 			return { canvases, active: canvases.indexOf(cs[active]) };
 		});
+		set({ selectedCanvases: [] });
 	},
 	saveToLibrary: async ({ asNew = false, doc: target, name } = {}) => {
 		const { doc: current, saved, time, canvases, active, projectName } = get();
@@ -478,9 +555,8 @@ export const useStore = create<State>((set, get) => ({
 		const layer = createLayer(type, opts);
 		const { selectedId } = get();
 		get().commit((doc) => {
-			const at = Math.max(0, doc.layers.findIndex((l) => l.id === selectedId));
 			const layers = [...doc.layers];
-			layers.splice(at, 0, layer);
+			layers.splice(insertAt(doc.layers, kindOf(def), selectedId), 0, layer);
 			return { ...doc, layers };
 		});
 		set({ selectedId: layer.id, selectedIds: [layer.id] });
@@ -537,6 +613,62 @@ export const useStore = create<State>((set, get) => ({
 			}),
 			`${id}:${key}`,
 		),
+	addEffect: (layerId, type) => {
+		const fx = createLayer(type);
+		const effect: LayerEffect = { id: fx.id, type, visible: true, params: fx.params };
+		get().commit((doc) => ({ ...doc, layers: doc.layers.map((l) => (l.id === layerId ? { ...l, effects: [effect, ...(l.effects ?? [])] } : l)) }));
+	},
+	updateEffect: (layerId, effectId, patch, coalesceKey) =>
+		get().commit(
+			(doc) => ({
+				...doc,
+				layers: doc.layers.map((l) => (l.id === layerId ? { ...l, effects: (l.effects ?? []).map((e) => (e.id === effectId ? { ...e, ...patch } : e)) } : l)),
+			}),
+			coalesceKey,
+		),
+	removeEffect: (layerId, effectId) =>
+		get().commit((doc) => ({ ...doc, layers: doc.layers.map((l) => (l.id === layerId ? { ...l, effects: (l.effects ?? []).filter((e) => e.id !== effectId) } : l)) })),
+	moveEffect: (layerId, effectId, dir) =>
+		get().commit((doc) => ({
+			...doc,
+			layers: doc.layers.map((l) => {
+				if (l.id !== layerId || !l.effects) return l;
+				const i = l.effects.findIndex((e) => e.id === effectId);
+				const j = i + dir;
+				if (i < 0 || j < 0 || j >= l.effects.length) return l;
+				const effects = [...l.effects];
+				[effects[i], effects[j]] = [effects[j], effects[i]];
+				return { ...l, effects };
+			}),
+		})),
+	applyLookTo: (lookId, targetId) => {
+		const layers = get().doc.layers;
+		const i = layers.findIndex((l) => l.id === lookId);
+		const look = layers[i];
+		if (!look || getDef(look.type)?.kind !== "effect") return;
+		const target = targetId ? layers.find((l) => l.id === targetId) : layers.slice(i + 1).find((l) => l.visible && getDef(l.type)?.kind === "source");
+		if (!target) return;
+		const effect: LayerEffect = { id: look.id, type: look.type, visible: look.visible, params: look.params };
+		get().commit((doc) => ({
+			...doc,
+			layers: doc.layers.filter((l) => l.id !== lookId).map((l) => (l.id === target.id ? { ...l, effects: [effect, ...(l.effects ?? [])] } : l)),
+		}));
+		set({ selectedId: target.id, selectedIds: [target.id] });
+		get().showToast(`${look.name} now applies only to ${target.name}`);
+	},
+	liftEffect: (layerId, effectId) => {
+		const layer = get().doc.layers.find((l) => l.id === layerId);
+		const effect = layer?.effects?.find((e) => e.id === effectId);
+		if (!layer || !effect) return;
+		const look = createLayer(effect.type, { params: effect.params, visible: effect.visible });
+		get().commit((doc) => {
+			const layers = doc.layers.map((l) => (l.id === layerId ? { ...l, effects: (l.effects ?? []).filter((e) => e.id !== effectId) } : l));
+			layers.splice(layers.findIndex((l) => l.id === layerId), 0, look);
+			return { ...doc, layers };
+		});
+		set({ selectedId: look.id, selectedIds: [look.id] });
+		get().showToast(`${look.name} now applies to everything below`);
+	},
 	setImage: async (id, src) => {
 		const empty = !get().doc.layers.find((l) => l.id === id)?.params.src;
 		// A new picture starts uncropped.
@@ -566,7 +698,7 @@ export const useStore = create<State>((set, get) => ({
 	},
 	setScene: (patch, coalesceKey) => get().commit((doc) => ({ ...doc, scene: { ...doc.scene, ...patch } }), coalesceKey),
 	select: (id, mode = "replace") => {
-		if (id) set({ canvasSelected: false });
+		if (id) set({ selectedCanvases: [] });
 		const { selectedIds, selectedId, doc } = get();
 		if (!id) return set({ selectedId: null, selectedIds: [] });
 		let ids = [id];
@@ -582,6 +714,7 @@ export const useStore = create<State>((set, get) => ({
 	selectMany: (ids) => set({ selectedIds: ids, selectedId: ids[ids.length - 1] ?? null }),
 	setHover: (hoverId) => get().hoverId !== hoverId && set({ hoverId }),
 	setEditingText: (editingTextId) => set({ editingTextId }),
+	setTool: (tool) => set({ tool }),
 	openMenu: (x, y) => set({ menu: { x, y } }),
 	closeMenu: () => set({ menu: null }),
 	arrange: (dir) => {
@@ -663,7 +796,7 @@ export const useStore = create<State>((set, get) => ({
 		// A shuffle changes what's on the canvas, never its name.
 		get().commit((doc) => ({ ...vary(doc, mode, rng), name: doc.name }));
 		// Whole-doc shuffles replace the layers, so the old selection would point at nothing.
-		if (mode === "pattern" || mode === "poster") set({ selectedId: null, selectedIds: [] });
+		if (mode === "pattern" || mode === "poster" || mode === "everything") set({ selectedId: null, selectedIds: [] });
 	},
 	setShuffleMode: (shuffleMode) => {
 		localStorage.setItem("clueso-brand-lab:shuffle", shuffleMode);

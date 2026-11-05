@@ -53,6 +53,7 @@ function commandItems(): Item[] {
 		cmd("dup-canvas", "Duplicate canvas", "Copy the canvas you're on", <I.Duplicate />, () => st().duplicateCanvas(st().active)),
 		cmd("shuffle", "Shuffle", "Shuffle in the current mode", <I.Shuffle />, () => st().shuffleAll(), ["S"]),
 		cmd("variations", "Variations and styles", "Compare variations of this canvas", <I.Grid />, () => st().setOverlay("explore"), ["E"]),
+		cmd("draw-canvas", "Draw a canvas", "Drag on the board to place a new canvas at any size", <I.Frame />, () => st().setTool("canvas"), ["F"]),
 		cmd("library", "Library", "Saved projects and presets", <I.Library />, () => st().setOverlay("library"), ["L"]),
 		cmd("snapping", "Toggle snapping", "Snap to guides, canvases and whole pixels", <I.AlignHCenter />, () => st().toggleSnapping(), ["⇧⌘'"]),
 	];

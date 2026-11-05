@@ -1,6 +1,6 @@
 import { cn } from "@/lib/design-system/jigsaw/lib/utils";
 import { usePanelWidths } from "@/tools/shell/context";
-import { GAP, M, PANEL_TOP } from "@/tools/shell/geometry";
+import { GAP, M, PANEL_TOP, shownWidth } from "@/tools/shell/geometry";
 import type { Pt } from "../engine/types";
 import { useIconLab } from "../state/store";
 import { ContextPane } from "./ContextPane";
@@ -15,8 +15,9 @@ export const BOTTOM = 64;
  */
 export function Canvas() {
 	const pane = useIconLab((s) => s.pane);
-	const left = usePanelWidths((s) => s.left);
-	const right = usePanelWidths((s) => s.right);
+	// 0 while a panel is collapsed, so the icon re-centres in the space it frees.
+	const left = usePanelWidths((s) => shownWidth(s, "left"));
+	const right = usePanelWidths((s) => shownWidth(s, "right"));
 	const { sketchStart, sketchMove, sketchEnd } = useIconLab.getState();
 	const at = (e: React.PointerEvent<HTMLDivElement>): Pt => {
 		const r = e.currentTarget.getBoundingClientRect();
@@ -42,7 +43,7 @@ export function Canvas() {
 			{/* The free space between the panels and the bars; panels hide on narrow screens. */}
 			<div
 				className="absolute right-[12px] left-[12px] flex flex-col items-center overflow-y-auto min-[1100px]:right-(--il-right) min-[1100px]:left-(--il-left)"
-				style={{ top: PANEL_TOP, bottom: M + BOTTOM + GAP, "--il-left": `${M + left + GAP}px`, "--il-right": `${M + right + GAP}px` } as React.CSSProperties}
+				style={{ top: PANEL_TOP, bottom: M + BOTTOM + GAP, "--il-left": `${left ? M + left + GAP : M}px`, "--il-right": `${right ? M + right + GAP : M}px` } as React.CSSProperties}
 			>
 				{pane === "icon" ? <IconView /> : <ContextPane />}
 			</div>

@@ -1,13 +1,9 @@
-// SVG markup (pasted code or a dropped .svg) becomes a crisp PNG for the image layer. The layer
-// samples a texture, so the vector is rasterised once at a generous size instead of at whatever
-// default size the browser picks for an SVG without width/height (often 300×150).
+// An .svg chosen as an image layer's picture becomes a crisp PNG. The image layer samples a texture,
+// so the vector is rasterised once at a generous size instead of at whatever default size the browser
+// picks for an SVG without width/height (often 300×150). Pasted and dropped SVGs become SVG layers
+// instead, which stay vector (layers/sources/svg.ts).
 
 const MAX_SIDE = 2048;
-
-/** True when pasted text is SVG markup (optionally behind an XML prolog, doctype or comments). */
-export function isSvgCode(text: string) {
-	return /^\s*(<\?xml[\s\S]*?\?>\s*)?(<!DOCTYPE[\s\S]*?>\s*)?(<!--[\s\S]*?-->\s*)*<svg[\s>]/i.test(text) && /<\/svg>\s*$/i.test(text);
-}
 
 /** Rasterise SVG markup to a PNG data URL, longest side MAX_SIDE. Rejects markup that isn't a valid SVG. */
 export async function svgToPng(code: string): Promise<{ src: string; title: string | null }> {
