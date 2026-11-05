@@ -1,0 +1,44 @@
+name: Checks
+
+# Runs on every pull request into staging or main. A PR can't merge if the site doesn't type-check,
+# lint, pass the registry, style and changelog checks, or build. PRs into staging must also add an
+# entry to lib/changelog.ts. Only a change no visitor can see (CI, docs, agent rules) may skip it,
+# with the `no-changelog` label. Release PRs (staging → main) carry the entries already.
+
+on:
+  pull_request:
+    branches: [staging, main]
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+concurrency:
+  group: checks-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Changelog entry
+        if: github.base_ref == 'staging' && !contains(github.event.pull_request.labels.*.name, 'no-changelog')
+        run: |
+          if git diff --name-only "origin/${{ github.base_ref }}...HEAD" | grep -qx "lib/changelog.ts"; then
+            echo "Changelog updated."
+          else
+            echo "::error file=lib/changelog.ts::Add an entry to the top of lib/changelog.ts for what this PR ships (CONTRIBUTING.md, 'Write the changelog entry'). Only a change no visitor can see may skip it, with the no-changelog label."
+            exit 1
+          fi
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
+      - run: pnpm build
