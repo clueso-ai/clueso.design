@@ -75,6 +75,62 @@ export const registry: RegistryItem[] = [
 		tags: ["icons", "design system", "svg"],
 		updated: "2026-11-02",
 	},
+	{
+		slug: "voice-booth",
+		title: "Voice booth",
+		type: "experiment",
+		owner: "Ajinkya Gajbhiye",
+		status: "exploring",
+		visibility: "public",
+		theme: "lab",
+		href: "/playground/voice-booth",
+		preview: "/previews/voice-booth.jpg",
+		description: "Record a line and give it a studio voice in one press, or try radio, phone and stadium. Hear before and after, then download it.",
+		tags: ["audio", "voice", "microphone"],
+		updated: "2026-11-05",
+	},
+	{
+		slug: "transitions",
+		title: "Transition lab",
+		type: "experiment",
+		owner: "Ajinkya Gajbhiye",
+		status: "exploring",
+		visibility: "public",
+		theme: "lab",
+		href: "/playground/transitions",
+		preview: "/previews/transitions.jpg",
+		description: "Cut between two clips with transitions made from Clueso's shapes: bars, blocks, glyphs, a zoom punch and a quarter-circle iris, each with its own sound. Tune the timing and export.",
+		tags: ["video", "motion", "brand"],
+		updated: "2026-11-05",
+	},
+	{
+		slug: "audiogram",
+		title: "Audiogram maker",
+		type: "experiment",
+		owner: "Ajinkya Gajbhiye",
+		status: "exploring",
+		visibility: "public",
+		theme: "lab",
+		href: "/playground/audiogram",
+		preview: "/previews/audiogram.jpg",
+		description: "Turn a voice clip or a track into a video: bars, pixels, glowing waves, an oscilloscope or a ring, with gradients and fine-tuning. Export it ready to post.",
+		tags: ["audio", "video", "social"],
+		updated: "2026-11-05",
+	},
+	{
+		slug: "photobooth",
+		title: "Pink photobooth",
+		type: "experiment",
+		owner: "Ajinkya Gajbhiye",
+		status: "exploring",
+		visibility: "public",
+		theme: "lab",
+		href: "/playground/photobooth",
+		preview: "/previews/photobooth.jpg",
+		description: "Your camera, a photo or a video through Clueso pink: glyphs, halftone dots and pixels, live. Snap a still, shoot a strip or record a clip. Nothing leaves your browser.",
+		tags: ["camera", "generative", "brand"],
+		updated: "2026-11-05",
+	},
 ];
 
 /** Items a signed-out visitor may see. There is no sign-in yet, so internal items are never listed. */
@@ -82,9 +138,9 @@ export function publicItems(type?: ItemType) {
 	return registry.filter((item) => item.visibility === "public" && (!type || item.type === type));
 }
 
-/** A name in sentence case for display, like the site's titles: "Brand Lab" reads "Brand lab". */
+/** A name in sentence case for display, like the site's titles: "Brand Lab" reads "Brand lab". Acronyms like SVG stay as they are. */
 export function displayTitle(title: string) {
-	return title.charAt(0) + title.slice(1).toLowerCase();
+	return title.charAt(0) + title.slice(1).replace(/\S+/g, (word) => (/^[A-Z]{2,}$/.test(word) ? word : word.toLowerCase()));
 }
 
 export function getItem(slug: string) {
