@@ -1,3 +1,5 @@
+import type { SignatureEntry } from "./types.ts";
+
 // Round 13–14 (2026-11-01): signature options, to make the set ownable. Each option redraws
 // a sample of the set so Sneha can compare them in the tool and in context (top bar →
 // Signature). Same grid, stroke and style rules as site-set.js. An entry with no `paths` uses
@@ -12,7 +14,7 @@
 // Tilt is part of A (round 14): only things that swing or get pushed in (bell, pin) lean 12°.
 // (C · Tilt as its own option and D · From the mark were tried in round 13 and dropped in round 14.)
 
-const SIGNATURE_SET = [
+export const SIGNATURE_SET: SignatureEntry[] = [
   {
     key: 'A', label: 'A · Clue pixel',
     idea: 'One small square pixel per icon: it replaces a small detail, marks a state inside the shape, or marks where the action happens.',
@@ -81,5 +83,3 @@ const SIGNATURE_SET = [
 
 // C · Block and D · Personality (round 23) were removed: C at her ask, and D's corner cuts went
 // into the base set itself (site-set.js `cut`), which is what she asked for.
-
-if (typeof module !== 'undefined') module.exports = SIGNATURE_SET;

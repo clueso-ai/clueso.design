@@ -16,6 +16,7 @@
 
 @import "../tools/shell/shell.css";
 @import "../tools/brand-lab/styles/brand-lab.css";
+@import "../tools/icon-lab/styles/icon-lab.css";
 
 @custom-variant dark (&:is(.dark *));
 

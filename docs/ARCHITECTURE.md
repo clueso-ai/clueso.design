@@ -1,10 +1,10 @@
 # Architecture
 
-Last updated 1 November 2026. This records how clueso.design is built today and the decisions behind it. The product brief is the source of intent; where this file differs from the brief, this file records the decision that changed it.
+Last updated 4 November 2026. This records how clueso.design is built today and the decisions behind it. The product brief is the source of intent; where this file differs from the brief, this file records the decision that changed it.
 
 ## Release 1 scope
 
-- Public site, no sign-in: `/`, `/tools`, `/tools/brand-lab`, `/playground/cluego`.
+- Public site, no sign-in: `/`, `/tools`, `/tools/brand-lab`, `/tools/icon-lab`, `/playground/cluego`.
 - The homepage has sections for Tools (with Brand Lab embedded live), Playground, Team and the changelog, and the nav links to them. Each becomes its own page once there is enough to fill it. Systems (Jigsaw) comes back when there is something to show.
 - No backend yet. Brand Lab saves in the browser (localStorage and IndexedDB) and to `.brandlab.json` files, as it always has.
 - No usage analytics yet. Vercel Analytics was removed when hosting moved to AWS.
@@ -17,7 +17,7 @@ Last updated 1 November 2026. This records how clueso.design is built today and 
 | Language | TypeScript 6.0. TS 7 is not used yet because typescript-eslint doesn't support it. |
 | Styling | Tailwind 4.3, themed in CSS. No Sass. |
 | Components | Jigsaw snapshot through `lib/design-system` (see below) |
-| State | zustand (Brand Lab) |
+| State | zustand (Brand Lab, Icon Lab) |
 | Icons | Clueso icons, imported as React components with SVGR (`?react`) |
 | Hosting | AWS: ECS Fargate behind CloudFront, deployed by GitHub Actions. `main` is production. `staging` doesn't deploy yet. See README. |
 | Package manager | pnpm, exact versions |
@@ -31,7 +31,7 @@ app/(site)/page.tsx        /
 app/(site)/tools/page.tsx  /tools
 app/(site)/changelog       /changelog, from lib/changelog.ts
 app/(tool)/tools/brand-lab /tools/brand-lab, full screen, client-only
-app/(tool)/tools/icon-lab  /tools/icon-lab, full screen, client-only (mounts public/tools/icon-lab)
+app/(tool)/tools/icon-lab  /tools/icon-lab, full screen, client-only (mounts tools/icon-lab)
 ```
 
 Playground pieces come two ways. Most are React pages in the site: `app/(site)/playground/<slug>/page.tsx` wraps a component from `components/playground/` in `ExperimentPage` (`experiment-page.tsx`), which shows the registry's title, description and owner and the "I want this in Clueso" vote. Experiments that export video share `lib/record-canvas.ts` (MP4 where the browser can record it, WebM otherwise). They're built from a shared kit in `components/playground/ui/` so nothing is written twice: `ExperimentLayout` and `ControlGroup` (the stage and controls columns), `Segmented`, `Waveform` (scrubbable, with the timeline's Playhead; peaks from `lib/waveform.ts`) and the recorder (`useRecorder`, `RecordingBar`, `RecPill`). Anything about a timeline uses Jigsaw's vendored video parts (`Playhead`, `Clip`, `GifTimeline`, `GifTimelineTransport`, exported from `lib/design-system/video.ts`). App routes win over the rewrite below. Others are static exports, not React. Each lives in `public/playground/<slug>/` with its files unchanged, and `next.config.ts` rewrites `/playground/<slug>` to its `index.html`. Port-only edits are marked with a `clueso.design:` comment. Cluego (Preshita) came from a claude.ai artifact this way. Its page needs a `<base>` tag because the URL has no trailing slash. Its own colours and fonts stay as made, so the token rules don't apply inside `public/`.
@@ -58,7 +58,7 @@ Tool pages get the full viewport and no site nav. Brand Lab's mark and name in i
 - **Team data.** `lib/team.ts`. Photos go in `public/team/<slug>.jpg` at 4:5.
 - **Changelog.** Every change that ships gets an entry in `lib/changelog.ts`, however small, written as what it means for visitors (CONTRIBUTING.md).
 - The theme toggle switches light and dark in one frame, with no animation (`applySiteTheme` in `lib/theme.ts`).
-- Featured tools run live on the homepage at `/tools/<slug>?embed` (`lib/tool-embed.ts`). An embed keeps nothing and takes its theme from the homepage, the opposite of the page's. Brand Lab opens on posters and never reads or writes the visitor's autosave (`EMBED` in its store). Icon Lab gets in-memory storage in place of `localStorage`, so its edits and theme toggle stay in the frame.
+- Featured tools run live on the homepage at `/tools/<slug>?embed` (`lib/tool-embed.ts`). An embed keeps nothing and takes its theme from the homepage, the opposite of the page's. Brand Lab opens on posters and never reads or writes the visitor's autosave (`EMBED` in its store). Icon Lab keeps its edits, options and theme in memory instead of `localStorage` (`EMBED` in `tools/icon-lab/state/storage.ts`), so they stay in the frame.
 - **Footer hearts.** How many people like the site, live (`footer-hearts.tsx`). Each browser hearts it once and can take it back; pressing slides a +1 or −1 in after the count, then the digits roll to the new number. `/api/hearts` saves the change and broadcasts the new total, with a version so late updates are ignored, over the presence stream (`lib/presence-server.ts`). The total and one item per browser (hashed id, hearted, cursor name, page, times) live in Upstash Redis, reached with `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` (GitHub secrets the deploy passes in; `lib/hearts-store.ts`). Without them, dev keeps them in memory and a restart starts from zero.
 - **Votes.** "I want this in Clueso" on every playground experiment page (`components/playground/want-in-clueso.tsx`), so the team can see which ideas people want in the product. One vote per browser per experiment, and it can be taken back. `/api/votes` reads every count (GET) and saves a vote from a tab's presence connection (POST, rate limited like hearts). They live in the same Upstash Redis as the hearts: a set of hashed browser ids per experiment (`votes:<slug>`), in memory in dev (`lib/votes-store.ts`). After a vote it asks, optionally, what they'd use it for; those notes stay private (`votes:<slug>:notes`, newest 500), and `node scripts/votes.ts` prints every count and note for the team (needs the two Upstash variables).
 - Say hi (`components/site/say-hi.tsx`) is parked: built but not on any page yet. It posts to `/api/hello`, which forwards to a Slack incoming webhook in `HELLO_WEBHOOK_URL`. Without it, production answers 503 and dev logs to the console.
@@ -124,9 +124,20 @@ Brand Lab started as a port of the standalone Vite app at `../brand-lab`, baseli
 
 Background removal runs in the browser, in a web worker (`tools/brand-lab/ml/`), with transformers.js and the ormbg model (Apache 2.0). The model downloads from Hugging Face on first use (about 88 MB on WebGPU, 44 MB on the CPU fallback) and the browser caches it. Images never leave the visitor's machine and there is no server cost.
 
+## Icon Lab
+
+Icon Lab (tool #002, Sneha) started as a standalone plain-JavaScript app, first shown here by loading its files from `public/tools/icon-lab`. It was ported onto the tool shell on 4 November 2026, and this repo is now its home: it's improved here like any other tool, and the standalone app and its sync script are no longer the source.
+
+- `tools/icon-lab/engine/` is the drawing engine (`engine.ts`), composing icons from the set's parts (`compose.ts`) and matching drawings (`sketch.ts`). Ported line for line; a script compared every icon, option and setting against the old engine and the SVG output is identical.
+- `tools/icon-lab/data/` holds the sets as data modules. The large generated ones (the Material Symbols set, the original icons, the library, the clueso.io captures) are parsed from a string, which keeps them out of the type checker. The captures' images stay in `public/tools/icon-lab/references/`.
+- `tools/icon-lab/state/` builds the sets the UI shows and holds a zustand store. Icons are mutable objects, as in the original: actions change them in place and bump a revision so React redraws.
+- It keeps the original's `localStorage` keys (`iconTool.edits`, `iconTool.variants`, `iconTool.generated`, `iconTool.requests`, `iconTool.apiKey`) and shares the site's theme key, so visitors keep their work.
+- Changes made while porting: the size ramp moved into the bottom bar beside the prompt (the shell's `bottomHeight` makes the bar 64px so 48px fits). The In context dialog (URL, screenshot, sizes) opens from the Context view; it had no button left in the old app. Drawing icons with Claude stays parked as it was: its generator never shipped, so the Connect Claude button is hidden and the key dialog is kept for later.
+- `Segmented`, `Row`, `Field` and the popover menu moved from Brand Lab into `tools/shell/components/` so both tools use them. Brand Lab re-exports them from their old paths, unchanged.
+
 ## Tool shell
 
-Built: `tools/shell/` holds the editor frame Brand Lab runs in, so a new tool can start from it. `ToolShell` gives a full-window canvas, the top bar with the mark and the tool's name (linking home), resizable side panels with widths saved per tool, a bottom bar, a toast and the Clueso cursor. The tool fills the slots. `tools/shell/README.md` shows how to start a tool. Brand Lab's look and behaviour didn't change when it moved onto the shell.
+Built: `tools/shell/` holds the editor frame Brand Lab and Icon Lab run in, so a new tool can start from it. `ToolShell` gives a full-window canvas, the top bar with the mark and the tool's name (linking home), resizable side panels with widths saved per tool, a bottom bar, a toast and the Clueso cursor. The tool fills the slots. `tools/shell/README.md` shows how to start a tool. Brand Lab's look and behaviour didn't change when it moved onto the shell.
 
 Still to come, as decided:
 

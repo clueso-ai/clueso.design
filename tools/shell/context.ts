@@ -9,6 +9,8 @@ export interface ShellContextValue {
 	hasBottom: boolean;
 	/** Whether the shell has a right panel, so the bottom bar stops before it. */
 	hasRight: boolean;
+	/** The bottom bar's height (BAR unless the tool asks for a taller one). */
+	bottomHeight: number;
 }
 
 export const ShellContext = createContext<ShellContextValue | null>(null);

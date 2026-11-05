@@ -8,13 +8,16 @@
 // 1-pixel gaps between parts). Shapes are in pixel units (0–20, y down). Circles use radii that
 // rasterise without one-pixel nubs (e.g. 9.4, 7.4, 4.4 about a pixel corner).
 
-const PIXEL_SET = (function () {
+type Shape = (x: number, y: number) => boolean;
+type Step = ["+" | "-", Shape];
+
+export const PIXEL_SET: { name: string; cells: { x: number; y: number; tone: string }[] }[] = (function () {
   const N = 20;
-  const rect = (x0, y0, x1, y1) => (x, y) => x >= x0 && x <= x1 && y >= y0 && y <= y1;
-  const ellipse = (cx, cy, rx, ry) => (x, y) => ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 <= 1;
-  const circle = (cx, cy, r) => ellipse(cx, cy, r, r);
-  const ring = (cx, cy, r0, r1) => (x, y) => { const d = Math.hypot(x - cx, y - cy); return d <= r1 && d >= r0; };
-  const poly = (pts) => (x, y) => {
+  const rect = (x0: number, y0: number, x1: number, y1: number): Shape => (x, y) => x >= x0 && x <= x1 && y >= y0 && y <= y1;
+  const ellipse = (cx: number, cy: number, rx: number, ry: number): Shape => (x, y) => ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 <= 1;
+  const circle = (cx: number, cy: number, r: number) => ellipse(cx, cy, r, r);
+  const ring = (cx: number, cy: number, r0: number, r1: number): Shape => (x, y) => { const d = Math.hypot(x - cx, y - cy); return d <= r1 && d >= r0; };
+  const poly = (pts: number[][]): Shape => (x, y) => {
     let inside = false;
     for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
       const [xi, yi] = pts[i]; const [xj, yj] = pts[j];
@@ -22,20 +25,18 @@ const PIXEL_SET = (function () {
     }
     return inside;
   };
-  const and = (a, b) => (x, y) => a(x, y) && b(x, y);
-  const grow = (f) => (x, y) => f(x, y) || f(x - 1, y) || f(x + 1, y) || f(x, y - 1) || f(x, y + 1);
-  const star = (cx, cy, R, r, n = 5) => poly(Array.from({ length: n * 2 }, (_, i) => {
+  const and = (a: Shape, b: Shape): Shape => (x, y) => a(x, y) && b(x, y);
+  const star = (cx: number, cy: number, R: number, r: number, n = 5) => poly(Array.from({ length: n * 2 }, (_, i) => {
     const a = -Math.PI / 2 + (i * Math.PI) / n; const d = i % 2 ? r : R; return [cx + d * Math.cos(a), cy + d * Math.sin(a)];
   }));
-  const spark = (cx, cy, R, k = 0.24) => poly([[cx, cy - R], [cx + R * k, cy - R * k], [cx + R, cy], [cx + R * k, cy + R * k],
+  const spark = (cx: number, cy: number, R: number, k = 0.24) => poly([[cx, cy - R], [cx + R * k, cy - R * k], [cx + R, cy], [cx + R * k, cy + R * k],
     [cx, cy + R], [cx - R * k, cy + R * k], [cx - R, cy], [cx - R * k, cy - R * k]]);
-  const person = (cx, headY, hr, bodyTop, brx) => [
+  const person = (cx: number, headY: number, hr: number, bodyTop: number, brx: number): Step[] => [
     ['+', circle(cx, headY, hr)],
     ['+', and(ellipse(cx, 19.5, brx, 19.5 - bodyTop), rect(0, bodyTop, N, 19))],
   ];
-  const front = (cx) => (x, y) => circle(cx, 6.5, 3.5)(x, y) || and(ellipse(cx, 19.5, 6.5, 8), rect(0, 11.5, N, 19))(x, y);
 
-  const icons = [
+  const icons: { name: string; draw: Step[] }[] = [
     // ---- Round 13, refined
     { name: 'play', draw: [['+', poly([[4, 2.5], [18, 10], [4, 17.5]])]] },
     { name: 'record', draw: [['+', ring(10, 10, 7.4, 9.4)], ['+', circle(10, 10, 4)]] },
@@ -111,7 +112,7 @@ const PIXEL_SET = (function () {
 
   // Rasterise: each step adds or removes the pixels whose centre is inside its shape.
   return icons.map(({ name, draw }) => {
-    const on = new Set();
+    const on = new Set<string>();
     for (const [op, shape] of draw) {
       for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
         if (!shape(x + 0.5, y + 0.5)) continue;
@@ -121,5 +122,3 @@ const PIXEL_SET = (function () {
     return { name, cells: [...on].map((k) => { const [x, y] = k.split(',').map(Number); return { x, y, tone: 'full' }; }) };
   });
 })();
-
-if (typeof module !== 'undefined') module.exports = PIXEL_SET;
