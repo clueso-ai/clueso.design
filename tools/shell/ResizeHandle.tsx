@@ -2,14 +2,14 @@ import { useRef, useState } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/lib/design-system/jigsaw/components/ui/overlays/tooltip/tooltip";
 import { cn } from "@/lib/design-system/jigsaw/lib/utils";
 import { usePanelWidths, useShell } from "./context";
-import { BAR, GAP, M, PANEL_TOP } from "./geometry";
+import { GAP, M, PANEL_TOP } from "./geometry";
 
 /**
  * Drag handle on a side panel's inner edge: a hairline hit area with a pill that shows on hover,
  * like the Clueso editor. Drag to resize, double-click to reset. Widths persist.
  */
 export function ResizeHandle({ side, label }: { side: "left" | "right"; label: string }) {
-	const { hasBottom } = useShell();
+	const { hasBottom, bottomHeight } = useShell();
 	const width = usePanelWidths((s) => s[side]);
 	const setWidth = usePanelWidths((s) => s.setWidth);
 	const reset = usePanelWidths((s) => s.reset);
@@ -28,7 +28,7 @@ export function ResizeHandle({ side, label }: { side: "left" | "right"; label: s
 					aria-label={label}
 					aria-valuenow={width}
 					className="group/resize absolute z-10 flex w-[10px] cursor-ew-resize items-center justify-center max-[1099px]:hidden"
-					style={{ top: PANEL_TOP, bottom: side === "left" && hasBottom ? M + BAR + GAP : M, ...(side === "left" ? { left: edge } : { right: edge }) }}
+					style={{ top: PANEL_TOP, bottom: side === "left" && hasBottom ? M + bottomHeight + GAP : M, ...(side === "left" ? { left: edge } : { right: edge }) }}
 					onPointerDown={(e) => {
 						if (e.button !== 0) return;
 						e.currentTarget.setPointerCapture(e.pointerId);

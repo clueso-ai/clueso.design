@@ -15,6 +15,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
 	{
+		date: "2026-11-05",
+		title: "Icon Lab gets Brand Lab's editor frame",
+		body: "Icon Lab now opens in the same frame as Brand Lab: the library on the left, the icon's settings on the right, sizes and search along the bottom. Your edits, chosen options and kept icons are all still there.",
+		area: "Icon Lab",
+		by: "ajinkya",
+	},
+	{
 		date: "2026-11-04",
 		title: "Rotate, round and crop like in Figma",
 		body: "Hover just outside a corner of anything you've selected and drag to rotate it, images included. Drag the dots inside a rectangle's or image's corners to round them, and hold ⌘ while dragging an image's edge or corner to crop it.",

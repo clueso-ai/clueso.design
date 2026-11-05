@@ -1,3 +1,5 @@
+import type { LibraryRedraw, SiteEntry } from "./types.ts";
+
 // Site set: the 80 most-used icons on clueso.io (crawl of 2026-10-30, see
 // references/clueso-site-icons.md), redrawn in the Sharp line style for review.
 //
@@ -8,7 +10,7 @@
 // corners, square ends, 90° and 45° angles. Paths are in grid units.
 // `replaces` is the icon currently used on the site; `pages` is how many pages use it.
 
-const SITE_SET = [
+export const SITE_SET: SiteEntry[] = [
   { name: 'chevron-down', replaces: 'Chevron down (page code) + Chevron-down', pages: 1570, keywords: ['chevron', 'down', 'expand', 'dropdown', 'caret'],
     paths: ['M6 9L12 15L18 9'] },
   { name: 'chevron-right', replaces: 'Chevron-right', pages: 1570, keywords: ['chevron', 'right', 'next', 'forward'],
@@ -837,7 +839,7 @@ const SITE_SET = [
 
 // Library icons redrawn on the grid where the Figma original didn't sit well.
 // They replace the original geometry in the library (same name, same keywords).
-const LIBRARY_REDRAWS = {
+export const LIBRARY_REDRAWS: Record<string, LibraryRedraw> = {
   // Round 5. Home on the grid exactly (the Figma one was nudged half a unit for balance,
   // so its edges sat off the grid): 45° roof, walls on the square keyline.
   'home-1': { paths: ['M3.75 20.25V11.5L12 3.25L20.25 11.5V20.25Z'] },
@@ -857,11 +859,7 @@ const LIBRARY_REDRAWS = {
 // Small fixes to library icons, applied to the original drawing before fitting.
 // `fillOutline`: paths (by their order in the icon) too small to hold a 1.5 outline
 // become filled shapes the size of the stroke's outer edge.
-const LIBRARY_TWEAKS = {
+export const LIBRARY_TWEAKS: Record<string, { fillOutline?: number[] }> = {
   // The play triangle inside the frame.
   'play-list-8': { fillOutline: [0] },
 };
-
-if (typeof module !== 'undefined') module.exports = SITE_SET;
-if (typeof module !== 'undefined') module.exports.LIBRARY_TWEAKS = LIBRARY_TWEAKS;
-if (typeof module !== 'undefined') module.exports.LIBRARY_REDRAWS = LIBRARY_REDRAWS;

@@ -9,3 +9,6 @@ export { Panel, PanelHeader, Section } from "./components/panel";
 export { ICON_NORMAL, IconButton } from "./components/icon-button";
 export { CustomCursor } from "./components/cursor";
 export { Toast } from "./components/toast";
+export { Row, Segmented } from "./components/controls";
+export { Field } from "./components/field";
+export { MenuItem, MenuLabel, MenuSeparator, Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from "./components/popover";
