@@ -23,7 +23,8 @@ const HeroCanvas = dynamic(() => import("./hero-canvas").then((m) => m.HeroCanva
 // late. Past a short free stretch the pull gets harder, and a line shows how far your hand has gone.
 // Let go and it wobbles back; flick it and it overshoots as far as you threw it. Each letter is a
 // note of the C major scale, played as it's let go, an octave up from a top handle and down from a
-// bottom one (lib/logo-sound.ts). With the beat box on, the letters dance to the beat.
+// bottom one (lib/logo-sound.ts). With the beat box on, the letters dance to the beat, and a fast
+// scroll sloshes them like liquid.
 //
 // Select several handles with a marquee or Shift-press, and pull them together, across letters.
 // Escape or a press on empty space clears the selection.
@@ -107,6 +108,15 @@ const restBody = (id: string): Body => ({ pos: REST[id].map((p): Pt => [p[0], p[
 /** How fast every letter hops on a beat, in logo units per second, and how far behind the one before it, in ms. */
 const HOP = 70;
 const WAVE_MS = 35;
+/**
+ * Scrolling: how much of the page's change in scroll speed the letters feel, and the most one scroll
+ * can push them, in logo units per second. A scroll with no update for SCROLL_STOP_MS has stopped.
+ */
+const SLOSH = 0.18;
+const MAX_SLOSH = 260;
+const SCROLL_STOP_MS = 90;
+/** How much each point sloshes: a gentle wave across the logo, so the letters ripple instead of moving as one. */
+const SLOSH_WEIGHT = Object.fromEntries(LOGO_PATHS.map(({ id }) => [id, REST[id].map(([x, y]) => 0.65 + 0.35 * Math.sin(x * 0.045 + y * 0.03))]));
 
 /** Where a handle sits up its letter: 1 in the top third, -1 in the bottom third, 0 between. Top handles play an octave up. */
 function octaveOf(key: string) {
@@ -360,6 +370,55 @@ export function FooterLogo() {
 		LOGO_PATHS.forEach(({ id }, i) => window.setTimeout(() => hop(id, beat.downbeat ? HOP * 1.6 : HOP), i * WAVE_MS));
 	});
 	useEffect(() => onBeat((beat) => onDance(beat)), []);
+
+	// Scrolling moves the logo like a glass of liquid: when the page speeds up the letters lag behind,
+	// and when it stops they slosh past and settle. They feel the change in scroll speed, not the speed.
+	const slosh = useEffectEvent((change: number) => {
+		const el = svg.current;
+		if (reduce || !el) return;
+		const box = el.getBoundingClientRect();
+		if (box.bottom < 0 || box.top > window.innerHeight) return;
+		const push = Math.max(-MAX_SLOSH, Math.min(MAX_SLOSH, (change / pxPerUnit) * SLOSH));
+		if (Math.abs(push) < 1) return;
+		for (const { id } of LOGO_PATHS) {
+			const w = SLOSH_WEIGHT[id];
+			let b = bodies.current[id];
+			if (!b) {
+				// Points that slosh less are a little stiffer, so the ripple runs through the letter.
+				b = bodies.current[id] = restBody(id);
+				b.stiff = w.map((k) => STIFF_FAR + (STIFF_NEAR - STIFF_FAR) * (1 - k));
+			}
+			b.vel.forEach((v, k) => {
+				v[1] += push * w[k];
+			});
+		}
+		wake();
+	});
+	useEffect(() => {
+		let last = window.scrollY;
+		let t = performance.now();
+		let speed = 0;
+		let stop = 0;
+		const to = (next: number) => {
+			slosh(next - speed);
+			speed = next;
+		};
+		const onScroll = () => {
+			const now = performance.now();
+			const v = ((window.scrollY - last) / Math.max(now - t, 8)) * 1000;
+			last = window.scrollY;
+			t = now;
+			// Smoothed, so one uneven scroll event doesn't jolt it.
+			to(speed * 0.5 + v * 0.5);
+			window.clearTimeout(stop);
+			stop = window.setTimeout(() => to(0), SCROLL_STOP_MS);
+		};
+		window.addEventListener("scroll", onScroll, { passive: true });
+		return () => {
+			window.removeEventListener("scroll", onScroll);
+			window.clearTimeout(stop);
+		};
+	}, []);
 
 	/** Tells everyone else what you're pulling. */
 	const share = () => {

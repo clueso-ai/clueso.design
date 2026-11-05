@@ -1,14 +1,16 @@
 import Link from "next/link";
+import { publicItems } from "@/lib/registry";
 import { Logo } from "./logo";
 import { MobileNav } from "./mobile-nav";
 import { ThemeToggle } from "./theme-toggle";
 import { TuckingHeader } from "./tucking-header";
 
 // Pages, plus the team section of the homepage. Sections become pages when there's enough to fill them.
+// Tools and the playground show how many things are inside, as a small number after the name.
 const NAV = [
 	// Tools and the playground have their own pages; the homepage only features some of each.
-	{ href: "/tools", label: "Tools" },
-	{ href: "/playground", label: "Playground" },
+	{ href: "/tools", label: "Tools", count: publicItems("tool").length },
+	{ href: "/playground", label: "Playground", count: publicItems("experiment").length },
 	{ href: "/#team", label: "Team" },
 	{ href: "/changelog", label: "Changelog" },
 ];
@@ -26,8 +28,9 @@ export function SiteHeader() {
 				<div className="flex items-center gap-gap-s">
 					<nav aria-label="Main" className="hidden items-center gap-gap-s md:flex">
 						{NAV.map((item) => (
-							<Link key={item.href} href={item.href} className={navLink}>
+							<Link key={item.href} href={item.href} className={navLink} aria-label={item.count ? `${item.label}, ${item.count}` : undefined}>
 								{item.label}
+								{item.count ? <sup className="type-text-xs ml-gap-3xs font-code text-neutral-weak">{item.count}</sup> : null}
 							</Link>
 						))}
 					</nav>

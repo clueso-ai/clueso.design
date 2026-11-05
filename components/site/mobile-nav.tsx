@@ -16,7 +16,7 @@ import { MenuIcon } from "@/lib/design-system/icons";
 const EASE = [0.23, 1, 0.32, 1] as const;
 const MotionLink = motion.create(Link);
 
-export function MobileNav({ items }: { items: { href: string; label: string }[] }) {
+export function MobileNav({ items }: { items: { href: string; label: string; count?: number }[] }) {
 	const [open, setOpen] = useState(false);
 	const reduce = useReducedMotion();
 	const path = usePathname();
@@ -66,11 +66,13 @@ export function MobileNav({ items }: { items: { href: string; label: string }[] 
 									<MotionLink
 										href={item.href}
 										onClick={() => setOpen(false)}
+										aria-label={item.count ? `${item.label}, ${item.count}` : undefined}
 										className="focus-ring type-text-l flex px-gap-l py-gap-s text-neutral-strong"
 										initial={reduce ? false : { opacity: 0, y: -6 }}
 										animate={{ opacity: 1, y: 0, transition: { duration: 0.28, ease: EASE, delay: 0.04 + i * 0.035 } }}
 									>
 										{item.label}
+										{item.count ? <sup className="type-text-xs ml-gap-3xs font-code text-neutral-weak">{item.count}</sup> : null}
 									</MotionLink>
 								</li>
 							))}

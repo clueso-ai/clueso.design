@@ -55,7 +55,8 @@ let server: { total: number; v: number; hearted: boolean } | null = null;
 let want: boolean | null = null;
 let heartBusy = false;
 
-function visitorId() {
+/** This browser's id, kept in localStorage. Shared by every tab. */
+export function visitorId() {
 	try {
 		const saved = localStorage.getItem(KEY);
 		if (saved) return saved;
@@ -66,6 +67,9 @@ function visitorId() {
 		return crypto.randomUUID();
 	}
 }
+
+/** This tab's live connection, once the server has said hello. Votes and hearts are sent with it. */
+export const connectionId = () => you;
 
 function set(next: Partial<Presence>) {
 	state = { ...state, ...next };

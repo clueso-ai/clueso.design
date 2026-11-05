@@ -16,11 +16,15 @@ import { team } from "@/lib/team";
 /** Inline links: quiet underline that firms up, and the text steps up to strong, on hover. */
 const TEXT_LINK = "focus-ring rounded-tiny text-neutral-strong underline decoration-neutral-weak underline-offset-4 transition-[color,text-decoration-color] duration-200 ease-out-strong hover:text-brand-normal hover:decoration-current";
 const BRAND_BLOG = "https://www.clueso.io/blog/the-clueso-brand";
-/** The playground: experiments so far, each showing its still, then empty slots that fill out the row on wider screens. */
+/** How many experiments the homepage shows, newest first. The rest are on the playground page. */
+const LATEST = 3;
+
+/** The playground: the newest experiments, each showing its still. Empty slots fill the row while there are fewer than three. */
 function Playground() {
-	const experiments = publicItems("experiment");
-	const total = Math.max(3, Math.ceil((experiments.length + 1) / 3) * 3);
-	const open = total - experiments.length;
+	const experiments = publicItems("experiment")
+		.toSorted((a, b) => b.updated.localeCompare(a.updated))
+		.slice(0, LATEST);
+	const open = LATEST - experiments.length;
 	return (
 		<ul className="grid border-t border-neutral-weak md:grid-cols-3 [&>li]:border-neutral-weak max-md:[&>li+li]:border-t md:[&>li:not(:nth-child(3n))]:border-r md:[&>li:nth-child(n+4)]:border-t">
 			{experiments.map((item) => (
