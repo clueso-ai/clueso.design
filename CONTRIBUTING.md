@@ -111,12 +111,17 @@ two short sentences. Sentence case title, no full stop at the end of it. `by` is
 
 ## Ship it
 
-1. `pnpm check`: typecheck, lint, registry check and style check. It must pass.
+1. `pnpm check`: typecheck, lint, registry, style and changelog checks. It must pass.
 2. `pnpm build` to be sure it builds the way production will.
-3. Push your branch and open a pull request into `staging`:
+3. Open it in a browser and use it: every state you changed, light and dark, keyboard, and phone
+   width for site pages. Note anything you couldn't check.
+4. Push your branch and open a pull request into `staging`:
    `gh pr create --base staging`. Always pass the base: `main` is still GitHub's default.
+   Fill in the PR template. CI runs the checks and the build, and blocks a PR into `staging` that
+   doesn't touch `lib/changelog.ts`. Only a change no visitor can see (CI, docs, agent rules) may
+   skip the entry, with the `no-changelog` label.
    Merging it deploys https://staging.clueso.design in about five minutes. Check your change there.
-4. Release by opening a pull request from `staging` into `main`. Merging into `main` deploys
+5. Release by opening a pull request from `staging` into `main`. Merging into `main` deploys
    clueso.design through GitHub Actions in about five minutes.
 
 `main` and `staging` only change through pull requests. No force pushes.

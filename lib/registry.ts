@@ -73,7 +73,7 @@ export const registry: RegistryItem[] = [
 		preview: "/previews/icon-lab.jpg",
 		description: "The Clueso icon set in one place: every website and platform icon, the style directions and a pixel set for the web. Find an icon or create a missing one from the set's parts, check it on clueso.io, and export SVG or PNG.",
 		tags: ["icons", "design system", "svg"],
-		updated: "2026-11-02",
+		updated: "2026-11-04",
 	},
 ];
 

@@ -1,0 +1,600 @@
+/* Icon Lab's chrome is Tailwind + Jigsaw, through the tool shell. This file holds what utilities can't
+   say well: the dotted canvas you draw on, the artboard's keyline grid and edit handles, the before /
+   after slider and the mockups in Context, which keep the standalone app's real-world colours (they
+   stand for clueso.io and the product, light and dark). Everything is scoped to .icon-lab-root, and to
+   the dialogs Icon Lab opens (portalled to <body>), so nothing leaks into the site or Brand Lab. */
+
+.icon-lab-root {
+	--il-artboard: #ffffff;
+	--il-grid-kl: rgb(0 0 0 / 0.12);
+	--il-grid-px: rgb(0 0 0 / 0.05);
+	--il-grid-dot: rgb(0 0 0 / 0.16);
+	--il-pink: #fe89eb;
+	--il-sketch: #da5cc7;
+}
+.dark .icon-lab-root {
+	--il-artboard: #121214;
+	--il-grid-kl: rgb(245 243 231 / 0.14);
+	--il-grid-px: rgb(245 243 231 / 0.06);
+	--il-grid-dot: rgb(255 255 255 / 0.14);
+	--il-sketch: #fe89eb;
+}
+
+/* Brand Lab keeps its clueso-icons a crisp 1px at any size (brand-lab.css). Icon Lab's drawings must
+   scale with their size, so that's undone for them; the keyline grid and edit handles stay hairlines. */
+:is(.icon-lab-root, .il-dialog) .il-icon svg :is(path, line, polyline, polygon, rect, circle, ellipse)[stroke] {
+	vector-effect: none;
+}
+
+/* ── Canvas: a dotted grid you can draw on (Icon view) ─────────────────────── */
+.icon-lab-root .il-drawable {
+	background-image: radial-gradient(circle, var(--il-grid-dot) 1px, transparent 1.3px);
+	background-size: 20px 20px;
+	background-position: center;
+	touch-action: none;
+	/* Over the grid the cursor is a pencil (its tip is the point you draw from), with a halo so it
+	   shows in light and dark. */
+	cursor: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M4.75%2019.25V16.25L15%206L18%209L7.75%2019.25Z%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%224%22%20stroke-linejoin%3D%22miter%22%20stroke-linecap%3D%22square%22/%3E%3Cpath%20d%3D%22M15%206L16.75%204.25L19.75%207.25L18%209%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%224%22%20stroke-linejoin%3D%22miter%22%20stroke-linecap%3D%22square%22/%3E%3Cpath%20d%3D%22M12.75%208.25L15.75%2011.25%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%224%22%20stroke-linejoin%3D%22miter%22%20stroke-linecap%3D%22square%22/%3E%3Cpath%20d%3D%22M4.75%2019.25V16.25L15%206L18%209L7.75%2019.25Z%22%20fill%3D%22%23ffffff%22/%3E%3Cpath%20d%3D%22M4.75%2019.25V16.25L15%206L18%209L7.75%2019.25Z%22%20fill%3D%22none%22%20stroke%3D%22%23111111%22%20stroke-width%3D%221.75%22%20stroke-linejoin%3D%22miter%22%20stroke-linecap%3D%22square%22/%3E%3Cpath%20d%3D%22M15%206L16.75%204.25L19.75%207.25L18%209%22%20fill%3D%22none%22%20stroke%3D%22%23111111%22%20stroke-width%3D%221.75%22%20stroke-linejoin%3D%22miter%22%20stroke-linecap%3D%22square%22/%3E%3Cpath%20d%3D%22M12.75%208.25L15.75%2011.25%22%20fill%3D%22none%22%20stroke%3D%22%23111111%22%20stroke-width%3D%221.75%22%20stroke-linejoin%3D%22miter%22%20stroke-linecap%3D%22square%22/%3E%3C/svg%3E") 4 20, crosshair;
+}
+.dark .icon-lab-root .il-drawable {
+	cursor: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M4.75%2019.25V16.25L15%206L18%209L7.75%2019.25Z%22%20fill%3D%22none%22%20stroke%3D%22%23111111%22%20stroke-width%3D%224%22%20stroke-linejoin%3D%22miter%22%20stroke-linecap%3D%22square%22/%3E%3Cpath%20d%3D%22M15%206L16.75%204.25L19.75%207.25L18%209%22%20fill%3D%22none%22%20stroke%3D%22%23111111%22%20stroke-width%3D%224%22%20stroke-linejoin%3D%22miter%22%20stroke-linecap%3D%22square%22/%3E%3Cpath%20d%3D%22M12.75%208.25L15.75%2011.25%22%20fill%3D%22none%22%20stroke%3D%22%23111111%22%20stroke-width%3D%224%22%20stroke-linejoin%3D%22miter%22%20stroke-linecap%3D%22square%22/%3E%3Cpath%20d%3D%22M4.75%2019.25V16.25L15%206L18%209L7.75%2019.25Z%22%20fill%3D%22%23111111%22/%3E%3Cpath%20d%3D%22M4.75%2019.25V16.25L15%206L18%209L7.75%2019.25Z%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%221.75%22%20stroke-linejoin%3D%22miter%22%20stroke-linecap%3D%22square%22/%3E%3Cpath%20d%3D%22M15%206L16.75%204.25L19.75%207.25L18%209%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%221.75%22%20stroke-linejoin%3D%22miter%22%20stroke-linecap%3D%22square%22/%3E%3Cpath%20d%3D%22M12.75%208.25L15.75%2011.25%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%221.75%22%20stroke-linejoin%3D%22miter%22%20stroke-linecap%3D%22square%22/%3E%3C/svg%3E") 4 20, crosshair;
+}
+.icon-lab-root .il-sketch polyline {
+	fill: none;
+	stroke: var(--il-sketch);
+	stroke-width: 3;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+/* ── Artboard: the icon over its keyline grid ──────────────────────────────── */
+.icon-lab-root .il-artboard {
+	box-shadow: 0 0 0 1px var(--color-fg-stroke-weak);
+}
+.icon-lab-root .il-artboard .overlay {
+	display: none;
+}
+.icon-lab-root .il-artboard.il-show-grid .overlay {
+	display: inline;
+}
+.icon-lab-root .il-artboard :is(.overlay, .handles) * {
+	vector-effect: non-scaling-stroke;
+}
+.icon-lab-root .il-artboard .overlay * {
+	fill: none;
+	stroke-width: 1px;
+}
+/* Unit grid barely there, keylines in grey, safe area and structure in Clueso pink. */
+.icon-lab-root .il-artboard .overlay .kl {
+	stroke: var(--il-grid-kl);
+}
+.icon-lab-root .il-artboard .overlay .px {
+	stroke: var(--il-grid-px);
+}
+.icon-lab-root .il-artboard .overlay .gr {
+	stroke: var(--il-pink);
+	opacity: 0.22;
+}
+.icon-lab-root .il-artboard .overlay .safe {
+	stroke: var(--il-pink);
+	opacity: 0.55;
+}
+/* Google's Material Symbols drawing of the same icon, faint blue, behind ours. */
+.icon-lab-root .il-artboard .google-ref {
+	opacity: 0.45;
+}
+/* Vector editing: anchors are squares, curve handles circles, in Clueso pink. */
+.icon-lab-root .il-artboard.il-editing svg {
+	touch-action: none;
+}
+.icon-lab-root .il-artboard .handles .anchor {
+	fill: var(--il-artboard);
+	stroke: var(--il-pink);
+	stroke-width: 1.5px;
+	cursor: grab;
+}
+.icon-lab-root .il-artboard .handles .ctrl {
+	fill: var(--il-artboard);
+	stroke: var(--il-pink);
+	stroke-width: 1px;
+	cursor: grab;
+}
+.icon-lab-root .il-artboard .handles :is(.anchor, .ctrl).sel {
+	fill: var(--il-pink);
+}
+.icon-lab-root .il-artboard .handles .cl {
+	stroke: var(--il-pink);
+	stroke-width: 1px;
+	opacity: 0.6;
+}
+.icon-lab-root .il-artboard .handles .marquee {
+	fill: rgb(254 137 235 / 0.08);
+	stroke: var(--il-pink);
+	stroke-width: 1px;
+	stroke-dasharray: 3 2;
+}
+
+/* The custom colour swatch: a colour wheel. */
+.icon-lab-root .il-custom-swatch {
+	background: conic-gradient(#fe89eb, #c12eaf, #4f8cff, #2ec27e, #f5c211, #fe89eb);
+}
+
+/* ── Context ───────────────────────────────────────────────────────────────── */
+.icon-lab-root .il-ctx-sec {
+	position: relative;
+	margin: 0 0 16px;
+}
+/* No headings: the source of each view shows on hover. */
+.icon-lab-root .il-ctx-label {
+	display: block;
+	height: 18px;
+	margin-top: 6px;
+	font: 11px var(--font-mono);
+	color: var(--color-fg-text-weak);
+	text-decoration: none;
+	opacity: 0;
+	transition: opacity 150ms;
+}
+.icon-lab-root .il-ctx-sec:is(:hover, :focus-within) .il-ctx-label {
+	opacity: 1;
+}
+.icon-lab-root a.il-ctx-label:hover {
+	color: var(--color-fg-text-strong);
+	text-decoration: underline;
+}
+.icon-lab-root .il-ctx-shot {
+	position: relative;
+	border-radius: 6px;
+	overflow: hidden;
+	box-shadow: 0 0 0 1px var(--color-fg-stroke-weak);
+}
+.icon-lab-root .il-ctx-tag {
+	position: absolute;
+	bottom: 8px;
+	left: 8px;
+	padding: 2px 6px;
+	border-radius: 4px;
+	background: rgb(0 0 0 / 0.06);
+	color: #555;
+	font: 10px var(--font-mono);
+	pointer-events: none;
+}
+.icon-lab-root .il-ctx-tag.il-dark {
+	background: rgb(255 255 255 / 0.1);
+	color: #bbb;
+}
+
+/* A capture of clueso.io, with the new icon patched over the old one. */
+:is(.icon-lab-root, .il-dialog) .il-shot {
+	position: relative;
+	overflow: hidden;
+	background: #fff;
+}
+:is(.icon-lab-root, .il-dialog) .il-shot img {
+	display: block;
+	width: 100%;
+	height: auto;
+	user-select: none;
+	-webkit-user-drag: none;
+	pointer-events: none;
+}
+:is(.icon-lab-root, .il-dialog) .il-patch {
+	position: absolute;
+}
+:is(.icon-lab-root, .il-dialog) .il-patch svg {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+}
+.il-dialog .il-shot {
+	border: 1px solid var(--color-fg-stroke-weak);
+}
+.il-dialog .il-mark {
+	position: absolute;
+	outline: 1px dashed #fe89eb;
+	outline-offset: 3px;
+	pointer-events: none;
+}
+.il-dialog .il-zoom {
+	aspect-ratio: 2 / 1;
+}
+.il-dialog .il-zoom img {
+	position: absolute;
+	max-width: none;
+}
+
+/* Before / after slider. Now fills the frame; New is on top, shown right of the handle. */
+.icon-lab-root .il-cmp {
+	position: relative;
+	overflow: hidden;
+	border-radius: 6px;
+	cursor: ew-resize;
+	touch-action: pan-y;
+	user-select: none;
+	box-shadow: 0 0 0 1px var(--color-fg-stroke-weak);
+}
+.icon-lab-root .il-cmp-new {
+	position: absolute;
+	inset: 0;
+	clip-path: inset(0 0 0 var(--x));
+}
+.icon-lab-root .il-cmp-handle {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: var(--x);
+	width: 0;
+	outline: none;
+}
+.icon-lab-root .il-cmp-handle::before {
+	content: "";
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: -0.5px;
+	width: 1px;
+	background: rgb(255 255 255 / 0.9);
+	box-shadow: 0 0 0 1px rgb(0 0 0 / 0.15);
+}
+/* The knob sits at the bottom edge, so it never covers the icon (every shot is centred on it). */
+.icon-lab-root .il-cmp-handle span {
+	position: absolute;
+	bottom: 10px;
+	left: 0;
+	width: 28px;
+	height: 28px;
+	translate: -50% 0;
+	border-radius: 50%;
+	background: #fff;
+	box-shadow: 0 0 0 1px rgb(0 0 0 / 0.12), 0 4px 12px rgb(0 0 0 / 0.18);
+}
+.icon-lab-root .il-cmp-handle span::before,
+.icon-lab-root .il-cmp-handle span::after {
+	content: "";
+	position: absolute;
+	top: 50%;
+	width: 5px;
+	height: 5px;
+	border: solid #555;
+	border-width: 0 0 1.5px 1.5px;
+}
+.icon-lab-root .il-cmp-handle span::before {
+	left: 7px;
+	translate: 0 -50%;
+	rotate: 45deg;
+}
+.icon-lab-root .il-cmp-handle span::after {
+	right: 7px;
+	translate: 0 -50%;
+	rotate: -135deg;
+}
+.icon-lab-root .il-cmp-handle:focus-visible span {
+	box-shadow: 0 0 0 2px var(--color-bg-brand-normal), 0 4px 12px rgb(0 0 0 / 0.18);
+}
+.icon-lab-root .il-cmp-tag {
+	position: absolute;
+	top: 8px;
+	padding: 2px 6px;
+	border-radius: 4px;
+	background: rgb(0 0 0 / 0.55);
+	color: #fff;
+	font: 10px var(--font-mono);
+	pointer-events: none;
+}
+.icon-lab-root .il-cmp-tag-now {
+	left: 8px;
+}
+.icon-lab-root .il-cmp-tag-new {
+	right: 8px;
+}
+
+/* Product mock: the same small UI drawn with the current icon (Now) and ours (New). In a slider its
+   rows are centred, so both show icons either side of the handle. */
+.icon-lab-root .il-mock {
+	display: grid;
+	gap: 8px;
+	padding: 10px;
+	border-radius: 6px;
+	background: #fff;
+	color: #1a1a1a;
+	font-size: 12px;
+	box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.08);
+}
+.icon-lab-root .il-mock.il-dark {
+	background: #161616;
+	color: #ececec;
+	box-shadow: inset 0 0 0 1px #2a2a2a;
+}
+.icon-lab-root .il-mock-tb {
+	display: flex;
+	gap: 6px;
+	align-items: center;
+}
+.icon-lab-root .il-mock-ib {
+	width: 30px;
+	height: 30px;
+	display: grid;
+	place-items: center;
+	border: 1px solid rgb(127 127 127 / 0.25);
+	border-radius: 6px;
+}
+.icon-lab-root .il-mock-lb {
+	display: inline-flex;
+	gap: 6px;
+	align-items: center;
+	padding: 5px 9px;
+	border: 1px solid rgb(127 127 127 / 0.25);
+	border-radius: 6px;
+}
+.icon-lab-root .il-mock-mi {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	padding: 5px 6px;
+	border-radius: 4px;
+	background: rgb(127 127 127 / 0.08);
+}
+.icon-lab-root .il-mock-ramp {
+	display: flex;
+	gap: 12px;
+	align-items: flex-end;
+}
+.icon-lab-root .il-mock svg {
+	display: block;
+	flex: none;
+}
+.icon-lab-root .il-cmp :is(.il-mock-tb, .il-mock-ramp, .il-mock-mi) {
+	justify-content: center;
+}
+
+/* Pixel direction: web uses at web sizes. */
+.icon-lab-root .il-pw {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	padding: 16px;
+	border-radius: 8px;
+	background: #fff;
+	color: #141414;
+}
+.icon-lab-root .il-pw.il-dark {
+	background: #0f0f12;
+	color: #f4f2ee;
+	box-shadow: inset 0 0 0 1px #26262b;
+}
+.icon-lab-root .il-pw-cards {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 10px;
+}
+.icon-lab-root .il-pw-card {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	font-size: 12px;
+	line-height: 1.4;
+}
+.icon-lab-root .il-pw-card b {
+	margin-top: 6px;
+	font-size: 13px;
+	font-weight: 500;
+}
+.icon-lab-root .il-pw-card span:last-child {
+	color: #777;
+}
+.icon-lab-root .il-pw-tile {
+	width: 56px;
+	height: 56px;
+	display: grid;
+	place-items: center;
+	border-radius: 8px;
+}
+.icon-lab-root .il-pw svg {
+	display: block;
+}
+.icon-lab-root .il-pw-rows {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	font-size: 13px;
+}
+.icon-lab-root .il-pw-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+.icon-lab-root .il-pw-rating {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	font-size: 12px;
+	color: #777;
+}
+.icon-lab-root .il-pw-rating b {
+	margin-right: 8px;
+	font-size: 22px;
+	font-weight: 500;
+	color: #141414;
+}
+.icon-lab-root .il-pw.il-dark .il-pw-rating b {
+	color: #f4f2ee;
+}
+.icon-lab-root .il-pw-rating > span:last-child {
+	margin-left: 8px;
+}
+.icon-lab-root .il-pw-ramp {
+	display: flex;
+	align-items: flex-end;
+	gap: 16px;
+}
+.icon-lab-root .il-pw-ramp figure {
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+}
+.icon-lab-root .il-pw-ramp figcaption {
+	font: 10px var(--font-mono);
+	color: #888;
+}
+
+/* ── In context dialog ─────────────────────────────────────────────────────── */
+/* Mockups: plain UI at real pixel sizes, light or dark. */
+.il-dialog .il-mockup {
+	--m-bg: #ffffff;
+	--m-ink: #111111;
+	--m-dim: #6b6b6b;
+	--m-line: #e6e3da;
+	--m-panel: #f5f3ee;
+	display: grid;
+	gap: 28px;
+	padding: 28px;
+	border-radius: 6px;
+	background: var(--m-bg);
+	color: var(--m-ink);
+	font-size: 14px;
+	line-height: 1.45;
+}
+.il-dialog .il-mockup.il-dark {
+	--m-bg: #0e0e0e;
+	--m-ink: #f5f3e7;
+	--m-dim: #8f8c84;
+	--m-line: #262626;
+	--m-panel: #171717;
+}
+.il-dialog .il-m-label {
+	margin-bottom: 10px;
+	font: 11px var(--font-mono);
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--m-dim);
+}
+.il-dialog .il-m-row {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex-wrap: wrap;
+}
+.il-dialog .il-m-nav {
+	display: flex;
+	align-items: center;
+	gap: 22px;
+	padding: 12px 16px;
+	border: 1px solid var(--m-line);
+	border-radius: 6px;
+}
+.il-dialog .il-m-nav strong {
+	margin-right: auto;
+}
+.il-dialog .il-m-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 14px;
+	border: 1px solid var(--m-line);
+	border-radius: 4px;
+	color: var(--m-ink);
+}
+.il-dialog .il-m-btn.il-primary {
+	background: var(--m-ink);
+	color: var(--m-bg);
+	border-color: var(--m-ink);
+}
+.il-dialog .il-m-btn.il-only {
+	padding: 8px;
+}
+.il-dialog .il-m-list {
+	max-width: 420px;
+	border: 1px solid var(--m-line);
+	border-radius: 6px;
+}
+.il-dialog .il-m-list > div {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 10px 14px;
+	border-top: 1px solid var(--m-line);
+}
+.il-dialog .il-m-list > div:first-child {
+	border-top: 0;
+}
+.il-dialog .il-m-list .il-cur {
+	background: var(--m-panel);
+}
+.il-dialog .il-m-cards {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 220px));
+	gap: 14px;
+}
+.il-dialog .il-m-card {
+	padding: 16px;
+	border: 1px solid var(--m-line);
+	border-radius: 6px;
+}
+.il-dialog .il-m-card .il-tile {
+	width: 44px;
+	height: 44px;
+	display: grid;
+	place-items: center;
+	margin-bottom: 12px;
+	border-radius: 4px;
+	background: var(--m-panel);
+}
+.il-dialog .il-m-card p {
+	margin: 4px 0 0;
+	color: var(--m-dim);
+	font-size: 13px;
+}
+.il-dialog .il-m-ramp {
+	display: flex;
+	align-items: flex-end;
+	gap: 28px;
+}
+.il-dialog .il-m-ramp figure {
+	margin: 0;
+	display: grid;
+	justify-items: center;
+	gap: 6px;
+}
+.il-dialog .il-m-ramp figcaption {
+	font: 11px var(--font-mono);
+	color: var(--m-dim);
+}
+.il-dialog .il-m-inline .il-icon {
+	vertical-align: -3px;
+}
+
+/* A page or a screenshot at real size, with the icon to drag into place. */
+.il-dialog .il-stage-frame {
+	position: relative;
+	border: 1px solid var(--color-fg-stroke-weak);
+	background: #fff;
+}
+.il-dialog .il-stage-frame.il-dark {
+	background: #0e0e0e;
+}
+.il-dialog .il-stage-frame.il-dragover {
+	outline: 2px dashed #fe89eb;
+	outline-offset: -6px;
+}
+.il-dialog .il-place {
+	position: absolute;
+	z-index: 2;
+	line-height: 0;
+	cursor: grab;
+	touch-action: none;
+}
+.il-dialog .il-place::after {
+	content: "";
+	position: absolute;
+	inset: -4px;
+	border: 1px dashed #fe89eb;
+}
+.il-dialog .il-place.il-dragging {
+	cursor: grabbing;
+}
+.il-dialog .il-stage-frame:has(.il-place.il-dragging) iframe {
+	pointer-events: none;
+}

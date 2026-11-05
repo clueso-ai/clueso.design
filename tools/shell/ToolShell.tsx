@@ -32,6 +32,8 @@ export interface ToolShellProps {
 	right?: React.ReactNode;
 	/** Along the bottom. Use <BottomBar>. */
 	bottom?: React.ReactNode;
+	/** The bottom bar's height. BAR (40) by default; the left panel stops above it. */
+	bottomHeight?: number;
 	/** Accessible names for the two resize handles. */
 	resizeLabels?: { left?: string; right?: string };
 	/** Sheets, menus and anything else above the chrome. */
@@ -46,11 +48,11 @@ export interface ToolShellProps {
  * The editor frame every tool shares: a full-window canvas, the top bar with the mark and the tool's
  * name, resizable side panels, a bottom bar, a toast and the Clueso cursor. The tool fills the slots.
  */
-export function ToolShell({ id, name, theme, children, toolbarStart, toolbarEnd, toolbarLabels, left, right, bottom, resizeLabels, overlays, toast, cursor = true }: ToolShellProps) {
+export function ToolShell({ id, name, theme, children, toolbarStart, toolbarEnd, toolbarLabels, left, right, bottom, bottomHeight = BAR, resizeLabels, overlays, toast, cursor = true }: ToolShellProps) {
 	const panels = panelStore(id);
 	const hasBottom = !!bottom;
 	const hasRight = !!right;
-	const ctx = useMemo(() => ({ panels, hasBottom, hasRight }), [panels, hasBottom, hasRight]);
+	const ctx = useMemo(() => ({ panels, hasBottom, hasRight, bottomHeight }), [panels, hasBottom, hasRight, bottomHeight]);
 
 	// jigsaw themes with a .dark class; on <html> so portalled menus and modals pick it up too.
 	useEffect(() => {
