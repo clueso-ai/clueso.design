@@ -38,7 +38,7 @@ Repo skills live in .claude/skills. Use them:
 - Site code uses v1 utilities only: text-neutral-strong, bg-raised-1, p-gap-m, type-title-l, type-text-m, max-w-page. Jigsaw names (text-strong, bg-canvas, label-*, para-*) are allowed only inside tools/ (each tool and the shared tool shell) and the Jigsaw snapshot. `pnpm check` enforces this.
 - Don't use Tailwind's max-w-sm…7xl. They collide with Jigsaw's spacing scale. Use max-w-page, max-w-measure-wide, max-w-measure.
 - No Sass, no CSS-in-JS.
-- Import components and icons only from lib/design-system. Never import lib/design-system/jigsaw or components/ui directly. Never copy more Jigsaw code here.
+- Import components and icons only from lib/design-system. Never import lib/design-system/jigsaw or components/ui directly. Never copy more Jigsaw code here. The one exception: Jigsaw's video timeline parts (Playhead, Clip, GifTimeline and its transport bar), vendored for the playground. Anything about a timeline or a player uses them (see lib/design-system/jigsaw/SYNC.md).
 - Need a component that isn't there? Add it with the shadcn CLI into components/ui, then export it from lib/design-system.
 - Register every item in lib/registry.ts with owner, status, visibility and theme. Anything not yet public is visibility: internal. There is no sign-in yet, so internal items must not have pages.
 - No production secrets, customer data or internal APIs.

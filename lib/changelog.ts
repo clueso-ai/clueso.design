@@ -15,10 +15,42 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
 	{
+		date: "2026-11-06",
+		title: "Four new things to play with",
+		body: "The playground has a pink photobooth, a voice booth that makes a recording sound produced, an audiogram maker with seven styles to animate a clip, and a transition lab for cutting between two clips. Everything stays in your browser, and each one exports.",
+		area: "Playground",
+		by: "ajinkya",
+	},
+	{
+		date: "2026-11-06",
+		title: "Tell us what to build into Clueso",
+		body: "Every playground experiment has an \"I want this in Clueso\" button. Press it, and if you like, tell us what you'd use it for.",
+		area: "Playground",
+		by: "ajinkya",
+	},
+	{
+		date: "2026-11-06",
+		title: "Easier to find your way around",
+		body: "The header shows how many tools and experiments there are, and playground pages have a breadcrumb and a back button. The playable logo now lives only on the homepage, so other pages end with a simple footer.",
+		area: "Site",
+		by: "ajinkya",
+	},
+	{
+		date: "2026-11-06",
+		title: "The footer logo sloshes when you scroll",
+		body: "Scroll fast and the logo's letters lean with the motion, then settle like liquid. The extra space under the footer is gone too.",
+		area: "Site",
+		by: "ajinkya",
+	},
+	{
 		date: "2026-11-05",
 		title: "The footer logo is a toy now",
 		body: "Pull the logo's letters and they bend like jelly, then wobble back with a note. Select several points at once, play tug of war with whoever else is on the site, or press Play to put on a beat and watch the logo dance.",
 		area: "Site",
+		by: "ajinkya",
+	},
+	{
+		date: "2026-11-04",
 		title: "Icon Lab gets Brand Lab's editor frame",
 		body: "Icon Lab now opens in the same frame as Brand Lab: the library on the left, the icon's settings on the right, sizes and search along the bottom. Your edits, chosen options and kept icons are all still there.",
 		area: "Icon Lab",

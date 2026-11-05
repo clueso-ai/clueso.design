@@ -23,7 +23,9 @@ export function SitePrefsRoot({ children }: { children: ReactNode }) {
 	} as CSSProperties;
 
 	return (
-		<div data-type-scope style={style} className={`flex min-h-dvh flex-col ${p.cluesoCursor ? "site-cursor" : ""}`}>
+		// Clipped at the bottom, so nothing hanging below the footer (like the logo's stretched mark
+		// fill) makes the page longer. Clip, not hidden, so sticky headers still stick.
+		<div data-type-scope style={style} className={`flex min-h-dvh flex-col overflow-y-clip ${p.cluesoCursor ? "site-cursor" : ""}`}>
 			{children}
 			<RemoteCursors />
 			<SiteCursor />
