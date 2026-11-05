@@ -81,13 +81,19 @@ function Panel() {
 	};
 
 	return (
-		<div className="grid gap-gap-l p-gap-l md:grid-cols-3">
-			<div className="flex flex-col gap-gap-2xs">
+		// Three columns split by hairlines, like the site's frame: stacked with rules between them on
+		// small screens, side by side with vertical rules from md up.
+		<div className="grid md:grid-cols-3">
+			<div className="flex flex-col gap-gap-2xs p-gap-l">
 				<h2 className="type-title-s text-neutral-strong">Play the logo</h2>
-				<p className="type-text-s text-neutral-weak">Pick a beat and the logo dances to it. Drag its points while it plays.</p>
+				<p className="type-text-s text-neutral-weak">
+					Pick a beat and the logo dances to it.
+					<br />
+					Drag its points while it plays.
+				</p>
 			</div>
 
-			<div className="flex flex-col gap-gap-s">
+			<div className="flex flex-col gap-gap-s border-t border-neutral-weak p-gap-l md:border-t-0 md:border-l">
 				<div role="radiogroup" aria-label="Beat" className="grid grid-cols-4 gap-gap-3xs rounded-medium border border-neutral-weak p-gap-3xs">
 					{PATTERNS.map((p) => (
 						<button
@@ -118,7 +124,7 @@ function Panel() {
 				</div>
 			</div>
 
-			<div className="flex flex-col gap-gap-s">
+			<div className="flex flex-col gap-gap-s border-t border-neutral-weak p-gap-l md:border-t-0 md:border-l">
 				<Slider
 					label="Tempo"
 					unit="bpm"
