@@ -1,6 +1,6 @@
 // A tiny SVG path editor model: parse absolute M/L/H/V/C/Z paths (what our logo uses) into
-// subpaths of line and cubic segments, move anchors the way design tools do (an anchor carries
-// its two handles), and write the path back out.
+// subpaths of line and cubic segments, flatten them into points to move one by one (an anchor
+// carries its two handles, the way design tools do), and write the path back out.
 
 export type Pt = [number, number];
 export interface Seg {
@@ -94,29 +94,76 @@ export function anchors(subs: Subpath[]): { a: Anchor; p: Pt }[] {
 	return out;
 }
 
-const add = (p: Pt | undefined, d: Pt): Pt | undefined => (p ? [p[0] + d[0], p[1] + d[1]] : p);
+const lerp = (a: Pt, b: Pt, t: number): Pt => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
 
-/** Moves an anchor by `d`, with its incoming and outgoing handles. Returns new subpaths. */
-export function moveAnchor(subs: Subpath[], [si, i]: Anchor, d: Pt): Subpath[] {
-	return subs.map((s, k) => {
-		if (k !== si) return s;
-		const segs = s.segs.map((seg) => ({ ...seg }));
-		let start = s.start;
-		const n = segs.length;
-		if (i === -1) {
-			start = add(start, d)!;
-			if (segs[0]) segs[0].c1 = add(segs[0].c1, d);
-			if (s.linked) {
-				segs[n - 1].p = add(segs[n - 1].p, d)!;
-				segs[n - 1].c2 = add(segs[n - 1].c2, d);
-			}
-		} else {
-			segs[i].p = add(segs[i].p, d)!;
-			segs[i].c2 = add(segs[i].c2, d);
-			if (segs[i + 1]) segs[i + 1].c1 = add(segs[i + 1].c1, d);
+/**
+ * Splits straight edges longer than two `step`s into curves about `step` long, drawn exactly as
+ * before, so a straight edge has points along it that can bend. Pieces stay longer than
+ * pickHandles' merge distance, so the handles it finds don't change.
+ */
+export function subdivide(subs: Subpath[], step = 12): Subpath[] {
+	const split = (from: Pt, to: Pt): Seg[] => {
+		const n = Math.floor(Math.hypot(to[0] - from[0], to[1] - from[1]) / step);
+		if (n < 2) return [];
+		return Array.from({ length: n }, (_, j) => {
+			const a = lerp(from, to, j / n);
+			const b = j === n - 1 ? to : lerp(from, to, (j + 1) / n);
+			return { c1: lerp(a, b, 1 / 3), c2: lerp(a, b, 2 / 3), p: b };
+		});
+	};
+	return subs.map((s) => {
+		const segs: Seg[] = [];
+		let from = s.start;
+		for (const seg of s.segs) {
+			const pieces = seg.c1 ? [] : split(from, seg.p);
+			segs.push(...(pieces.length ? pieces : [seg]));
+			from = seg.p;
 		}
-		return { ...s, start, segs };
+		// The edge Z draws back to the start is straight too.
+		const closing = s.closed && !s.linked ? split(from, s.start) : [];
+		return closing.length ? { ...s, segs: [...segs, ...closing], linked: true } : { ...s, segs };
 	});
+}
+
+/** Every point of a path in order: each subpath's start, then each segment's c1, c2 and end. */
+export function flatten(subs: Subpath[]): Pt[] {
+	const out: Pt[] = [];
+	for (const s of subs) {
+		out.push(s.start);
+		for (const seg of s.segs) {
+			if (seg.c1) out.push(seg.c1, seg.c2!);
+			out.push(seg.p);
+		}
+	}
+	return out;
+}
+
+/** Rebuilds a path shaped like `like` from points in `flatten` order. */
+export function unflatten(like: Subpath[], pts: Pt[]): Subpath[] {
+	let k = 0;
+	return like.map((s) => ({ ...s, start: pts[k++], segs: s.segs.map((seg) => (seg.c1 ? { c1: pts[k++], c2: pts[k++], p: pts[k++] } : { p: pts[k++] })) }));
+}
+
+/**
+ * The points that move with an anchor, as indexes into `flatten`: the anchor and its incoming and
+ * outgoing handles, the way design tools move them. A linked start also carries the last segment's end.
+ */
+export function anchorIndices(subs: Subpath[], [si, i]: Anchor): number[] {
+	let k = 0;
+	for (let j = 0; j < si; j++) k += 1 + subs[j].segs.reduce((t, seg) => t + (seg.c1 ? 3 : 1), 0);
+	const s = subs[si];
+	const at: number[] = [];
+	let m = k + 1;
+	for (const seg of s.segs) {
+		at.push(m);
+		m += seg.c1 ? 3 : 1;
+	}
+	const c1 = (j: number) => (s.segs[j]?.c1 ? [at[j]] : []);
+	const c2 = (j: number) => (s.segs[j].c1 ? [at[j] + 1] : []);
+	const p = (j: number) => at[j] + (s.segs[j].c1 ? 2 : 0);
+	const n = s.segs.length;
+	if (i === -1) return [k, ...c1(0), ...(s.linked ? [p(n - 1), ...c2(n - 1)] : [])];
+	return [p(i), ...c2(i), ...c1(i + 1)];
 }
 
 /** A handle the visitor can drag: one or more anchors that move together, drawn at `at`. */
@@ -216,15 +263,4 @@ export function pickHandles(subs: Subpath[], { cornerDeg = 35, merge = 8 } = {})
 export function anchorAt(subs: Subpath[], [si, i]: Anchor): Pt {
 	const s = subs[si];
 	return i === -1 ? s.start : s.segs[i].p;
-}
-
-const mix = (a: Pt | undefined, b: Pt | undefined, t: number): Pt | undefined => (a && b ? [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t] : a);
-
-/** Blends two versions of the same path (same structure), t from 0 (a) to 1 (b). */
-export function lerpPath(a: Subpath[], b: Subpath[], t: number): Subpath[] {
-	return a.map((s, si) => ({
-		...s,
-		start: mix(s.start, b[si].start, t)!,
-		segs: s.segs.map((seg, i) => ({ c1: mix(seg.c1, b[si].segs[i].c1, t), c2: mix(seg.c2, b[si].segs[i].c2, t), p: mix(seg.p, b[si].segs[i].p, t)! })),
-	}));
 }

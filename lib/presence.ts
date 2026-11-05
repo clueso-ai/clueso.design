@@ -5,6 +5,9 @@
 // component that needs it.
 
 import { useSyncExternalStore } from "react";
+import type { Tug } from "./presence-server";
+
+export type { Tug };
 
 export interface RemoteCursor {
 	id: string;
@@ -18,6 +21,8 @@ export interface RemoteCursor {
 	x: number | null;
 	/** From the top of the page, in px. */
 	y: number | null;
+	/** What they're pulling on the footer logo, if anything. */
+	tug: Tug | null;
 }
 
 interface Presence {

@@ -13,6 +13,9 @@ export { default as PlusIcon } from "./jigsaw/icons/icons/Mathematics/Plus.svg?r
 export { default as CopyIcon } from "./jigsaw/icons/icons/Technical Concepts/Copy.svg?react";
 export { default as FontSizeIcon } from "./jigsaw/icons/icons/Editing Design/Font-size.svg?react";
 export { default as CheckIcon } from "./jigsaw/icons/icons/Validation/Check.svg?react";
+export { default as MusicIcon } from "./jigsaw/icons/icons/Media/Musical-note.svg?react";
+export { default as PlayIcon } from "./jigsaw/icons/icons/Media/Play-filled.svg?react";
+export { default as PauseIcon } from "./jigsaw/icons/icons/Media/Pause.svg?react";
 export { default as CloseIcon } from "./jigsaw/icons/icons/Mathematics/Cross.svg?react";
 export { MenuIcon } from "./menu-icon";
 export { HeartIcon } from "./heart-icon";
