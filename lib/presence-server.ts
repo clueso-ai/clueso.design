@@ -2,7 +2,9 @@
 // and the visitor count) and /api/hearts (the footer's heart count). Route files can only export
 // handlers, so the shared state lives here.
 
-export type Cursor = { id: string; who: string; page: string; name: string; color: string; tilt: number; x: number | null; y: number | null };
+/** A pull on the footer logo: the handles held, how far they're pulled (x, y) and where the hand is (hx, hy), all from rest in logo units. */
+export type Tug = { keys: string[]; x: number; y: number; hx: number; hy: number };
+export type Cursor = { id: string; who: string; page: string; name: string; color: string; tilt: number; x: number | null; y: number | null; tug: Tug | null };
 export type Conn = Cursor & { visitor: string; seq: number; send: (msg: object) => void };
 
 // On globalThis so dev reloads keep the list.

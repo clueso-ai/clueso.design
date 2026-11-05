@@ -166,6 +166,8 @@ export interface SitePrefs {
 	onboarded: boolean;
 	/** Opened Customize website at least once, by C or the button. Until then the cursor's tag says how. */
 	hintDone: boolean;
+	/** The footer logo plays notes when you pull its letters. */
+	logoSound: boolean;
 }
 
 export const DEFAULT_PREFS: SitePrefs = {
@@ -183,6 +185,7 @@ export const DEFAULT_PREFS: SitePrefs = {
 	typeRatio: null,
 	onboarded: false,
 	hintDone: false,
+	logoSound: true,
 };
 
 /** The weight a font actually renders at: the visitor's choice for variable fonts, the font's own otherwise. */

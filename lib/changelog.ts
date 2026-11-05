@@ -15,6 +15,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
 	{
+		date: "2026-11-05",
+		title: "The footer logo is a toy now",
+		body: "Pull the logo's letters and they bend like jelly, then wobble back with a note. Select several points at once, play tug of war with whoever else is on the site, or press Play to put on a beat and watch the logo dance.",
+		area: "Site",
+		by: "ajinkya",
+	},
+	{
 		date: "2026-11-04",
 		title: "Rotate, round and crop like in Figma",
 		body: "Hover just outside a corner of anything you've selected and drag to rotate it, images included. Drag the dots inside a rectangle's or image's corners to round them, and hold ⌘ while dragging an image's edge or corner to crop it.",
