@@ -47,6 +47,10 @@ export const changelog: ChangelogEntry[] = [
 		title: "The footer logo is a toy now",
 		body: "Pull the logo's letters and they bend like jelly, then wobble back with a note. Select several points at once, play tug of war with whoever else is on the site, or press Play to put on a beat and watch the logo dance.",
 		area: "Site",
+		by: "ajinkya",
+	},
+	{
+		date: "2026-11-04",
 		title: "Icon Lab gets Brand Lab's editor frame",
 		body: "Icon Lab now opens in the same frame as Brand Lab: the library on the left, the icon's settings on the right, sizes and search along the bottom. Your edits, chosen options and kept icons are all still there.",
 		area: "Icon Lab",
